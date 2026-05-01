@@ -141,31 +141,9 @@ export default function Home() {
   const mood = result ? MOOD_CONFIG[result.mood] : null;
 
   return (
-    <main
-      style={{
-        fontFamily: "'Space Grotesk','Segoe UI',sans-serif",
-        background: "#04080e",
-        minHeight: "100vh",
-        color: "#e2e8f0",
-      }}
-    >
-      {/* dot grid bg */}
-      <div
-        style={{
-          position: "fixed", inset: 0,
-          backgroundImage: "radial-gradient(rgba(16,185,129,.035) 1px,transparent 1px)",
-          backgroundSize: "26px 26px", pointerEvents: "none",
-        }}
-      />
-      {/* top glow */}
-      <div
-        style={{
-          position: "fixed", top: -100, left: "50%", transform: "translateX(-50%)",
-          width: 500, height: 280,
-          background: "radial-gradient(ellipse,rgba(16,185,129,.08) 0%,transparent 70%)",
-          pointerEvents: "none",
-        }}
-      />
+    <main style={{ fontFamily: "'Space Grotesk','Segoe UI',sans-serif", background: "#04080e", minHeight: "100vh", color: "#e2e8f0" }}>
+      <div style={{ position: "fixed", inset: 0, backgroundImage: "radial-gradient(rgba(16,185,129,.035) 1px,transparent 1px)", backgroundSize: "26px 26px", pointerEvents: "none" }} />
+      <div style={{ position: "fixed", top: -100, left: "50%", transform: "translateX(-50%)", width: 500, height: 280, background: "radial-gradient(ellipse,rgba(16,185,129,.08) 0%,transparent 70%)", pointerEvents: "none" }} />
 
       <div style={{ maxWidth: 680, margin: "0 auto", padding: "22px 16px 48px", position: "relative" }}>
 
@@ -207,7 +185,7 @@ export default function Home() {
             <button key={c} onClick={() => setQuery(c)} className="mono"
               style={{ background: "#080f18", border: "1px solid #1a2f3e", color: "#334155", padding: "4px 12px", borderRadius: 20, fontSize: 11, cursor: "pointer", transition: "all .15s" }}
               onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#10b981"; e.currentTarget.style.color = "#10b981"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a2f3e";  e.currentTarget.style.color = "#334155"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a2f3e"; e.currentTarget.style.color = "#334155"; }}
             >{c}</button>
           ))}
         </div>
@@ -227,6 +205,7 @@ export default function Home() {
 
         {result && !loading && (
           <div className="fadein">
+
             {/* Coin header */}
             <div style={{ background: "#080f18", border: "1px solid #1a2f3e", borderRadius: 12, padding: "14px 16px", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -324,20 +303,36 @@ export default function Home() {
               </div>
             </div>
 
-            {/* AI Analysis */}
-            <div style={{ background: "#04080e", border: "1px solid #10b98120", borderRadius: 10, padding: "14px 16px", marginBottom: 10 }}>
+            {/* ✅ YES YOU PRO AI ANALYSIS BOX */}
+            <div style={{ background: "#04080e", border: "1px solid #10b98130", borderRadius: 10, padding: "14px 16px", marginBottom: 10, position: "relative", overflow: "hidden" }}>
+              {/* top shimmer line */}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg,transparent,#10b981,transparent)" }} />
+
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span>🤖</span>
-                <span className="mono" style={{ fontSize: 10, color: "#10b981", letterSpacing: 2 }}>CLAUDE AI ANALYSIS</span>
+                {/* YYP Badge */}
+                <div style={{ background: "linear-gradient(135deg,#10b981,#059669)", borderRadius: 6, padding: "2px 8px", fontWeight: 800, fontSize: 11, color: "#fff", fontFamily: "'Space Grotesk',sans-serif", letterSpacing: 0.5, flexShrink: 0 }}>
+                  YYP
+                </div>
+                <span className="mono" style={{ fontSize: 10, color: "#10b981", letterSpacing: 2 }}>
+                  YES YOU PRO AI ANALYSIS
+                </span>
                 {aiLoading && (
                   <div style={{ display: "flex", gap: 3, marginLeft: "auto" }}>
-                    {[0, 1, 2].map((i) => (<div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: "#10b981", animation: `blink 1.2s ${i * 0.2}s infinite` }} />))}
+                    {[0, 1, 2].map((i) => (
+                      <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: "#10b981", animation: `blink 1.2s ${i * 0.2}s infinite` }} />
+                    ))}
                   </div>
                 )}
               </div>
+
               {aiText
                 ? <p style={{ fontSize: 13, color: "#94a3b8", lineHeight: 1.65, whiteSpace: "pre-line" }}>{aiText}</p>
-                : <div style={{ height: 40, background: "#080f18", borderRadius: 6, animation: "shimmer 1.5s infinite" }} />}
+                : <div style={{ height: 40, background: "#080f18", borderRadius: 6, animation: "shimmer 1.5s infinite" }} />
+              }
+
+              <div className="mono" style={{ fontSize: 9, color: "#1e3a4a", marginTop: 10, textAlign: "right" }}>
+                Powered by YesYouPro · yesyoupro.com
+              </div>
             </div>
 
             {/* Market stats */}
@@ -408,8 +403,9 @@ export default function Home() {
         {/* Disclaimer */}
         <div className="mono" style={{ background: "#04080e", border: "1px solid #0f1e26", borderRadius: 8, padding: "10px 14px", fontSize: 10, color: "#1e3a4a", textAlign: "center", lineHeight: 1.6 }}>
           ⚠️ AI-based analysis only — not financial advice. Crypto is highly volatile. Always DYOR.<br />
-          Data: Binance (real-time) · Indicators: RSI(14) · MA50 · MA200 · AI: Claude
+          Data: Binance (real-time) · Indicators: RSI(14) · MA50 · MA200 · YesYouPro AI
         </div>
+
       </div>
     </main>
   );
