@@ -4,12 +4,18 @@ export async function POST(request) {
   try {
     const body = await request.json();
     const {
-      name, symbol, price, rsi, ma50, ma200,
-      ch24, ch7d, decision, confidence, risk,
+      mode = "analysis",
       language = "english",
-      mode = "analysis", // "analysis" | "budget" | "scam"
+      // analysis fields
+      name, symbol, price, rsi, ma50, ma200, ch24, ch7d, decision, confidence, risk,
+      // budget fields
       budgetAmount, budgetCurrency,
+      // scam fields
       scamFlags,
+      // screenshot fields
+      imageBase64, imageType,
+      // personal advisor fields
+      userSituation,
     } = body;
 
     const fmt = (n) =>
@@ -17,68 +23,126 @@ export async function POST(request) {
         ? "$" + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
         : "$" + n.toPrecision(4);
 
-    let systemPrompt = "";
-    let userPrompt = "";
-
-    // ── LANGUAGE INSTRUCTION ──────────────────────────────────────────────────
-    const langInstructions = {
+    const langRule = {
       english:  "Respond in clear, simple English.",
-      hindi:    "Poora jawab sirf Hindi mein do. Roman script nahi, Devanagari Hindi mein likho. Simple bhasha use karo.",
-      hinglish: "Respond in Hinglish — mix of Hindi and English like how young Indians talk. Example: 'Bitcoin abhi oversold zone mein hai, yeh ek buying opportunity ho sakti hai but risk bhi hai.'",
-    };
-    const langRule = langInstructions[language] || langInstructions.english;
+      hindi:    "Sirf Hindi mein jawab do (Devanagari). Simple bhasha use karo.",
+      hinglish: "Hinglish mein jawab do — Hindi + English mix, jaise Indian log bolte hain.",
+    }[language] || "Respond in clear English.";
 
-    // ── MODE: COIN ANALYSIS ───────────────────────────────────────────────────
+    let messages = [];
+
+    // ── MODE: COIN ANALYSIS ──────────────────────────────────────────────────
     if (mode === "analysis") {
-      userPrompt = `You are a crypto analyst for Indian investors. ${langRule}
+      messages = [{
+        role: "user",
+        content: `You are a crypto analyst for Indian investors. ${langRule}
 
 Coin: ${name} (${symbol})
 Price: ${fmt(price)} | RSI: ${rsi} | MA50: ${ma50} | MA200: ${ma200}
-24h Change: ${parseFloat(ch24).toFixed(2)}% | 7d Change: ${parseFloat(ch7d).toFixed(2)}%
-Decision: ${decision} (${confidence}% confidence) | Risk: ${risk}
+24h: ${parseFloat(ch24).toFixed(2)}% | 7d: ${parseFloat(ch7d).toFixed(2)}%
+Decision: ${decision} (${confidence}% conf) | Risk: ${risk}
 
-Reply in EXACTLY this format (2 lines only):
-📊 Technical: [one sentence about indicators and momentum]
-⚠️ Risk Note: [one honest sentence about what could go wrong]
+Reply EXACTLY:
+📊 Technical: [one sentence on indicators and momentum]
+⚠️ Risk Note: [one honest sentence on what could go wrong]
 
-No hype. No profit guarantees. Keep it simple and direct.`;
+No hype. No profit guarantees.`,
+      }];
     }
 
-    // ── MODE: MERA BUDGET ─────────────────────────────────────────────────────
+    // ── MODE: BUDGET ADVISOR ─────────────────────────────────────────────────
     else if (mode === "budget") {
-      userPrompt = `You are a helpful crypto advisor for Indian investors. ${langRule}
+      messages = [{
+        role: "user",
+        content: `You are a helpful crypto advisor for Indian investors. ${langRule}
 
-The user has ${budgetCurrency === "INR" ? "₹" : "$"}${budgetAmount} to invest in crypto.
+User has ${budgetCurrency === "INR" ? "₹" : "$"}${budgetAmount} to invest.
 
-Suggest the BEST way to use this budget. Give exactly 3 options:
-1. Safe option (low risk coin like BTC/ETH)
-2. Moderate option (mid-cap coin)  
-3. High risk / high reward option (small cap)
+Give exactly 3 investment options:
+1. 🐢 Safe (low risk)
+2. ⚖️ Moderate (medium risk)
+3. 🎲 Aggressive (high risk/reward)
 
-For each option mention:
-- Which coin to buy
-- How much to invest
-- Why this coin
-- Risk level
-
-Keep advice practical for small Indian investors. No guaranteed profit promises.
-Format with clear sections. Max 150 words total.`;
+For each: coin name, how much to invest, why, risk level.
+Keep it practical. Max 150 words. No guaranteed profit claims.`,
+      }];
     }
 
-    // ── MODE: SCAM DETECTOR ───────────────────────────────────────────────────
+    // ── MODE: SCAM DETECTOR ──────────────────────────────────────────────────
     else if (mode === "scam") {
-      userPrompt = `You are a crypto scam detector. ${langRule}
+      messages = [{
+        role: "user",
+        content: `You are a crypto scam detector. ${langRule}
 
 Coin: ${name} (${symbol})
-24h Change: ${parseFloat(ch24).toFixed(2)}% | 7d Change: ${parseFloat(ch7d).toFixed(2)}%
-RSI: ${rsi}
-Red flags detected: ${scamFlags.join(", ")}
+24h: ${parseFloat(ch24).toFixed(2)}% | 7d: ${parseFloat(ch7d).toFixed(2)}%
+RSI: ${rsi} | Red flags: ${scamFlags.join(", ")}
 
-Based on these signals, give a SHORT verdict:
-🚨 Verdict: [1 sentence — is this coin suspicious or safe?]
-💡 Advice: [1 sentence — what should the user do?]
+Give verdict:
+🚨 Verdict: [1 sentence — suspicious or safe?]
+💡 Advice: [1 sentence — what should user do?]
 
-Be direct and honest. Warn strongly if it looks like a pump & dump.`;
+Be direct and honest.`,
+      }];
+    }
+
+    // ── MODE: SCREENSHOT ANALYSIS ────────────────────────────────────────────
+    else if (mode === "screenshot") {
+      messages = [{
+        role: "user",
+        content: [
+          {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: imageType || "image/jpeg",
+              data: imageBase64,
+            },
+          },
+          {
+            type: "text",
+            text: `You are an expert crypto portfolio analyzer for Indian investors. ${langRule}
+
+Analyze this crypto exchange/portfolio screenshot carefully.
+
+Provide analysis in this EXACT format:
+
+📊 Portfolio Summary:
+[List what coins/positions you can see]
+
+⚠️ Risk Assessment:
+[Over-concentration? Any risky positions?]
+
+💡 AI Recommendation:
+[Specific actionable advice — what to do, rebalance, cut losses, take profit etc.]
+
+📈 Rebalancing Suggestion:
+[Ideal allocation if they should change anything]
+
+Be specific, practical, and honest. No guaranteed profit claims. If you cannot read the image clearly, say so.`,
+          },
+        ],
+      }];
+    }
+
+    // ── MODE: PERSONAL ADVISOR ("Mujhe Bata") ───────────────────────────────
+    else if (mode === "personal") {
+      messages = [{
+        role: "user",
+        content: `You are a personal crypto advisor for Indian investors. ${langRule}
+
+User's situation: "${userSituation}"
+
+Give them honest, personalized advice. Be direct like a trusted friend who knows crypto.
+
+Format:
+🎯 Situation Analysis: [understand their problem in 1-2 sentences]
+💡 My Honest Advice: [specific what-to-do advice, 2-3 sentences]
+⚠️ Important Warning: [one key risk or thing to be careful about]
+📋 Action Steps: [3 numbered specific steps they should take]
+
+Be warm, honest, and practical. No false promises. Max 200 words.`,
+      }];
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -90,8 +154,8 @@ Be direct and honest. Warn strongly if it looks like a pump & dump.`;
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 400,
-        messages: [{ role: "user", content: userPrompt }],
+        max_tokens: mode === "screenshot" ? 600 : mode === "personal" ? 500 : 400,
+        messages,
       }),
     });
 
@@ -100,9 +164,10 @@ Be direct and honest. Warn strongly if it looks like a pump & dump.`;
     const text = data.content?.[0]?.text || "Analysis complete. Always DYOR.";
     return NextResponse.json({ text });
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     return NextResponse.json({
-      text: "📊 Technical: Real-time data fetched successfully.\n⚠️ Risk Note: Crypto markets are highly volatile — invest only what you can afford to lose.",
+      text: "📊 Analysis could not be completed right now.\n⚠️ Please try again in a moment.",
     });
   }
 }
