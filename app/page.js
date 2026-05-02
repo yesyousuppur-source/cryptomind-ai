@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import { calcRSI, calcMA, buildDecision } from "../lib/indicators";
 import { INPUT_MAP, FULL_NAME, DECISION_CONFIG, MOOD_CONFIG, fmt, fmtBig } from "../lib/constants";
 
@@ -756,58 +755,14 @@ export default function Home() {
           )}
         </div>
 
-        {/* FOOTER */}
-        <div style={{marginTop:8}}>
-
-          {/* Disclaimer box */}
-          <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:16,padding:"16px 20px",textAlign:"center",boxShadow:"0 2px 12px rgba(16,185,129,.08)",marginBottom:16}}>
-            <div style={{fontSize:12,color:"#059669",fontWeight:700,marginBottom:6}}>⚠️ Disclaimer</div>
-            <div className="mono" style={{fontSize:10,color:"#64748b",lineHeight:1.8}}>
-              AI-based analysis only — not financial advice.<br/>
-              Crypto is highly volatile. Always do your own research (DYOR).<br/>
-              <span style={{color:"#059669",fontWeight:600}}>Data: Binance · Fear & Greed: Alternative.me · AI: YesYouPro</span>
-            </div>
+        {/* DISCLAIMER */}
+        <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:16,padding:"16px 20px",textAlign:"center",boxShadow:"0 2px 12px rgba(16,185,129,.08)"}}>
+          <div style={{fontSize:12,color:"#059669",fontWeight:700,marginBottom:6}}>⚠️ Disclaimer</div>
+          <div className="mono" style={{fontSize:10,color:"#64748b",lineHeight:1.8}}>
+            AI-based analysis only — not financial advice.<br/>
+            Crypto is highly volatile. Always do your own research (DYOR).<br/>
+            <span style={{color:"#059669",fontWeight:600}}>Data: Binance · Fear & Greed: Alternative.me · AI: YesYouPro</span>
           </div>
-
-          {/* Footer nav links */}
-          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px 20px",boxShadow:"0 2px 10px rgba(0,0,0,.05)"}}>
-            {/* Logo row */}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10,marginBottom:14}}>
-              <div style={{background:"linear-gradient(135deg,#10b981,#059669)",borderRadius:8,padding:"4px 10px",fontWeight:900,fontSize:12,color:"#fff",letterSpacing:.5}}>YYP</div>
-              <span style={{fontWeight:800,fontSize:14,color:"#0f172a"}}>CryptoMind AI</span>
-              <span style={{fontSize:11,color:"#94a3b8"}}>by YesYouPro</span>
-            </div>
-
-            {/* Nav links */}
-            <div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap",marginBottom:14}}>
-              {[
-                {label:"🏠 Home",         href:"/"},
-                {label:"👋 About Us",     href:"/about"},
-                {label:"🔒 Privacy Policy",href:"/privacy"},
-                {label:"💬 Contact Us",   href:"/contact"},
-              ].map((link,i)=>(
-                <Link key={i} href={link.href}
-                  style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:20,padding:"6px 14px",fontSize:12,color:"#475569",fontWeight:600,textDecoration:"none",transition:"all .15s"}}
-                  onMouseEnter={e=>{e.currentTarget.style.background="#f0fdf4";e.currentTarget.style.color="#059669";e.currentTarget.style.borderColor="#6ee7b7";}}
-                  onMouseLeave={e=>{e.currentTarget.style.background="#f8fafc";e.currentTarget.style.color="#475569";e.currentTarget.style.borderColor="#e2e8f0";}}>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-
-            {/* Bottom line */}
-            <div style={{borderTop:"1px dashed #e2e8f0",paddingTop:12,textAlign:"center"}}>
-              <div className="mono" style={{fontSize:10,color:"#94a3b8",lineHeight:1.7}}>
-                © {new Date().getFullYear()} YesYouPro · CryptoMind AI · All rights reserved<br/>
-                <a href="https://yesyoupro.com" target="_blank" rel="noopener noreferrer"
-                  style={{color:"#059669",textDecoration:"none",fontWeight:600}}>yesyoupro.com</a>
-                {" · "}
-                <a href="mailto:support@yesyoupro.com"
-                  style={{color:"#059669",textDecoration:"none",fontWeight:600}}>support@yesyoupro.com</a>
-              </div>
-            </div>
-          </div>
-
         </div>
 
       </div>
