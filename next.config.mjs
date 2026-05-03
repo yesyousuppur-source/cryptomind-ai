@@ -1,15 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Force all API routes to be dynamic — prevents build-time fetch errors
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",
     },
-  },
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
-    },
-    responseLimit: "10mb",
   },
 };
 
