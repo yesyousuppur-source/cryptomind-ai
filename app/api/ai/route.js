@@ -3,30 +3,21 @@ import { NextResponse } from "next/server";
 export async function POST(request) {
   try {
     const body = await request.json();
-    const {
-      mode = "analysis",
-      language = "english",
-      name, symbol, price, rsi, ma50, ma200, ch24, ch7d, decision, confidence, risk,
-      budgetAmount, budgetCurrency,
-      scamFlags,
-      imageBase64, imageType,
-      userSituation,
-      // new modes
-      coinName,           // for explain
-      newsHeadlines,      // for news_impact
-      scamData,           // for scam_ai
-    } = body;
+    const { mode = "analysis", name, symbol, price, rsi, ma50, ma200, ch24, ch7d,
+      decision, confidence, risk, budgetAmount, budgetCurrency, scamFlags,
+      imageBase64, imageType, userSituation, coinName, newsHeadlines, scamData,
+      // new
+      iqAnswers, portfolio, networkCoin } = body;
 
-    const fmt = (n) =>
-      n >= 1 ? "$" + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-             : "$" + n.toPrecision(4);
+    const fmt = (n) => n >= 1
+      ? "$" + n.toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 })
+      : "$" + n.toPrecision(4);
 
     let messages = [];
 
-    // ── ANALYSIS ──────────────────────────────────────────────────────────────
     if (mode === "analysis") {
       messages = [{ role:"user", content:
-        `You are a crypto analyst for Indian investors. Respond in clear simple English.
+        `You are a crypto analyst for Indian investors.
 Coin: ${name} (${symbol}) | Price: ${fmt(price)} | RSI: ${rsi} | MA50: ${ma50} | MA200: ${ma200}
 24h: ${parseFloat(ch24).toFixed(2)}% | 7d: ${parseFloat(ch7d).toFixed(2)}% | Decision: ${decision} (${confidence}% conf) | Risk: ${risk}
 Reply EXACTLY:
@@ -34,149 +25,176 @@ Reply EXACTLY:
 ⚠️ Risk Note: [one honest sentence on what could go wrong]
 No hype. No profit guarantees.` }];
     }
-
-    // ── BUDGET ────────────────────────────────────────────────────────────────
     else if (mode === "budget") {
       messages = [{ role:"user", content:
-        `You are a helpful crypto advisor for Indian investors. Respond in clear English.
+        `Helpful crypto advisor for Indian investors.
 User has ${budgetCurrency === "INR" ? "₹" : "$"}${budgetAmount} to invest.
 Give exactly 3 options: 🐢 Safe · ⚖️ Moderate · 🎲 Aggressive
 For each: coin, amount, why, risk. Max 150 words. No guaranteed profit.` }];
     }
-
-    // ── SCAM (basic) ──────────────────────────────────────────────────────────
     else if (mode === "scam") {
       messages = [{ role:"user", content:
-        `You are a crypto scam detector.
+        `Crypto scam detector.
 Coin: ${name} (${symbol}) | 24h: ${parseFloat(ch24).toFixed(2)}% | 7d: ${parseFloat(ch7d).toFixed(2)}% | RSI: ${rsi} | Red flags: ${scamFlags.join(", ")}
-Reply:
-🚨 Verdict: [1 sentence]
-💡 Advice: [1 sentence]` }];
+🚨 Verdict: [1 sentence] 💡 Advice: [1 sentence]` }];
     }
-
-    // ── SCREENSHOT ────────────────────────────────────────────────────────────
     else if (mode === "screenshot") {
       messages = [{ role:"user", content: [
         { type:"image", source:{ type:"base64", media_type: imageType||"image/jpeg", data: imageBase64 } },
-        { type:"text", text:
-          `You are an expert crypto portfolio analyzer for Indian investors.
-Analyze this exchange/portfolio screenshot carefully.
-Format EXACTLY:
-📊 Portfolio Summary: [what coins/positions you see]
-⚠️ Risk Assessment: [over-concentration? risky positions?]
-💡 AI Recommendation: [specific actionable advice]
-📈 Rebalancing Suggestion: [ideal allocation change if needed]
-Be specific and honest. No profit guarantees.` }
+        { type:"text", text:`Expert crypto portfolio analyzer for Indian investors.
+Format: 📊 Portfolio Summary: | ⚠️ Risk Assessment: | 💡 AI Recommendation: | 📈 Rebalancing Suggestion:
+Be specific and honest.` }
       ]}];
     }
-
-    // ── PERSONAL ADVISOR ──────────────────────────────────────────────────────
     else if (mode === "personal") {
       messages = [{ role:"user", content:
-        `You are a personal crypto advisor for Indian investors.
+        `Personal crypto advisor for Indian investors.
 User's situation: "${userSituation}"
-Format:
-🎯 Situation Analysis: [1-2 sentences understanding their problem]
-💡 My Honest Advice: [2-3 sentences specific advice]
-⚠️ Important Warning: [1 key risk]
-📋 Action Steps: [3 numbered specific steps]
-Warm, honest, practical. No false promises. Max 200 words.` }];
+Format: 🎯 Situation Analysis: | 💡 My Honest Advice: | ⚠️ Important Warning: | 📋 Action Steps: (3 numbered)
+Warm, honest, practical. Max 200 words.` }];
     }
-
-    // ── NEW: EXPLAIN THIS COIN ────────────────────────────────────────────────
     else if (mode === "explain") {
       messages = [{ role:"user", content:
-        `You are a crypto educator explaining coins to everyday Indian investors in simple language.
-
-Explain "${coinName}" in a way that a non-technical person can understand easily.
-
-Format EXACTLY (use emojis, keep it fun and simple):
-
-🪙 Kya Hai Yeh?
-[1-2 sentences: what this coin/project actually does in plain language — no jargon]
-
-🎯 Problem Solve Karta Hai:
-[What real-world problem it solves — relate to something Indians understand]
-
-⚡ Kaise Kaam Karta Hai:
-[Simple 2-3 line explanation, like explaining to a friend]
-
-💰 Investment Angle:
-[Why people invest — what's the potential and what's the risk — be honest]
-
-🌍 Kaun Use Karta Hai:
-[Who uses it, any big companies/partnerships, adoption]
-
-⭐ Rating: [X/10 — with one honest line about overall quality]
-
-Keep entire response under 200 words. No technical jargon. Friendly tone. Hindi words OK.` }];
+        `Crypto educator explaining to everyday Indian investors.
+Explain "${coinName}" simply.
+Format EXACTLY:
+🪙 Kya Hai Yeh? [1-2 sentences plain language]
+🎯 Problem Solve Karta Hai: [real-world problem]
+⚡ Kaise Kaam Karta Hai: [2-3 lines simple]
+💰 Investment Angle: [potential + risk honestly]
+🌍 Kaun Use Karta Hai: [users/partnerships]
+⭐ Rating: [X/10 with one honest line]
+Under 200 words. No jargon. Friendly tone.` }];
     }
-
-    // ── NEW: NEWS IMPACT ENGINE ───────────────────────────────────────────────
     else if (mode === "news_impact") {
       messages = [{ role:"user", content:
-        `You are a crypto market analyst. Analyze these recent crypto news headlines and tell their market impact.
-
-News Headlines:
-${newsHeadlines}
-
-${coinName ? `Focus especially on impact for: ${coinName}` : "Give general crypto market impact."}
-
-Format EXACTLY:
-
-📰 Top Impact News:
-[Pick the 2-3 most market-moving news items briefly]
-
-📈 Market Sentiment: [Bullish / Bearish / Neutral] — Confidence: [X%]
-
-⚡ Short-term Impact (24-72 hours):
-[What might happen in next few days]
-
-📅 Long-term Impact (1-4 weeks):
-[Broader trend implications]
-
-🪙 Coins Most Affected:
-[List 3-5 coins that would be most impacted and why]
-
-⚠️ Risk Factor:
-[One key risk to watch out for]
-
-Be specific and data-driven. No hype. Max 200 words.` }];
+        `Crypto market analyst. Analyze news headlines for market impact.
+Headlines: ${newsHeadlines}
+${coinName ? `Focus on: ${coinName}` : "General market."}
+Format: 📰 Top Impact News: | 📈 Market Sentiment: [Bullish/Bearish/Neutral] — Confidence: X% | ⚡ Short-term (24-72h): | 📅 Long-term (1-4 weeks): | 🪙 Coins Most Affected: | ⚠️ Risk Factor:
+Max 200 words.` }];
     }
-
-    // ── NEW: SCAM AI (detailed) ───────────────────────────────────────────────
     else if (mode === "scam_ai") {
       const d = scamData;
       messages = [{ role:"user", content:
-        `You are a crypto security expert and scam detector. Analyze this token for scam probability.
+        `Crypto security expert. Analyze token for scam probability.
+Token: ${d.name} (${d.symbol}) | Price: ${d.price} | MCap: ${d.marketCap}
+24h: ${d.ch24}% | 7d: ${d.ch7d}% | Volume: ${d.volume} | Vol/MCap: ${d.volMcapRatio}
+RSI: ${d.rsi} | Red Flags: ${d.flags.join(", ")||"None"}
+Format: 🛡️ Scam Risk Score: [X/100] — [LOW/MEDIUM/HIGH/VERY HIGH] | 🔍 Risk Factors: | ✅ Positive Signals: | 🚨 Key Warning: | 💡 Verdict:
+Max 180 words.` }];
+    }
 
-Token: ${d.name} (${d.symbol})
-Price: ${d.price} | Market Cap: ${d.marketCap}
-24h Change: ${d.ch24}% | 7d Change: ${d.ch7d}%
-24h Volume: ${d.volume} | Volume/MCap Ratio: ${d.volMcapRatio}
-RSI: ${d.rsi} | Age: ${d.age || "Unknown"}
-Red Flags Found: ${d.flags.join(", ") || "None detected"}
+    // ── NEW: IQ TEST SCORING ──────────────────────────────────────────────────
+    else if (mode === "iq_test") {
+      const ans = iqAnswers;
+      messages = [{ role:"user", content:
+        `You are a crypto psychology expert analyzing a trader's quiz results.
 
-Based on these metrics, provide a scam risk assessment:
+Quiz Answers:
+${ans.map((a,i)=>`Q${i+1}: "${a.question}" → User answered: "${a.answer}" (Correct: ${a.correct||"N/A"}, Behavior flag: ${a.behaviorFlag||"none"})`).join("\n")}
+
+Analyze their knowledge AND behavior patterns. Give result in EXACTLY this format:
+
+🧠 Crypto IQ Score: [X/100]
+🎭 Trader Type: [Creative name like "Anxious Accumulator" or "FOMO Fighter" or "Diamond Hand Beginner"]
+📊 Knowledge Level: [Beginner/Intermediate/Advanced]
+🎯 Behavior Pattern: [1 sentence about their psychological trading tendency]
+
+💪 Your Strengths:
+- [strength 1]
+- [strength 2]
+
+⚠️ Your Weaknesses:
+- [weakness 1]
+- [weakness 2]
+
+🎯 Perfect Strategy For YOU:
+[3 specific personalized tips based on their answers]
+
+🏆 Badge: "[Creative badge name]" [relevant emoji]
+
+Compare: [Famous investor/trader with similar style]
+
+Keep it fun, specific, and shareable. Max 250 words.` }];
+    }
+
+    // ── NEW: PORTFOLIO HEALTH CHECKUP ─────────────────────────────────────────
+    else if (mode === "health_checkup") {
+      messages = [{ role:"user", content:
+        `You are Dr. YYP AI — a crypto portfolio doctor for Indian investors.
+
+Patient's Portfolio:
+${portfolio.map(p=>`${p.coin}: ${p.currency==="INR"?"₹":"$"}${p.amount} invested`).join("\n")}
+Total invested: ${portfolio[0]?.currency==="INR"?"₹":"$"}${portfolio.reduce((s,p)=>s+parseFloat(p.amount||0),0).toLocaleString()}
+Check frequency: ${portfolio[0]?.checkFreq||"Unknown"} times/day
+
+Give a DOCTOR-STYLE health report in EXACTLY this format:
+
+🏥 PORTFOLIO HEALTH REPORT
+Patient: Anonymous Investor
+Doctor: Dr. YYP AI, MD (Market Dynamics)
+━━━━━━━━━━━━━━━━━━
+
+✅ HEALTHY:
+[List what's good]
+
+⚠️ WARNING SIGNS:
+[List moderate concerns]
+
+🚨 CRITICAL:
+[List serious issues if any]
+
+💊 PRESCRIPTION:
+1. [Action 1]
+2. [Action 2]
+3. [Action 3]
+
+📊 OVERALL HEALTH GRADE: [A/B/C/D/F] — [tagline]
+
+🔄 Next Checkup: [timeframe recommendation]
+━━━━━━━━━━━━━━━━━━
+Signed: Dr. YYP AI, MD
+
+Be specific, honest, practical. Use Indian context. Max 300 words.` }];
+    }
+
+    // ── NEW: DESI NETWORK INSIGHT ─────────────────────────────────────────────
+    else if (mode === "desi_network") {
+      messages = [{ role:"user", content:
+        `You are a crypto market analyst specializing in Indian and NRI investor behavior.
+
+Current market data for ${networkCoin||"BTC"}:
+${body.marketData||"No specific data"}
+
+Analyze NRI and Indian crypto investment patterns for this coin.
 
 Format EXACTLY:
+🌍 GLOBAL DESI NETWORK ANALYSIS — ${networkCoin||"BTC"}
 
-🛡️ Scam Risk Score: [X/100] — [LOW/MEDIUM/HIGH/VERY HIGH]
+🇮🇳 India Pattern:
+[What Indian investors are typically doing with this coin]
 
-🔍 Risk Factors Found:
-[List specific concerning patterns you see in the data]
+✈️ NRI Hotspots:
+[USA/Dubai/UK NRI behavior patterns — based on typical patterns]
 
-✅ Positive Signals:
-[List anything that looks legitimate]
+📊 Desi Volume Insight:
+[When Indians typically buy/sell this — time patterns]
 
-🚨 Key Warning:
-[Most important thing investor should know — 1 sentence]
+🔔 Current Signal:
+[Based on typical patterns, what's the likely India sentiment]
 
-💡 Verdict:
-[Final honest recommendation — 1-2 sentences]
+💡 Insight For You:
+[1-2 actionable insights based on Desi network patterns]
 
-Be direct and honest. Warn strongly if suspicious. Max 180 words.` }];
+⚠️ Note: Based on historical patterns — not guaranteed.
+Max 200 words. Keep it insightful and specific.` }];
     }
+
+    const maxTokens = {
+      screenshot: 600, explain: 500, news_impact: 500, scam_ai: 450,
+      iq_test: 600, health_checkup: 600, desi_network: 400,
+    }[mode] || 400;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -187,20 +205,17 @@ Be direct and honest. Warn strongly if suspicious. Max 180 words.` }];
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: mode === "screenshot" ? 600 : mode === "explain" ? 500 : mode === "news_impact" ? 500 : mode === "scam_ai" ? 450 : 400,
+        max_tokens: maxTokens,
         messages,
       }),
     });
 
     if (!response.ok) throw new Error("API failed");
     const data = await response.json();
-    const text = data.content?.[0]?.text || "Analysis complete. Always DYOR.";
-    return NextResponse.json({ text });
+    return NextResponse.json({ text: data.content?.[0]?.text || "Analysis complete." });
 
   } catch (err) {
     console.error(err);
-    return NextResponse.json({
-      text: "📊 Analysis could not be completed right now.\n⚠️ Please try again in a moment.",
-    });
+    return NextResponse.json({ text: "📊 Analysis could not be completed.\n⚠️ Please try again in a moment." });
   }
 }
