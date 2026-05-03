@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
+// MUST be dynamic — never static generate this route
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 // ── INDICATORS ────────────────────────────────────────────────────────────────
 function calcRSI(prices, period = 14) {
   if (prices.length < period + 1) return null;
@@ -23,7 +27,7 @@ function calcMA(prices, n) {
   return prices.slice(-n).reduce((a, b) => a + b, 0) / n;
 }
 
-function scorecoin({ rsi, price, ma50, ma200, ch24, ch7d }) {
+function scoreCoin({ rsi, price, ma50, ma200, ch24, ch7d }) {
   let score = 50;
   if (rsi !== null) {
     if      (rsi < 30) score += 22;
@@ -33,9 +37,9 @@ function scorecoin({ rsi, price, ma50, ma200, ch24, ch7d }) {
   }
   if (ma50  !== null) score += price > ma50  ? 12 : -12;
   if (ma200 !== null) score += price > ma200 ? 10 : -10;
-  if (ch24 > 3)   score += 5;
+  if (ch24 > 3)    score += 5;
   else if (ch24 < -4) score -= 8;
-  if (ch7d > 8)   score += 6;
+  if (ch7d > 8)    score += 6;
   else if (ch7d < -12) score -= 8;
   return Math.max(0, Math.min(100, Math.round(score)));
 }
@@ -45,22 +49,21 @@ const fmt = (n) =>
     ? "$" + n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     : "$" + n.toPrecision(4);
 
-// Top coins to scan (handpicked liquid coins)
 const SCAN_LIST = [
   "BTC","ETH","SOL","BNB","XRP","ADA","AVAX","DOT","LINK","MATIC",
-  "APT","SUI","INJ","ARB","OP","NEAR","FTM","ATOM","UNI","LTC",
-  "DOGE","TRX","TON","AAVE","MKR",
+  "APT","SUI","INJ","ARB","OP","NEAR","ATOM","UNI","LTC","DOGE",
+  "TRX","TON","AAVE","MKR","FTM",
 ];
 
 const FULL_NAME = {
   BTC:"Bitcoin",ETH:"Ethereum",SOL:"Solana",BNB:"BNB",XRP:"XRP",
   ADA:"Cardano",AVAX:"Avalanche",DOT:"Polkadot",LINK:"Chainlink",MATIC:"Polygon",
   APT:"Aptos",SUI:"Sui",INJ:"Injective",ARB:"Arbitrum",OP:"Optimism",
-  NEAR:"NEAR",FTM:"Fantom",ATOM:"Cosmos",UNI:"Uniswap",LTC:"Litecoin",
-  DOGE:"Dogecoin",TRX:"TRON",TON:"Toncoin",AAVE:"Aave",MKR:"Maker",
+  NEAR:"NEAR",ATOM:"Cosmos",UNI:"Uniswap",LTC:"Litecoin",DOGE:"Dogecoin",
+  TRX:"TRON",TON:"Toncoin",AAVE:"Aave",MKR:"Maker",FTM:"Fantom",
 };
 
-// Cache: refresh every 10 minutes
+// 10-minute cache
 let cache = { data: null, ts: 0 };
 
 export async function GET() {
@@ -70,25 +73,31 @@ export async function GET() {
   }
 
   try {
-    // Fetch all 24h tickers in one call
-    const tickRes = await fetch("https://api.binance.com/api/v3/ticker/24hr");
-    if (!tickRes.ok) throw new Error("Binance ticker failed");
+    // Fetch all 24h tickers
+    const tickRes = await fetch("https://api.binance.com/api/v3/ticker/24hr", {
+      headers: { "Accept": "application/json" },
+    });
+
+    if (!tickRes.ok) {
+      // Return empty gracefully — do NOT throw
+      return NextResponse.json({ coins: [], updatedAt: new Date().toISOString() });
+    }
+
     const allTickers = await tickRes.json();
 
-    // Build a map: symbol → ticker
+    // Build map
     const tickerMap = {};
     for (const t of allTickers) {
       if (t.symbol.endsWith("USDT")) {
-        const sym = t.symbol.replace("USDT", "");
-        tickerMap[sym] = t;
+        tickerMap[t.symbol.replace("USDT", "")] = t;
       }
     }
 
-    // Fetch klines for all scan coins in parallel
+    // Fetch klines for scan list in parallel
     const klineResults = await Promise.allSettled(
       SCAN_LIST.map((sym) =>
         fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1d&limit=210`)
-          .then(r => r.ok ? r.json() : [])
+          .then((r) => (r.ok ? r.json() : []))
           .catch(() => [])
       )
     );
@@ -101,59 +110,52 @@ export async function GET() {
       if (!ticker) continue;
 
       const klines = klineResults[i].status === "fulfilled" ? klineResults[i].value : [];
-      const closes = klines.map(k => parseFloat(k[4]));
+      const closes = Array.isArray(klines) ? klines.map((k) => parseFloat(k[4])) : [];
 
       const price = parseFloat(ticker.lastPrice);
       const ch24  = parseFloat(ticker.priceChangePercent);
       const vol   = parseFloat(ticker.quoteVolume);
 
       const ch7d = closes.length >= 8
-        ? ((closes[closes.length-1] - closes[closes.length-8]) / closes[closes.length-8]) * 100
+        ? ((closes[closes.length - 1] - closes[closes.length - 8]) / closes[closes.length - 8]) * 100
         : ch24;
 
       const rsi   = closes.length > 15  ? calcRSI(closes)     : null;
       const ma50  = closes.length >= 50  ? calcMA(closes, 50)  : null;
       const ma200 = closes.length >= 200 ? calcMA(closes, 200) : null;
 
-      const score = scorecoin({ rsi, price, ma50, ma200, ch24, ch7d });
-
-      // Only include coins with bullish score
+      const score = scoreCoin({ rsi, price, ma50, ma200, ch24, ch7d });
       if (score < 55) continue;
 
       const risk = Math.abs(ch7d) > 20 ? "High" : Math.abs(ch7d) > 10 ? "Medium" : "Low";
-      const rsiNum = rsi ? rsi.toFixed(1) : "—";
 
       scored.push({
         symbol: sym,
         name:   FULL_NAME[sym] || sym,
         price:  fmt(price),
-        rawPrice: price,
         ch24:   ch24.toFixed(2),
         ch7d:   ch7d.toFixed(2),
         score,
         risk,
-        rsi:    rsiNum,
-        ma50:   ma50 ? fmt(ma50) : "—",
+        rsi:    rsi ? rsi.toFixed(1) : "—",
         volume: vol,
-        aboveMa50:  ma50  ? price > ma50  : false,
-        aboveMa200: ma200 ? price > ma200 : false,
-        image: `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`,
-        signal: score >= 72 ? "STRONG BUY" : score >= 62 ? "BUY" : "WATCH",
-        signalColor: score >= 72 ? "#059669" : score >= 62 ? "#10b981" : "#d97706",
-        signalBg:    score >= 72 ? "#ecfdf5"  : score >= 62 ? "#f0fdf4"  : "#fffbeb",
+        image:  `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`,
+        signal:      score >= 72 ? "STRONG BUY" : score >= 62 ? "BUY" : "WATCH",
+        signalColor: score >= 72 ? "#059669"     : score >= 62 ? "#10b981" : "#d97706",
+        signalBg:    score >= 72 ? "#ecfdf5"     : score >= 62 ? "#f0fdf4" : "#fffbeb",
       });
     }
 
-    // Sort by score desc, take top 5
     scored.sort((a, b) => b.score - a.score);
     const top5 = scored.slice(0, 5);
-
     const result = { coins: top5, updatedAt: new Date().toISOString() };
-    cache = { data: result, ts: now };
 
+    cache = { data: result, ts: now };
     return NextResponse.json(result);
+
   } catch (err) {
-    console.error(err);
+    console.error("Top5 error:", err);
+    // Always return valid JSON — never crash build
     return NextResponse.json({ coins: [], updatedAt: new Date().toISOString() });
   }
 }
