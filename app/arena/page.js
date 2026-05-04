@@ -32,18 +32,42 @@ const LEADERBOARD = [
 ];
 
 export default function ArenaPage() {
-  const [prices, setPrices]         = useState(FALLBACK); // Start with fallback prices
-  const [priceStatus, setPriceStatus] = useState("loading"); // loading | live | fallback
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [cash, setCash]             = useState(START_CASH);
-  const [holdings, setHoldings]     = useState({});
-  const [trades, setTrades]         = useState([]);
-  const [started, setStarted]       = useState(false);
-  const [selCoin, setSelCoin]       = useState("BTC");
-  const [tradeAmt, setTradeAmt]     = useState("");
-  const [tradeType, setTradeType]   = useState("buy");
-  const [tradeMsg, setTradeMsg]     = useState(null);
-  const [activeTab, setActiveTab]   = useState("trade");
+  const [prices, setPrices]           = useState(FALLBACK);
+  const [priceStatus, setPriceStatus] = useState("loading");
+  const [lastUpdate, setLastUpdate]   = useState(null);
+  const [cash, setCash]               = useState(START_CASH);
+  const [holdings, setHoldings]       = useState({});
+  const [trades, setTrades]           = useState([]);
+  const [started, setStarted]         = useState(false);
+  const [selCoin, setSelCoin]         = useState("BTC");
+  const [tradeAmt, setTradeAmt]       = useState("");
+  const [tradeType, setTradeType]     = useState("buy");
+  const [tradeMsg, setTradeMsg]       = useState(null);
+  const [activeTab, setActiveTab]     = useState("trade");
+  const [hydrated, setHydrated]       = useState(false);
+
+  // ── LOAD from localStorage on mount ──────────────────────────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("arena_data");
+      if (saved) {
+        const d = JSON.parse(saved);
+        if (d.cash !== undefined) setCash(d.cash);
+        if (d.holdings)           setHoldings(d.holdings);
+        if (d.trades)             setTrades(d.trades);
+        if (d.started)            setStarted(true);
+      }
+    } catch(_) {}
+    setHydrated(true);
+  }, []);
+
+  // ── SAVE to localStorage whenever data changes ────────────────────────────
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem("arena_data", JSON.stringify({ cash, holdings, trades, started: true }));
+    } catch(_) {}
+  }, [cash, holdings, trades, hydrated]);
   const intervalRef = useRef(null);
 
   // ── FETCH PRICES ──────────────────────────────────────────────────────────
@@ -145,8 +169,10 @@ export default function ArenaPage() {
       setCash(p => p - amt);
       setHoldings(p => ({ ...p, [selCoin]: (p[selCoin]||0) + qty }));
       setTrades(p => [{ type:"BUY", coin:selCoin, amt, qty, price:coinPrice,
-        time:new Date().toLocaleTimeString("en-IN"), id:Date.now() }, ...p]);
-      setTradeMsg({ type:"success", text:`✅ ${qty.toFixed(6)} ${selCoin} kharida ${fmtINR(amt)} mein!` });
+        time:new Date().toLocaleTimeString("en-IN"), id:Date.now(),
+        currentValue: amt  // will update with live price
+      }, ...p]);
+      setTradeMsg({ type:"success", text:`✅ ${qty.toFixed(6)} ${selCoin} kharida!\n💰 Invest kiya: ${fmtINR(amt)} @ ${fmtUSD(coinPrice)}` });
     } else {
       const myQty = holdings[selCoin] || 0;
       if (myQty <= 0.000001) {
@@ -167,6 +193,7 @@ export default function ArenaPage() {
 
   const resetArena = () => {
     setCash(START_CASH); setHoldings({}); setTrades([]);
+    try { localStorage.removeItem("arena_data"); } catch(_) {}
     setTradeMsg({ type:"success", text:"🎮 Reset! Fresh ₹1,00,000 se shuru karo." });
     setTimeout(()=>setTradeMsg(null),3000);
   };
@@ -212,7 +239,7 @@ export default function ArenaPage() {
               ⚠️ Yeh virtual trading hai — real money nahi lagti.<br/>
               Real crypto mein invest karne se pehle yahaan practice karo.
             </div>
-            <button onClick={()=>setStarted(true)}
+            <button onClick={()=>{ setStarted(true); try{localStorage.setItem("arena_data", JSON.stringify({cash:START_CASH,holdings:{},trades:[],started:true}));}catch(_){} }}
               style={{background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:16,padding:"16px 40px",fontWeight:800,fontSize:16,cursor:"pointer",fontFamily:"'Inter',sans-serif",boxShadow:"0 4px 24px rgba(16,185,129,.4)"}}>
               🚀 Enter Arena — Start with ₹1,00,000
             </button>
@@ -440,16 +467,36 @@ export default function ArenaPage() {
               ):(
                 <div>
                   {Object.entries(holdings).filter(([,qty])=>qty>0.000001).map(([coin,qty])=>{
-                    const p=prices[coin]?.price||FALLBACK[coin]||0;
-                    const val=qty*p;
-                    const pct=totalValue>0?(val/totalValue*100).toFixed(1):"0";
+                    const livePrice = prices[coin]?.price || FALLBACK[coin] || 0;
+                    const currentVal = qty * livePrice;
+                    // Calculate cost basis from BUY trades
+                    const buys = trades.filter(t=>t.type==="BUY"&&t.coin===coin);
+                    const totalCost = buys.reduce((s,t)=>s+t.amt,0);
+                    const pnl = currentVal - totalCost;
+                    const pnlPctCoin = totalCost > 0 ? ((pnl/totalCost)*100).toFixed(2) : "0.00";
+                    const pct = totalValue>0?(currentVal/totalValue*100).toFixed(1):"0";
                     return(
                       <div key={coin} style={{background:"#f8fafc",border:`1px solid ${T.border}`,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
-                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
-                          <div><span className="mono" style={{fontWeight:800,fontSize:14}}>{coin}</span><span className="mono" style={{fontSize:9,color:T.text3,marginLeft:8}}>{qty.toFixed(6)}</span></div>
-                          <div style={{textAlign:"right"}}><div className="mono" style={{fontWeight:700,fontSize:13}}>{fmtINR(val)}</div><div style={{fontSize:10,color:T.text3}}>{pct}%</div></div>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:8}}>
+                          <div>
+                            <span className="mono" style={{fontWeight:800,fontSize:15}}>{coin}</span>
+                            <span className="mono" style={{fontSize:9,color:T.text3,marginLeft:8}}>{qty.toFixed(6)} units</span>
+                          </div>
+                          <div style={{textAlign:"right"}}>
+                            <div className="mono" style={{fontWeight:700,fontSize:14}}>{fmtINR(currentVal)}</div>
+                            <div style={{fontSize:10,color:T.text3}}>{pct}% of portfolio</div>
+                          </div>
                         </div>
-                        <div style={{height:4,background:T.border,borderRadius:2}}><div style={{width:`${pct}%`,height:"100%",background:"linear-gradient(90deg,#10b981,#059669)",borderRadius:2}}/></div>
+                        {/* P&L Row */}
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:pnl>=0?"#f0fdf4":"#fef2f2",borderRadius:8,padding:"6px 10px"}}>
+                          <div style={{fontSize:11,color:T.text3}}>Cost: {fmtINR(totalCost)}</div>
+                          <div style={{fontSize:12,fontWeight:700,color:pnl>=0?T.greenDk:"#dc2626"}}>
+                            {pnl>=0?"▲ +":"-"}{fmtINR(Math.abs(pnl))} ({pnl>=0?"+":""}{pnlPctCoin}%)
+                          </div>
+                        </div>
+                        <div style={{height:4,background:T.border,borderRadius:2,marginTop:8}}>
+                          <div style={{width:`${pct}%`,height:"100%",background:"linear-gradient(90deg,#10b981,#059669)",borderRadius:2}}/>
+                        </div>
                       </div>
                     );
                   })}
