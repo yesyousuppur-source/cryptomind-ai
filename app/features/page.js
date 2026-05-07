@@ -1121,7 +1121,8 @@ export default function FeaturesPage() {
           </div>
         )}
 
-
+        {/* Footer */}
+        <div style={{ textAlign:"center", marginTop:24 }}>
           <Link href="/arena" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"linear-gradient(135deg,#10b981,#059669)", color:"#fff", textDecoration:"none", borderRadius:14, padding:"13px 28px", fontWeight:700, fontSize:14, boxShadow:"0 4px 20px rgba(16,185,129,.4)", marginBottom:14 }}>
             🏟️ Virtual Trading Arena →
           </Link>
