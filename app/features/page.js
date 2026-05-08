@@ -911,6 +911,62 @@ export default function FeaturesPage() {
               <p style={{ fontSize:13, color:T.text2 }}>Apna exchange chuno → CSV upload karo → 1 click tax dekho</p>
             </div>
 
+            {/* ── TAX CARD PREVIEW (before upload) ── */}
+            {!taxExchange && !taxData && (
+              <div style={{ marginBottom:20 }}>
+                <div style={{ fontSize:11, color:T.text3, fontWeight:700, letterSpacing:1.5, marginBottom:10, textAlign:"center" }}>
+                  👇 CSV UPLOAD KE BAAD AISA DIKHEGA
+                </div>
+                {/* Preview Card */}
+                <div style={{ background:"linear-gradient(135deg,#0f172a,#1e293b)", borderRadius:24, padding:"20px", position:"relative", overflow:"hidden", opacity:0.85 }}>
+                  {/* Blur overlay */}
+                  <div style={{ position:"absolute", inset:0, backdropFilter:"blur(2px)", zIndex:1, background:"rgba(15,23,42,0.3)", display:"flex", alignItems:"center", justifyContent:"center", borderRadius:24 }}>
+                    <div style={{ background:"rgba(16,185,129,.9)", borderRadius:20, padding:"8px 20px", fontSize:12, fontWeight:800, color:"#fff", letterSpacing:1 }}>
+                      🔒 CSV Upload Karo — Unlock Hoga
+                    </div>
+                  </div>
+                  <div style={{ position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:"rgba(16,185,129,.08)" }}/>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
+                    <div>
+                      <div style={{ fontSize:9, color:"#64748b", letterSpacing:2 }}>CRYPTO TAX CARD</div>
+                      <div style={{ fontSize:10, color:"#475569", marginTop:2 }}>Exchange · XX trades</div>
+                    </div>
+                    <div style={{ background:"linear-gradient(135deg,#10b981,#059669)", borderRadius:8, padding:"3px 10px", fontSize:10, fontWeight:700, color:"#fff" }}>YYP</div>
+                  </div>
+                  <div style={{ marginBottom:16 }}>
+                    <div style={{ fontSize:10, color:"#475569", marginBottom:4 }}>TOTAL TAX DUE</div>
+                    <div style={{ fontSize:40, fontWeight:900, color:"#f59e0b", lineHeight:1 }}>₹ **,***</div>
+                    <div style={{ marginTop:8, background:"rgba(255,255,255,.1)", borderRadius:100, height:8, overflow:"hidden" }}>
+                      <div style={{ height:"100%", width:"65%", background:"linear-gradient(90deg,#f59e0b,#d97706)", borderRadius:100 }}/>
+                    </div>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginTop:3, fontSize:8, color:"#475569" }}>
+                      <span>LOW</span><span>MEDIUM</span><span>HIGH</span>
+                    </div>
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:14 }}>
+                    {["Total Profit","Total Loss","TDS Paid"].map((l,i)=>(
+                      <div key={i} style={{ background:"rgba(255,255,255,.06)", borderRadius:10, padding:"8px", textAlign:"center" }}>
+                        <div style={{ fontSize:8, color:"#475569" }}>{l}</div>
+                        <div style={{ fontSize:11, fontWeight:700, color:["#10b981","#ef4444","#f59e0b"][i] }}>₹ **,***</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:12 }}>
+                    <div style={{ fontSize:9, color:"#475569", marginBottom:8, letterSpacing:1 }}>YEAR BREAKDOWN</div>
+                    {["FY 2022-23","FY 2023-24","FY 2024-25","FY 2025-26"].map((fy,i)=>(
+                      <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                        <span style={{ fontSize:11, color:"#94a3b8" }}>{fy}</span>
+                        <div style={{ display:"flex", gap:8 }}>
+                          <span style={{ fontSize:11, color:"#f87171" }}>₹ **,***</span>
+                          <span style={{ fontSize:9, color:"#475569" }}>{["✅ Filed","⚠️ Due","⏳ File karo","⏳ Upcoming"][i]}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ── EXCHANGE SELECTOR ── */}
             {!taxExchange && (
               <div>
@@ -920,23 +976,28 @@ export default function FeaturesPage() {
                 <div style={{ fontSize:10, color:T.text3, fontWeight:700, letterSpacing:1.5, marginBottom:8 }}>🇮🇳 INDIAN EXCHANGES</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
                   {[
-                    {id:"coindcx",    name:"CoinDCX",      icon:"🔵", color:"#1a56db"},
-                    {id:"wazirx",     name:"WazirX",        icon:"🟠", color:"#f97316"},
-                    {id:"coinswitch", name:"CoinSwitch",    icon:"🟣", color:"#7c3aed"},
-                    {id:"zebpay",     name:"ZebPay",         icon:"🔴", color:"#dc2626"},
-                    {id:"unocoin",    name:"Unocoin",        icon:"🟡", color:"#d97706"},
-                    {id:"mudrex",     name:"Mudrex",         icon:"🟢", color:"#059669"},
-                    {id:"bitbns",     name:"BitBNS",         icon:"⚫", color:"#374151"},
-                    {id:"delta",      name:"Delta Exchange", icon:"🔷", color:"#2563eb"},
+                    {id:"coindcx",    name:"CoinDCX",      logo:"https://coindcx.com/favicon.ico",                    color:"#1a56db", bg:"#eff6ff"},
+                    {id:"wazirx",     name:"WazirX",        logo:"https://wazirx.com/favicon.ico",                     color:"#f97316", bg:"#fff7ed"},
+                    {id:"coinswitch", name:"CoinSwitch",    logo:"https://coinswitch.co/favicon.ico",                  color:"#7c3aed", bg:"#f5f3ff"},
+                    {id:"zebpay",     name:"ZebPay",         logo:"https://zebpay.com/favicon.ico",                     color:"#dc2626", bg:"#fef2f2"},
+                    {id:"unocoin",    name:"Unocoin",        logo:"https://unocoin.com/favicon.ico",                    color:"#d97706", bg:"#fffbeb"},
+                    {id:"mudrex",     name:"Mudrex",         logo:"https://mudrex.com/favicon.ico",                     color:"#059669", bg:"#ecfdf5"},
+                    {id:"bitbns",     name:"BitBNS",         logo:"https://bitbns.com/favicon.ico",                     color:"#374151", bg:"#f9fafb"},
+                    {id:"delta",      name:"Delta Exchange", logo:"https://www.delta.exchange/favicon.ico",             color:"#2563eb", bg:"#eff6ff"},
                   ].map(ex=>(
                     <button key={ex.id} onClick={()=>setTaxExchange(ex)}
-                      style={{ background:"#fff", border:`2px solid ${T.border}`, borderRadius:14, padding:"12px 10px", cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:10, transition:"all .2s", fontFamily:"'Inter',sans-serif" }}
-                      onMouseEnter={e=>{e.currentTarget.style.borderColor=ex.color;e.currentTarget.style.background="#f8fafc";}}
-                      onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background="#fff";}}>
-                      <span style={{ fontSize:24 }}>{ex.icon}</span>
+                      style={{ background:"#fff", border:`2px solid ${T.border}`, borderRadius:16, padding:"12px 10px", cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:10, transition:"all .2s", fontFamily:"'Inter',sans-serif", boxShadow:"0 2px 8px rgba(0,0,0,.04)" }}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor=ex.color;e.currentTarget.style.background=ex.bg;e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 8px 20px ${ex.color}22`;}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background="#fff";e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.04)";}}>
+                      <img src={ex.logo} alt={ex.name}
+                        onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}
+                        style={{ width:32, height:32, borderRadius:8, objectFit:"contain", border:`1px solid ${T.border}`, padding:2, flexShrink:0 }}/>
+                      <div style={{ display:"none", width:32, height:32, borderRadius:8, background:`linear-gradient(135deg,${ex.color},${ex.color}cc)`, alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:900, color:"#fff", flexShrink:0 }}>
+                        {ex.name[0]}
+                      </div>
                       <div>
                         <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{ex.name}</div>
-                        <div style={{ fontSize:9, color:T.text3, marginTop:1 }}>CSV Guide available</div>
+                        <div style={{ fontSize:9, color:ex.color, marginTop:1, fontWeight:600 }}>📋 Guide + CSV Upload</div>
                       </div>
                     </button>
                   ))}
@@ -945,20 +1006,25 @@ export default function FeaturesPage() {
                 <div style={{ fontSize:10, color:T.text3, fontWeight:700, letterSpacing:1.5, marginBottom:8 }}>🌍 GLOBAL EXCHANGES</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
                   {[
-                    {id:"binance",  name:"Binance",   icon:"🟡", color:"#f59e0b"},
-                    {id:"kucoin",   name:"KuCoin",    icon:"🟢", color:"#10b981"},
-                    {id:"okx",      name:"OKX",       icon:"⬛", color:"#111827"},
-                    {id:"bybit",    name:"Bybit",     icon:"🟠", color:"#f97316"},
-                    {id:"coinbase", name:"Coinbase",  icon:"🔵", color:"#2563eb"},
+                    {id:"binance",  name:"Binance",   logo:"https://bin.bnbstatic.com/static/images/common/favicon.ico", color:"#f59e0b", bg:"#fffbeb"},
+                    {id:"kucoin",   name:"KuCoin",    logo:"https://assets.staticimg.com/cms/media/1lB3PkckFDyfxz6gu85anL9hZ.png", color:"#10b981", bg:"#ecfdf5"},
+                    {id:"okx",      name:"OKX",       logo:"https://static.okx.com/cdn/assets/imgs/247/58E63FEA43973EC3.png", color:"#111827", bg:"#f9fafb"},
+                    {id:"bybit",    name:"Bybit",     logo:"https://www.bybit.com/favicon.ico",   color:"#f97316", bg:"#fff7ed"},
+                    {id:"coinbase", name:"Coinbase",  logo:"https://www.coinbase.com/favicon.ico", color:"#2563eb", bg:"#eff6ff"},
                   ].map(ex=>(
                     <button key={ex.id} onClick={()=>setTaxExchange(ex)}
-                      style={{ background:"#fff", border:`2px solid ${T.border}`, borderRadius:14, padding:"12px 10px", cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:10, transition:"all .2s", fontFamily:"'Inter',sans-serif" }}
-                      onMouseEnter={e=>{e.currentTarget.style.borderColor=ex.color;e.currentTarget.style.background="#f8fafc";}}
-                      onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background="#fff";}}>
-                      <span style={{ fontSize:24 }}>{ex.icon}</span>
+                      style={{ background:"#fff", border:`2px solid ${T.border}`, borderRadius:16, padding:"12px 10px", cursor:"pointer", textAlign:"left", display:"flex", alignItems:"center", gap:10, transition:"all .2s", fontFamily:"'Inter',sans-serif", boxShadow:"0 2px 8px rgba(0,0,0,.04)" }}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor=ex.color;e.currentTarget.style.background=ex.bg;e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 8px 20px ${ex.color}22`;}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor=T.border;e.currentTarget.style.background="#fff";e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="0 2px 8px rgba(0,0,0,.04)";}}>
+                      <img src={ex.logo} alt={ex.name}
+                        onError={e=>{e.target.style.display="none";e.target.nextSibling.style.display="flex";}}
+                        style={{ width:32, height:32, borderRadius:8, objectFit:"contain", border:`1px solid ${T.border}`, padding:2, flexShrink:0 }}/>
+                      <div style={{ display:"none", width:32, height:32, borderRadius:8, background:`linear-gradient(135deg,${ex.color},${ex.color}cc)`, alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:900, color:"#fff", flexShrink:0 }}>
+                        {ex.name[0]}
+                      </div>
                       <div>
                         <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{ex.name}</div>
-                        <div style={{ fontSize:9, color:T.text3, marginTop:1 }}>CSV Guide available</div>
+                        <div style={{ fontSize:9, color:ex.color, marginTop:1, fontWeight:600 }}>📋 Guide + CSV Upload</div>
                       </div>
                     </button>
                   ))}
