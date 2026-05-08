@@ -914,55 +914,89 @@ export default function FeaturesPage() {
             {/* ── TAX CARD PREVIEW (before upload) ── */}
             {!taxExchange && !taxData && (
               <div style={{ marginBottom:20 }}>
-                <div style={{ fontSize:11, color:T.text3, fontWeight:700, letterSpacing:1.5, marginBottom:10, textAlign:"center" }}>
-                  👇 CSV UPLOAD KE BAAD AISA DIKHEGA
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
+                  <div style={{ height:1, flex:1, background:"linear-gradient(90deg,transparent,#e2e8f0)" }}/>
+                  <span style={{ fontSize:10, color:"#94a3b8", fontWeight:700, letterSpacing:1.5 }}>CSV UPLOAD KE BAAD AISA DIKHEGA</span>
+                  <div style={{ height:1, flex:1, background:"linear-gradient(90deg,#e2e8f0,transparent)" }}/>
                 </div>
-                {/* Preview Card */}
-                <div style={{ background:"linear-gradient(135deg,#0f172a,#1e293b)", borderRadius:24, padding:"20px", position:"relative", overflow:"hidden", opacity:0.85 }}>
-                  {/* Blur overlay */}
-                  <div style={{ position:"absolute", inset:0, backdropFilter:"blur(2px)", zIndex:1, background:"rgba(15,23,42,0.3)", display:"flex", alignItems:"center", justifyContent:"center", borderRadius:24 }}>
-                    <div style={{ background:"rgba(16,185,129,.9)", borderRadius:20, padding:"8px 20px", fontSize:12, fontWeight:800, color:"#fff", letterSpacing:1 }}>
-                      🔒 CSV Upload Karo — Unlock Hoga
-                    </div>
-                  </div>
+
+                {/* Preview Card — fully visible */}
+                <div style={{ background:"linear-gradient(135deg,#0f172a,#1e293b)", borderRadius:24, padding:"20px", position:"relative", overflow:"hidden", border:"2px dashed rgba(16,185,129,.3)" }}>
                   <div style={{ position:"absolute", top:-40, right:-40, width:160, height:160, borderRadius:"50%", background:"rgba(16,185,129,.08)" }}/>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:16 }}>
+                  <div style={{ position:"absolute", bottom:-30, left:-30, width:120, height:120, borderRadius:"50%", background:"rgba(245,158,11,.06)" }}/>
+
+                  {/* Sample badge */}
+                  <div style={{ position:"absolute", top:12, left:12, background:"rgba(16,185,129,.2)", border:"1px solid rgba(16,185,129,.4)", borderRadius:20, padding:"3px 10px", fontSize:9, fontWeight:700, color:"#6ee7b7", letterSpacing:1 }}>
+                    PREVIEW
+                  </div>
+
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:16, marginTop:20 }}>
                     <div>
                       <div style={{ fontSize:9, color:"#64748b", letterSpacing:2 }}>CRYPTO TAX CARD</div>
-                      <div style={{ fontSize:10, color:"#475569", marginTop:2 }}>Exchange · XX trades</div>
+                      <div style={{ fontSize:10, color:"#475569", marginTop:2 }}>CoinDCX · 47 trades</div>
                     </div>
                     <div style={{ background:"linear-gradient(135deg,#10b981,#059669)", borderRadius:8, padding:"3px 10px", fontSize:10, fontWeight:700, color:"#fff" }}>YYP</div>
                   </div>
+
+                  {/* Tax amount */}
                   <div style={{ marginBottom:16 }}>
-                    <div style={{ fontSize:10, color:"#475569", marginBottom:4 }}>TOTAL TAX DUE</div>
-                    <div style={{ fontSize:40, fontWeight:900, color:"#f59e0b", lineHeight:1 }}>₹ **,***</div>
+                    <div style={{ fontSize:10, color:"#64748b", marginBottom:4 }}>TOTAL TAX DUE (ESTIMATED)</div>
+                    <div style={{ fontSize:42, fontWeight:900, color:"#f59e0b", lineHeight:1 }}>₹26,500</div>
                     <div style={{ marginTop:8, background:"rgba(255,255,255,.1)", borderRadius:100, height:8, overflow:"hidden" }}>
-                      <div style={{ height:"100%", width:"65%", background:"linear-gradient(90deg,#f59e0b,#d97706)", borderRadius:100 }}/>
+                      <div style={{ height:"100%", width:"58%", background:"linear-gradient(90deg,#f59e0b,#d97706)", borderRadius:100 }}/>
                     </div>
-                    <div style={{ display:"flex", justifyContent:"space-between", marginTop:3, fontSize:8, color:"#475569" }}>
-                      <span>LOW</span><span>MEDIUM</span><span>HIGH</span>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginTop:3, fontSize:8, color:"#64748b" }}>
+                      <span>LOW</span><span>▲ MEDIUM</span><span>HIGH</span>
                     </div>
                   </div>
+
+                  {/* Stats */}
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:14 }}>
-                    {["Total Profit","Total Loss","TDS Paid"].map((l,i)=>(
+                    {[
+                      {l:"Total Profit", v:"₹88,300", c:"#10b981"},
+                      {l:"Total Loss",   v:"₹22,100", c:"#ef4444"},
+                      {l:"TDS Paid",     v:"₹4,400",  c:"#f59e0b"},
+                    ].map((s,i)=>(
                       <div key={i} style={{ background:"rgba(255,255,255,.06)", borderRadius:10, padding:"8px", textAlign:"center" }}>
-                        <div style={{ fontSize:8, color:"#475569" }}>{l}</div>
-                        <div style={{ fontSize:11, fontWeight:700, color:["#10b981","#ef4444","#f59e0b"][i] }}>₹ **,***</div>
+                        <div style={{ fontSize:8, color:"#64748b", marginBottom:3 }}>{s.l}</div>
+                        <div style={{ fontSize:12, fontWeight:800, color:s.c }}>{s.v}</div>
                       </div>
                     ))}
                   </div>
+
+                  {/* FY Breakdown */}
                   <div style={{ borderTop:"1px solid rgba(255,255,255,.08)", paddingTop:12 }}>
-                    <div style={{ fontSize:9, color:"#475569", marginBottom:8, letterSpacing:1 }}>YEAR BREAKDOWN</div>
-                    {["FY 2022-23","FY 2023-24","FY 2024-25","FY 2025-26"].map((fy,i)=>(
-                      <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
-                        <span style={{ fontSize:11, color:"#94a3b8" }}>{fy}</span>
-                        <div style={{ display:"flex", gap:8 }}>
-                          <span style={{ fontSize:11, color:"#f87171" }}>₹ **,***</span>
-                          <span style={{ fontSize:9, color:"#475569" }}>{["✅ Filed","⚠️ Due","⏳ File karo","⏳ Upcoming"][i]}</span>
+                    <div style={{ fontSize:9, color:"#64748b", marginBottom:8, letterSpacing:1 }}>FINANCIAL YEAR BREAKDOWN</div>
+                    {[
+                      {fy:"FY 2022-23", trades:12, tax:"₹8,000",  status:"✅ Filed"},
+                      {fy:"FY 2023-24", trades:18, tax:"₹11,500", status:"⚠️ File Karo"},
+                      {fy:"FY 2024-25", trades:14, tax:"₹7,000",  status:"⏳ Upcoming"},
+                      {fy:"FY 2025-26", trades:3,  tax:"₹0",      status:"⏳ Current"},
+                    ].map((row,i)=>(
+                      <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                          <div style={{ width:6, height:6, borderRadius:"50%", background:i===0?"#10b981":i===1?"#ef4444":"#64748b" }}/>
+                          <span style={{ fontSize:11, color:"#e2e8f0", fontWeight:600 }}>{row.fy}</span>
+                          <span style={{ fontSize:9, color:"#475569" }}>{row.trades} trades</span>
+                        </div>
+                        <div style={{ textAlign:"right" }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:i===0?"#6ee7b7":i===1?"#f87171":"#64748b" }}>{row.tax}</div>
+                          <div style={{ fontSize:9, color:"#475569" }}>{row.status}</div>
                         </div>
                       </div>
                     ))}
                   </div>
+
+                  {/* Action buttons preview */}
+                  <div style={{ display:"flex", gap:8, marginTop:14 }}>
+                    <div style={{ flex:1, background:"#25D366", borderRadius:12, padding:"10px", textAlign:"center", fontSize:12, fontWeight:700, color:"#fff", opacity:.6 }}>📱 CA Ko Share</div>
+                    <div style={{ flex:1, background:"rgba(255,255,255,.08)", borderRadius:12, padding:"10px", textAlign:"center", fontSize:12, fontWeight:700, color:"#64748b", opacity:.6 }}>🔄 Recalculate</div>
+                  </div>
+                </div>
+
+                {/* Arrow pointing down */}
+                <div style={{ textAlign:"center", marginTop:10, marginBottom:4 }}>
+                  <div style={{ fontSize:11, color:"#10b981", fontWeight:700 }}>👆 Yeh real data se dikhega — exchange chuno aur CSV upload karo!</div>
                 </div>
               </div>
             )}
