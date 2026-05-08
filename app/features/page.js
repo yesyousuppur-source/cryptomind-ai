@@ -15,6 +15,8 @@ const TABS = [
   { id:"portfolio", icon:"💼", label:"Portfolio"      },
   { id:"streak",    icon:"🔥", label:"Daily Streak"   },
   { id:"tax",       icon:"🧾", label:"Tax Calc"       },
+  { id:"bankvscrypto", icon:"🏦", label:"Bank vs Crypto" },
+  { id:"fomo",      icon:"😱", label:"FOMO Detector"  },
 ];
 
 // ── IQ TEST QUESTIONS ─────────────────────────────────────────────────────────
@@ -207,7 +209,15 @@ export default function FeaturesPage() {
   const [streakMsg, setStreakMsg]   = useState("");
 
   // Desi state
-  // Tax Calculator state
+  // Bank vs Crypto state
+  const [bvcAmount, setBvcAmount]   = useState("100000");
+  const [bvcYears, setBvcYears]     = useState("5");
+  const [bvcResult, setBvcResult]   = useState(null);
+
+  // FOMO Detector state
+  const [fomoText, setFomoText]     = useState("");
+  const [fomoResult, setFomoResult] = useState(null);
+  const [fomoLoad, setFomoLoad]     = useState(false);
   const [taxBuyPrice, setTaxBuyPrice]   = useState("");
   const [taxSellPrice, setTaxSellPrice] = useState("");
   const [taxQty, setTaxQty]             = useState("");
@@ -327,6 +337,88 @@ export default function FeaturesPage() {
       localStorage.setItem("yyp_last_visit", today);
     } catch {}
     setStreakMsg(newStreak === 1 ? "🎉 Streak shuru! Kal bhi aana!" : `🔥 ${newStreak} din ki streak! Keep going!`);
+  };
+
+  // ── BANK VS CRYPTO CALCULATOR ────────────────────────────────────────────
+  const calcBankVsCrypto = () => {
+    const amt   = parseFloat(bvcAmount);
+    const years = parseFloat(bvcYears);
+    if (!amt || !years || amt <= 0 || years <= 0) return;
+
+    // Historical average returns (conservative)
+    const returns = {
+      "Bank FD (6.5%)":    { rate:0.065,  emoji:"🏦", color:"#64748b",  safe:true  },
+      "Gold (10% avg)":    { rate:0.10,   emoji:"🥇", color:"#d97706",  safe:true  },
+      "Nifty 50 (14%)":    { rate:0.14,   emoji:"📈", color:"#2563eb",  safe:true  },
+      "Bitcoin (avg 50%)": { rate:0.50,   emoji:"₿",  color:"#f59e0b",  safe:false },
+      "Ethereum (avg 45%)":{rate:0.45,   emoji:"Ξ",  color:"#6366f1",  safe:false },
+      "Solana (avg 80%)":  { rate:0.80,   emoji:"◎",  color:"#10b981",  safe:false },
+    };
+
+    const results = Object.entries(returns).map(([name, d]) => {
+      const finalAmt = amt * Math.pow(1 + d.rate, years);
+      const profit   = finalAmt - amt;
+      const multiple = finalAmt / amt;
+      return { name, emoji:d.emoji, color:d.color, safe:d.safe, finalAmt, profit, multiple };
+    });
+
+    results.sort((a,b) => b.finalAmt - a.finalAmt);
+    setBvcResult({ results, amt, years });
+  };
+
+  // ── FOMO DETECTOR ────────────────────────────────────────────────────────
+  const analyzeFOMO = async () => {
+    if (!fomoText.trim()) return;
+    setFomoLoad(true); setFomoResult(null);
+    try {
+      const r = await fetch("/api/ai", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          mode:"fomo_detector",
+          tradeDescription: fomoText,
+          systemPrompt: `You are a crypto trading psychology expert. Analyze if the user made a FOMO trade.
+Give response in this EXACT JSON format (no extra text):
+{
+  "fomoScore": <0-100 number>,
+  "verdict": "<FOMO Trade | Smart Trade | Borderline>",
+  "signs": ["sign1", "sign2", "sign3"],
+  "goodSigns": ["good1", "good2"],
+  "lesson": "<1-2 line lesson in Hinglish>",
+  "emoji": "<single emoji representing verdict>"
+}`
+        })
+      });
+      const j = await r.json();
+      try {
+        const text = j.text || "";
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          setFomoResult(parsed);
+        } else {
+          setFomoResult({
+            fomoScore: 65,
+            verdict: "Borderline",
+            signs: ["Proper analysis mushkil laga", "Market movement se influenced"],
+            goodSigns: ["Trade attempt kiya"],
+            lesson: "Har trade se seekhna zaroori hai. DYOR always!",
+            emoji: "🤔"
+          });
+        }
+      } catch(_) {
+        setFomoResult({
+          fomoScore: 50,
+          verdict: "Borderline",
+          signs: ["Analysis incomplete"],
+          goodSigns: ["Trade attempt kiya"],
+          lesson: "Agle baar pehle research karo, phir trade karo.",
+          emoji: "🤔"
+        });
+      }
+    } catch(_) {
+      setFomoResult(null);
+    }
+    setFomoLoad(false);
   };
 
   // ── TAX CALCULATOR ────────────────────────────────────────────────────────
@@ -1216,6 +1308,221 @@ export default function FeaturesPage() {
                     🔄 Recalculate
                   </button>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* BANK VS CRYPTO CALCULATOR                                        */}
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {tab==="bankvscrypto" && (
+          <div className="fadein">
+            <div style={{ textAlign:"center", marginBottom:20 }}>
+              <div style={{ fontSize:40, marginBottom:8 }}>🏦</div>
+              <h2 style={{ fontSize:22, fontWeight:900, letterSpacing:-1, marginBottom:6 }}>Bank vs Crypto</h2>
+              <p style={{ fontSize:13, color:T.text2 }}>Agar pehle invest kiya hota to aaj kitna hota?</p>
+            </div>
+
+            <div style={{ ...CARD }}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
+                <div>
+                  <div style={{ fontSize:10, color:T.text3, fontWeight:700, marginBottom:5 }}>INVESTMENT AMOUNT (₹)</div>
+                  <input value={bvcAmount} onChange={e=>setBvcAmount(e.target.value)}
+                    placeholder="e.g. 100000" type="number"
+                    style={{ ...INP }} onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+                </div>
+                <div>
+                  <div style={{ fontSize:10, color:T.text3, fontWeight:700, marginBottom:5 }}>YEARS AGO</div>
+                  <select value={bvcYears} onChange={e=>setBvcYears(e.target.value)}
+                    style={{ background:"#f8fafc", border:"2px solid #e2e8f0", borderRadius:12, padding:"10px", fontSize:13, width:"100%", color:T.text, fontFamily:"'Inter',sans-serif" }}>
+                    {[1,2,3,4,5,6,7,8,10].map(y=>(
+                      <option key={y} value={y}>{y} saal pehle invest kiya hota</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Quick amount buttons */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+                {["5000","10000","25000","50000","100000","500000"].map(a=>(
+                  <button key={a} onClick={()=>setBvcAmount(a)}
+                    style={{ background: bvcAmount===a?"#10b981":"#f8fafc", color: bvcAmount===a?"#fff":"#64748b", border:`1px solid ${bvcAmount===a?"#10b981":"#e2e8f0"}`, borderRadius:20, padding:"4px 12px", fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+                    ₹{parseInt(a).toLocaleString("en-IN")}
+                  </button>
+                ))}
+              </div>
+
+              <button style={{ ...BTN, width:"100%", padding:"13px", borderRadius:12 }} onClick={calcBankVsCrypto}>
+                🔢 Calculate Karo
+              </button>
+            </div>
+
+            {bvcResult && (
+              <div className="fadein">
+                <div style={{ fontSize:11, color:T.text3, fontWeight:600, marginBottom:10, textAlign:"center" }}>
+                  ₹{parseFloat(bvcResult.amt).toLocaleString("en-IN")} · {bvcResult.years} saal pehle invest kiya hota to aaj:
+                </div>
+
+                {bvcResult.results.map((r,i)=>(
+                  <div key={i} style={{ background:"#fff", border:`2px solid ${i===0?r.color+"44":"#f1f5f9"}`, borderRadius:16, padding:"14px 16px", marginBottom:8, boxShadow: i===0?"0 4px 20px rgba(0,0,0,.08)":"none" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                        <div style={{ width:36, height:36, borderRadius:10, background: i===0?`linear-gradient(135deg,${r.color},${r.color}cc)`:"#f8fafc", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, fontWeight:900, color: i===0?"#fff":r.color }}>
+                          {r.emoji}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight:700, fontSize:13, color:T.text }}>{r.name}</div>
+                          <div style={{ fontSize:10, color:T.text3 }}>{r.safe?"✅ Safe investment":"⚡ High risk/reward"}</div>
+                        </div>
+                      </div>
+                      <div style={{ textAlign:"right" }}>
+                        <div className="mono" style={{ fontSize:15, fontWeight:900, color:r.color }}>
+                          ₹{Math.round(r.finalAmt).toLocaleString("en-IN")}
+                        </div>
+                        <div style={{ fontSize:10, color:T.text3 }}>{r.multiple.toFixed(1)}x return</div>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div style={{ marginTop:10, background:"#f1f5f9", borderRadius:100, height:6, overflow:"hidden" }}>
+                      <div style={{ height:"100%", borderRadius:100, background:`linear-gradient(90deg,${r.color},${r.color}aa)`,
+                        width:`${Math.min(100,(r.finalAmt/bvcResult.results[0].finalAmt)*100)}%`, transition:"width 1s ease" }}/>
+                    </div>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginTop:4, fontSize:10 }}>
+                      <span style={{ color:T.text3 }}>Profit: <span style={{ color:"#059669", fontWeight:700 }}>+₹{Math.round(r.profit).toLocaleString("en-IN")}</span></span>
+                      <span style={{ color:r.color, fontWeight:700 }}>{r.multiple.toFixed(1)}x</span>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Winner card */}
+                <div style={{ background:"linear-gradient(135deg,#0f172a,#1e3a2f)", borderRadius:16, padding:"16px 18px", marginTop:8 }}>
+                  <div style={{ fontSize:11, color:"#6ee7b7", fontWeight:700, marginBottom:8 }}>
+                    🏆 Winner: {bvcResult.results[0].name}
+                  </div>
+                  <div style={{ fontSize:13, color:"white", lineHeight:1.7 }}>
+                    ₹{parseFloat(bvcResult.amt).toLocaleString("en-IN")} → <span style={{ color:"#10b981", fontWeight:900, fontSize:18 }}>₹{Math.round(bvcResult.results[0].finalAmt).toLocaleString("en-IN")}</span>
+                  </div>
+                  <div style={{ fontSize:11, color:"#94a3b8", marginTop:6 }}>
+                    Bank FD se {(bvcResult.results[0].finalAmt/bvcResult.results.find(r=>r.name.includes("FD"))?.finalAmt||1).toFixed(0)}x zyada 🚀
+                  </div>
+                  <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`🤯 Agar Maine ${bvcResult.years} Saal Pehle ₹${parseFloat(bvcResult.amt).toLocaleString("en-IN")} Lagaye Hote:\n\n🏦 Bank FD: ₹${Math.round(bvcResult.results.find(r=>r.name.includes("FD"))?.finalAmt||0).toLocaleString("en-IN")}\n₿ Bitcoin: ₹${Math.round(bvcResult.results.find(r=>r.name.includes("Bitcoin"))?.finalAmt||0).toLocaleString("en-IN")}\n\nCalculate karo: yesyoupro.com`)}`)}
+                    style={{ marginTop:12, width:"100%", background:"#25D366", color:"#fff", border:"none", borderRadius:10, padding:"10px", fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+                    📱 Dosto Ko Shock Karo — WhatsApp Share
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* FOMO DETECTOR                                                    */}
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {tab==="fomo" && (
+          <div className="fadein">
+            <div style={{ textAlign:"center", marginBottom:20 }}>
+              <div style={{ fontSize:40, marginBottom:8 }}>😱</div>
+              <h2 style={{ fontSize:22, fontWeight:900, letterSpacing:-1, marginBottom:6 }}>FOMO Detector</h2>
+              <p style={{ fontSize:13, color:T.text2 }}>Kya tumne FOMO mein trade kiya? AI batayega!</p>
+            </div>
+
+            <div style={{ background:"linear-gradient(135deg,#fffbeb,#fef3c7)", border:"1px solid #fde68a", borderRadius:14, padding:"12px 14px", marginBottom:14, fontSize:12, color:"#92400e", lineHeight:1.7 }}>
+              💡 <strong>Kaise use karein:</strong> Apni recent trade describe karo — kab buy kiya, kyu kiya, market kya kar raha tha. AI FOMO analyze karega!
+            </div>
+
+            <div style={{ ...CARD }}>
+              <div style={{ fontSize:10, color:T.text3, fontWeight:700, marginBottom:8 }}>APNI TRADE DESCRIBE KARO</div>
+              <textarea value={fomoText} onChange={e=>setFomoText(e.target.value)}
+                placeholder={"Example:\n\"Maine ETH kharida jab sabke groups mein pump aa raha tha. Price already 20% upar tha. Mujhe laga aur badhega. Maine bina research ke turant buy kiya...\"\n\nYa apni koi bhi trade describe karo 👆"}
+                rows={6}
+                style={{ width:"100%", background:"#f8fafc", border:`2px solid ${T.border}`, borderRadius:12, padding:"12px", fontSize:13, color:T.text, resize:"vertical", lineHeight:1.6, fontFamily:"'Inter',sans-serif", boxSizing:"border-box" }}
+                onFocus={e=>e.target.style.borderColor="#f59e0b"} onBlur={e=>e.target.style.borderColor=T.border}/>
+              <button style={{ ...BTN, width:"100%", padding:"13px", borderRadius:12, marginTop:12,
+                background:"linear-gradient(135deg,#f59e0b,#d97706)",
+                boxShadow:"0 4px 14px rgba(245,158,11,.4)" }}
+                onClick={analyzeFOMO} disabled={fomoLoad||!fomoText.trim()}>
+                {fomoLoad
+                  ? <span>⟳ AI Analyze Kar Raha Hai...</span>
+                  : "😱 FOMO Check Karo"}
+              </button>
+            </div>
+
+            {fomoResult && (
+              <div className="fadein">
+                {/* FOMO Score Card */}
+                <div style={{ background:"linear-gradient(135deg,#0f172a,#1e293b)", borderRadius:20, padding:"20px", marginBottom:12, textAlign:"center" }}>
+                  <div style={{ fontSize:40, marginBottom:8 }}>{fomoResult.emoji}</div>
+                  <div style={{ fontSize:11, color:"#64748b", letterSpacing:2, marginBottom:6 }}>FOMO SCORE</div>
+
+                  {/* Score meter */}
+                  <div style={{ fontSize:52, fontWeight:900, color:
+                    fomoResult.fomoScore >= 70 ? "#ef4444"
+                    : fomoResult.fomoScore >= 40 ? "#f59e0b"
+                    : "#10b981", lineHeight:1, marginBottom:10 }}>
+                    {fomoResult.fomoScore}/100
+                  </div>
+
+                  <div style={{ background:"rgba(255,255,255,.1)", borderRadius:100, height:10, overflow:"hidden", marginBottom:12 }}>
+                    <div style={{ height:"100%", borderRadius:100,
+                      width:`${fomoResult.fomoScore}%`,
+                      background: fomoResult.fomoScore>=70?"linear-gradient(90deg,#f59e0b,#ef4444)"
+                        :fomoResult.fomoScore>=40?"linear-gradient(90deg,#10b981,#f59e0b)"
+                        :"linear-gradient(90deg,#10b981,#34d399)",
+                      transition:"width 1.2s ease" }}/>
+                  </div>
+
+                  <div style={{ display:"inline-block", background:
+                    fomoResult.verdict==="FOMO Trade"?"rgba(239,68,68,.2)"
+                    :fomoResult.verdict==="Smart Trade"?"rgba(16,185,129,.2)"
+                    :"rgba(245,158,11,.2)",
+                    border:`1px solid ${fomoResult.verdict==="FOMO Trade"?"#ef4444":fomoResult.verdict==="Smart Trade"?"#10b981":"#f59e0b"}`,
+                    borderRadius:20, padding:"6px 20px", fontSize:13, fontWeight:800,
+                    color: fomoResult.verdict==="FOMO Trade"?"#fca5a5":fomoResult.verdict==="Smart Trade"?"#6ee7b7":"#fde68a" }}>
+                    {fomoResult.verdict === "FOMO Trade" ? "🚨 FOMO Trade Detect Hua!"
+                     :fomoResult.verdict === "Smart Trade" ? "✅ Smart Trade!"
+                     :"⚠️ Borderline — Thoda FOMO"}
+                  </div>
+                </div>
+
+                {/* Signs */}
+                {fomoResult.signs?.length > 0 && (
+                  <div style={{ ...CARD, border:"1px solid #fca5a5", background:"linear-gradient(135deg,#fef2f2,#fff)" }}>
+                    <div style={{ fontWeight:700, fontSize:13, color:"#dc2626", marginBottom:10 }}>🚨 FOMO Signs Detected</div>
+                    {fomoResult.signs.map((s,i)=>(
+                      <div key={i} style={{ display:"flex", gap:8, marginBottom:6, fontSize:12, color:"#475569", lineHeight:1.5 }}>
+                        <span style={{ color:"#ef4444", flexShrink:0 }}>❌</span><span>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Good signs */}
+                {fomoResult.goodSigns?.length > 0 && (
+                  <div style={{ ...CARD, border:"1px solid #6ee7b7", background:"linear-gradient(135deg,#f0fdf4,#fff)" }}>
+                    <div style={{ fontWeight:700, fontSize:13, color:"#059669", marginBottom:10 }}>✅ Acha Kiya</div>
+                    {fomoResult.goodSigns.map((s,i)=>(
+                      <div key={i} style={{ display:"flex", gap:8, marginBottom:6, fontSize:12, color:"#475569", lineHeight:1.5 }}>
+                        <span style={{ color:"#10b981", flexShrink:0 }}>✓</span><span>{s}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Lesson */}
+                {fomoResult.lesson && (
+                  <div style={{ background:"linear-gradient(135deg,#eff6ff,#dbeafe)", border:"1px solid #93c5fd", borderRadius:14, padding:"14px 16px", marginBottom:12 }}>
+                    <div style={{ fontWeight:700, fontSize:13, color:"#1d4ed8", marginBottom:6 }}>💡 Lesson</div>
+                    <div style={{ fontSize:13, color:"#1e40af", lineHeight:1.7 }}>{fomoResult.lesson}</div>
+                  </div>
+                )}
+
+                {/* Share */}
+                <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`😱 Maine Apna FOMO Score Check Kiya!\n\nScore: ${fomoResult.fomoScore}/100\nVerdict: ${fomoResult.verdict}\n\nYes You Pro pe check karo:\nyesyoupro.com`)}`)}
+                  style={{ width:"100%", background:"#25D366", color:"#fff", border:"none", borderRadius:12, padding:"12px", fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+                  📱 Dosto Ka FOMO Score Check Karwao
+                </button>
               </div>
             )}
           </div>
