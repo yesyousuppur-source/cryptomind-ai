@@ -321,19 +321,35 @@ export default function Home() {
   // ── NEWS TAB ───────────────────────────────────────────────────────────────
   const fetchNews=async(forceCoin)=>{
     const coin=(forceCoin!==undefined?forceCoin:newsQuery).trim();
-    setNewsLoad(true);setNewsData(null);setNewsAiText("");
+    setNewsLoad(true);setNewsAiLoad(false);setNewsData(null);setNewsAiText("");
     try{
       const url=coin?`/api/news?coin=${coin.toUpperCase()}`:`/api/news?coin=general`;
-      const r=await fetch(url); const j=await r.json();
-      setNewsData(j); setNewsLoad(false);
-      if(j.headlines){
+      const r=await fetch(url);
+      if(!r.ok) throw new Error("News fetch failed");
+      const j=await r.json();
+      setNewsData(j);
+      setNewsLoad(false);
+      if(j.headlines && j.headlines.length>0){
         setNewsAiLoad(true);
-        const r2=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({mode:"news_impact",newsHeadlines:j.headlines,coinName:coin||""})});
-        const j2=await r2.json(); setNewsAiText(j2.text||"");
-        setNewsAiLoad(false);
+        try{
+          const r2=await fetch("/api/ai",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({mode:"news_impact",newsHeadlines:j.headlines,coinName:coin||"crypto"})
+          });
+          const j2=await r2.json();
+          setNewsAiText(j2.text||"AI analysis load nahi ho saka. News articles padho.");
+        }catch(_){
+          setNewsAiText("AI analysis abhi available nahi hai. News articles check karo.");
+        }finally{
+          setNewsAiLoad(false);
+        }
       }
-    }catch(_){setNewsLoad(false);setNewsAiLoad(false);}
+    }catch(_){
+      setNewsLoad(false);
+      setNewsAiLoad(false);
+      setNewsAiText("News fetch mein problem aayi. Dobara try karo.");
+    }
   };
 
   // ── HEATMAP FETCH ──────────────────────────────────────────────────────────
@@ -1462,8 +1478,17 @@ export default function Home() {
                   placeholder="Coin name (optional): BTC, ETH… ya khali chhoddo"
                   style={{flex:1,background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px 14px",fontSize:13,color:"#0f172a",transition:"border-color .2s"}}
                   onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-                <button className="btn" onClick={fetchNews} disabled={newsLoad||newsAiLoad} style={{padding:"12px 20px",fontSize:13,borderRadius:12,whiteSpace:"nowrap"}}>
-                  {newsLoad?<span style={{display:"inline-block",animation:"spin .8s linear infinite"}}>⟳</span>:"📰 Get News"}
+                <button className="btn" onClick={()=>{
+                    if(newsLoad||newsAiLoad){
+                      setNewsLoad(false);setNewsAiLoad(false);
+                    } else {
+                      fetchNews();
+                    }
+                  }}
+                  style={{padding:"12px 20px",fontSize:13,borderRadius:12,whiteSpace:"nowrap"}}>
+                  {newsLoad?<span style={{display:"inline-block",animation:"spin .8s linear infinite"}}>⟳</span>
+                  :newsAiLoad?"⟳ AI..."
+                  :"📰 Get News"}
                 </button>
               </div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
