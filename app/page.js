@@ -121,7 +121,8 @@ export default function Home() {
 
   // share card
   const [shareVisible,setShareVisible] = useState(false);
-  const [openTool,setOpenTool]         = useState(null); // null | "alert" | "screenshot" | "advice" | "budget"
+  const [openTool,setOpenTool]         = useState(null);
+  const [desiMode,setDesiMode]         = useState(false);
   // Price Alert state
   const [alertCoin,setAlertCoin]     = useState("");
   const [alertPrice,setAlertPrice]   = useState("");
@@ -264,7 +265,7 @@ export default function Home() {
     setExplainLoad(true);setExplainText("");
     try{
       const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({mode:"explain",coinName:coin})});
+        body:JSON.stringify({mode: desiMode?"explain_desi":"explain", coinName:coin, desiMode})});
       const j=await r.json(); setExplainText(j.text||"");
     }catch(_){setExplainText("Unable to explain. Please try again.");}
     setExplainLoad(false);
@@ -1295,9 +1296,33 @@ export default function Home() {
         {activeTab==="explain" && (
           <div className="fadein">
             <div style={{textAlign:"center",marginBottom:20}}>
-              <div style={{fontSize:40,marginBottom:8}}>🤖</div>
-              <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:6}}>AI Explain This Coin</h2>
-              <p style={{fontSize:13,color:"#64748b"}}>Koi bhi coin ka naam likho — AI simple language mein samjhayega</p>
+              <div style={{fontSize:40,marginBottom:8}}>{desiMode?"🇮🇳":"🤖"}</div>
+              <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:6}}>
+                {desiMode?"Desi Style Explain 🇮🇳":"AI Explain This Coin"}
+              </h2>
+              <p style={{fontSize:13,color:"#64748b"}}>
+                {desiMode?"Bilkul desi andaaz mein — auto, chai, cricket se samjhayega!":"Koi bhi coin ka naam likho — AI simple language mein samjhayega"}
+              </p>
+            </div>
+
+            {/* Desi Mode Toggle */}
+            <div style={{...CARD,padding:"12px 16px",marginBottom:12,display:"flex",alignItems:"center",justifyContent:"space-between",background: desiMode?"linear-gradient(135deg,#fff7ed,#fed7aa)":"#fff",border:`2px solid ${desiMode?"#f97316":"#e2e8f0"}`}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                <span style={{fontSize:24}}>🇮🇳</span>
+                <div>
+                  <div style={{fontWeight:700,fontSize:13,color: desiMode?"#c2410c":"#0f172a"}}>Desi Explanation Mode</div>
+                  <div style={{fontSize:10,color: desiMode?"#d97706":"#94a3b8"}}>
+                    {desiMode?"ON — Auto, chai, cricket style mein":"OFF — Normal English explanation"}
+                  </div>
+                </div>
+              </div>
+              <button onClick={()=>{setDesiMode(p=>!p);setExplainText("");}}
+                style={{width:52,height:28,borderRadius:100,border:"none",cursor:"pointer",
+                  background: desiMode?"linear-gradient(135deg,#f97316,#ea580c)":"#e2e8f0",
+                  position:"relative",transition:"all .3s",flexShrink:0}}>
+                <div style={{position:"absolute",top:4,width:20,height:20,borderRadius:"50%",background:"#fff",
+                  transition:"all .3s",left: desiMode?"28px":"4px",boxShadow:"0 2px 4px rgba(0,0,0,.2)"}}/>
+              </button>
             </div>
 
             <div style={{...CARD}}>
@@ -1308,7 +1333,7 @@ export default function Home() {
                   style={{flex:1,background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px 14px",fontSize:14,color:"#0f172a",transition:"border-color .2s"}}
                   onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
                 <button className="btn" onClick={explainCoin} disabled={explainLoad||!explainQuery.trim()} style={{padding:"12px 20px",fontSize:13,borderRadius:12,whiteSpace:"nowrap"}}>
-                  {explainLoad?<span style={{display:"inline-block",animation:"spin .8s linear infinite"}}>⟳</span>:"Explain 🤖"}
+                  {explainLoad?<span style={{display:"inline-block",animation:"spin .8s linear infinite"}}>⟳</span>:desiMode?"Desi Batao 🇮🇳":"Explain 🤖"}
                 </button>
               </div>
               {/* Quick coin chips */}
