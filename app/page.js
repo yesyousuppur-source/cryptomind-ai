@@ -319,8 +319,9 @@ export default function Home() {
   };
 
   // ── NEWS TAB ───────────────────────────────────────────────────────────────
-  const fetchNews=async()=>{
-    const coin=newsQuery.trim(); setNewsLoad(true);setNewsData(null);setNewsAiText("");
+  const fetchNews=async(forceCoin)=>{
+    const coin=(forceCoin!==undefined?forceCoin:newsQuery).trim();
+    setNewsLoad(true);setNewsData(null);setNewsAiText("");
     try{
       const url=coin?`/api/news?coin=${coin.toUpperCase()}`:`/api/news?coin=general`;
       const r=await fetch(url); const j=await r.json();
@@ -1467,8 +1468,16 @@ export default function Home() {
               </div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {["General","BTC","ETH","SOL","BNB","XRP"].map(c=>(
-                  <button key={c} onClick={()=>setNewsQuery(c==="General"?"":c)}
-                    className="chip" style={{background:"#f8fafc",border:"1px solid #e2e8f0",color:"#64748b",padding:"4px 12px",borderRadius:20,fontSize:11,fontWeight:500}}>
+                  <button key={c} onClick={()=>{
+                    const q = c==="General" ? "" : c;
+                    setNewsQuery(q);
+                    fetchNews(q);
+                  }}
+                    style={{background: newsQuery===(c==="General"?"":c)?"#10b981":"#f8fafc",
+                      border:`1px solid ${newsQuery===(c==="General"?"":c)?"#10b981":"#e2e8f0"}`,
+                      color: newsQuery===(c==="General"?"":c)?"#fff":"#64748b",
+                      padding:"4px 12px",borderRadius:20,fontSize:11,fontWeight:600,cursor:"pointer",
+                      transition:"all .15s",fontFamily:"'Inter',sans-serif"}}>
                     {c}
                   </button>
                 ))}
@@ -1485,7 +1494,7 @@ export default function Home() {
             {newsData&&!newsLoad&&(
               <div className="fadein">
                 {/* News List */}
-                {newsData.articles.length>0&&(
+                {newsData.articles&&newsData.articles.length>0&&(
                   <div style={{...CARD}}>
                     <div style={{fontWeight:700,fontSize:14,marginBottom:12,color:"#0f172a"}}>
                       📡 Latest News {newsData.coin!=="general"?`— ${newsData.coin}`:"— Crypto Market"}
@@ -1493,8 +1502,8 @@ export default function Home() {
                     </div>
                     <div>
                       {newsData.articles.map((a,i)=>(
-                        <a key={i} href={a.url} target="_blank" rel="noopener noreferrer" style={{textDecoration:"none"}}
-                          className="news-card" style={{display:"block",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:8,textDecoration:"none",transition:"all .15s"}}
+                        <a key={i} href={a.url} target="_blank" rel="noopener noreferrer"
+                          style={{display:"block",background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:12,padding:"12px 14px",marginBottom:8,textDecoration:"none",transition:"all .15s"}}
                           onMouseEnter={e=>{e.currentTarget.style.borderColor="#6ee7b7";e.currentTarget.style.background="#f0fdf4"}}
                           onMouseLeave={e=>{e.currentTarget.style.borderColor="#e2e8f0";e.currentTarget.style.background="#f8fafc"}}>
                           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
