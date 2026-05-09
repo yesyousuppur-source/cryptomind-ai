@@ -865,18 +865,71 @@ export default function Home() {
                   </div>
                 </div>
               ):(
-                <div style={{background:"linear-gradient(135deg,#fffbeb,#fef3c7)",border:"1px solid #fde68a",borderRadius:14,padding:"14px 16px"}}>
-                  <div style={{fontWeight:700,fontSize:13,color:"#92400e",marginBottom:6}}>
-                    {top5?.message==="no_signal"?"⏳ Aaj Koi Strong Signal Nahi":"🔍 Sirf Kuch Coins Qualify Hue"}
-                  </div>
-                  <div style={{fontSize:12,color:"#78350f",lineHeight:1.7,marginBottom:10}}>
-                    {top5?.message==="no_signal"
-                      ?"7-indicator filter abhi kisi coin ko safe buy nahi bol raha. Market weak hai — galat entry se bach rahe ho. Kal dobara check karo."
-                      :"Limited opportunities hain. Jo dikh raha hai woh genuinely strong signal hai."}
-                  </div>
-                  <button onClick={fetchTop5} style={{width:"100%",background:"#f59e0b",color:"#fff",border:"none",borderRadius:10,padding:"10px",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-                    🔄 Dobara Scan Karo
-                  </button>
+                <div>
+                  {top5?.message==="weak_market"&&top5?.coins?.length>0?(
+                    <div>
+                      <div style={{background:"linear-gradient(135deg,#fffbeb,#fef3c7)",border:"2px solid #fde68a",borderRadius:14,padding:"12px 14px",marginBottom:12}}>
+                        <div style={{fontWeight:700,fontSize:13,color:"#92400e",marginBottom:4}}>⚠️ Weak Market — Cautious Signals</div>
+                        <div style={{fontSize:11,color:"#78350f",lineHeight:1.6}}>Strong buy zone nahi hai abhi. Yeh best available coins hain — <strong>chhota position lo, tight stop loss lagao.</strong></div>
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                        {top5.coins.map((coin,i)=>(
+                          <div key={coin.symbol} style={{background:"#fff",border:"2px solid #fde68a",borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.04)"}}>
+                            <div style={{background:"linear-gradient(135deg,#fffbeb,#fff)",padding:"12px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
+                              <img src={coin.image} alt="" onError={e=>e.target.style.display="none"} style={{width:32,height:32,borderRadius:"50%",border:"2px solid #e2e8f0",flexShrink:0}}/>
+                              <div style={{flex:1}}>
+                                <div style={{fontWeight:800,fontSize:14}}>{coin.name}</div>
+                                <div className="mono" style={{fontSize:10,color:"#94a3b8"}}>{coin.symbol} · Score: {coin.score}/100</div>
+                              </div>
+                              <div style={{textAlign:"right"}}>
+                                <div className="mono" style={{fontSize:14,fontWeight:800}}>{coin.price}</div>
+                                <div style={{fontSize:11,color:parseFloat(coin.ch24)>=0?"#059669":"#dc2626",fontWeight:600}}>{parseFloat(coin.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(coin.ch24)).toFixed(1)}%</div>
+                              </div>
+                            </div>
+                            <div style={{padding:"10px 14px"}}>
+                              <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
+                                <span style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:20,padding:"3px 12px",fontSize:11,color:"#d97706",fontWeight:800}}>👀 WATCH</span>
+                                <span style={{fontSize:10,color:"#94a3b8",background:"#f8fafc",padding:"2px 8px",borderRadius:20}}>RSI: {coin.rsi}</span>
+                                <span style={{fontSize:10,color:"#6366f1",background:"#eef2ff",padding:"2px 8px",borderRadius:20,fontWeight:700}}>R:R 1:{coin.rrRatio}</span>
+                              </div>
+                              <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
+                                <div style={{background:"#fef2f2",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #fca5a5"}}>
+                                  <div style={{fontSize:8,color:"#dc2626",fontWeight:700,marginBottom:2}}>🛑 SL</div>
+                                  <div className="mono" style={{fontSize:9,fontWeight:800,color:"#991b1b"}}>{coin.stopLoss}</div>
+                                  <div style={{fontSize:8,color:"#dc2626",marginTop:1}}>{coin.slPct}%</div>
+                                </div>
+                                <div style={{background:"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #86efac"}}>
+                                  <div style={{fontSize:8,color:"#059669",fontWeight:700,marginBottom:2}}>🎯 TP1</div>
+                                  <div className="mono" style={{fontSize:9,fontWeight:800,color:"#065f46"}}>{coin.tp1}</div>
+                                  <div style={{fontSize:8,color:"#059669",marginTop:1}}>+{coin.tp1Pct}%</div>
+                                </div>
+                                <div style={{background:"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #4ade80"}}>
+                                  <div style={{fontSize:8,color:"#059669",fontWeight:700,marginBottom:2}}>🚀 TP2</div>
+                                  <div className="mono" style={{fontSize:9,fontWeight:800,color:"#065f46"}}>{coin.tp2}</div>
+                                  <div style={{fontSize:8,color:"#059669",marginTop:1}}>+{coin.tp2Pct}%</div>
+                                </div>
+                                <div style={{background:"#eff6ff",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #93c5fd"}}>
+                                  <div style={{fontSize:8,color:"#1d4ed8",fontWeight:700,marginBottom:2}}>💎 TP3</div>
+                                  <div className="mono" style={{fontSize:9,fontWeight:800,color:"#1e3a8a"}}>{coin.tp3}</div>
+                                  <div style={{fontSize:8,color:"#2563eb",marginTop:1}}>+{coin.tp3Pct}%</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ):(
+                    <div style={{background:"linear-gradient(135deg,#fef2f2,#fee2e2)",border:"1px solid #fca5a5",borderRadius:14,padding:"14px 16px"}}>
+                      <div style={{fontWeight:700,fontSize:13,color:"#dc2626",marginBottom:6}}>⏳ Aaj Koi Signal Nahi</div>
+                      <div style={{fontSize:12,color:"#991b1b",lineHeight:1.7,marginBottom:10}}>
+                        120 coins scan kiye — market itna weak hai ki koi bhi minimum standard meet nahi kar raha. Yeh tumhe galat trade se bachata hai.
+                      </div>
+                      <button onClick={fetchTop5} style={{width:"100%",background:"#f59e0b",color:"#fff",border:"none",borderRadius:10,padding:"10px",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                        🔄 Dobara Scan Karo
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
