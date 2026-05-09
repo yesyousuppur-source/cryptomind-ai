@@ -630,12 +630,20 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <div style={{display:"flex",gap:8}}>
+          <div style={{display:"flex",gap:8,marginBottom:8}}>
             <Link href="/features" style={{flex:1,background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",boxShadow:"0 4px 14px rgba(16,185,129,.4)"}}>
               ✨ Open Features
             </Link>
             <Link href="/arena" style={{flex:1,background:"rgba(255,255,255,.08)",color:"#e2e8f0",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(255,255,255,.15)"}}>
               🏟️ Trading Arena
+            </Link>
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <Link href="/sikho" style={{flex:1,background:"rgba(99,102,241,.2)",color:"#a5b4fc",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(99,102,241,.3)"}}>
+              📚 Crypto Sikho
+            </Link>
+            <Link href="/market" style={{flex:1,background:"rgba(245,158,11,.15)",color:"#fbbf24",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(245,158,11,.3)"}}>
+              📊 Live Market
             </Link>
           </div>
         </div>
