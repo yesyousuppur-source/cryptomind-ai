@@ -893,8 +893,8 @@ export default function Home() {
                       </div>
                       <div style={{display:"flex",flexDirection:"column",gap:12}}>
                         {top5.coins.map((coin,i)=>(
-                          <div key={coin.symbol} style={{background:"#fff",border:"2px solid #fde68a",borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.04)"}}>
-                            <div style={{background:"linear-gradient(135deg,#fffbeb,#fff)",padding:"12px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
+                          <div key={coin.symbol} style={{background:"#fff",border:`2px solid ${coin.signalColor}33`,borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.04)"}}>
+                            <div style={{background:`linear-gradient(135deg,${coin.signalBg},#fff)`,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
                               <img src={coin.image} alt="" onError={e=>e.target.style.display="none"} style={{width:32,height:32,borderRadius:"50%",border:"2px solid #e2e8f0",flexShrink:0}}/>
                               <div style={{flex:1}}>
                                 <div style={{fontWeight:800,fontSize:14}}>{coin.name}</div>
@@ -907,7 +907,7 @@ export default function Home() {
                             </div>
                             <div style={{padding:"10px 14px"}}>
                               <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
-                                <span style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:20,padding:"3px 12px",fontSize:11,color:"#d97706",fontWeight:800}}>👀 WATCH</span>
+                                <span style={{background:coin.signalBg,border:`1px solid ${coin.signalColor}44`,borderRadius:20,padding:"3px 12px",fontSize:11,color:coin.signalColor,fontWeight:800}}>{coin.signal}</span>
                                 <span style={{fontSize:10,color:"#94a3b8",background:"#f8fafc",padding:"2px 8px",borderRadius:20}}>RSI: {coin.rsi}</span>
                                 <span style={{fontSize:10,color:"#6366f1",background:"#eef2ff",padding:"2px 8px",borderRadius:20,fontWeight:700}}>R:R 1:{coin.rrRatio}</span>
                               </div>
@@ -939,13 +939,11 @@ export default function Home() {
                       </div>
                     </div>
                   ):(
-                    <div style={{background:"linear-gradient(135deg,#fef2f2,#fee2e2)",border:"1px solid #fca5a5",borderRadius:14,padding:"14px 16px"}}>
-                      <div style={{fontWeight:700,fontSize:13,color:"#dc2626",marginBottom:6}}>⏳ Aaj Koi Signal Nahi</div>
-                      <div style={{fontSize:12,color:"#991b1b",lineHeight:1.7,marginBottom:10}}>
-                        120 coins scan kiye — market itna weak hai ki koi bhi minimum standard meet nahi kar raha. Yeh tumhe galat trade se bachata hai.
-                      </div>
-                      <button onClick={fetchTop5} style={{width:"100%",background:"#f59e0b",color:"#fff",border:"none",borderRadius:10,padding:"10px",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-                        🔄 Dobara Scan Karo
+                    <div style={{textAlign:"center",padding:"20px 0"}}>
+                      <div style={{fontSize:36,marginBottom:8}}>🔍</div>
+                      <p style={{fontSize:13,color:"#64748b",marginBottom:12}}>Scan karke best coins dekho</p>
+                      <button onClick={fetchTop5} style={{background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:12,padding:"12px 24px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif",boxShadow:"0 4px 14px rgba(16,185,129,.35)"}}>
+                        🔍 Scan Karo
                       </button>
                     </div>
                   )}
