@@ -419,19 +419,85 @@ export default function Home() {
   // ── PRICE ALERTS ───────────────────────────────────────────────────────────
   const addAlert = () => {
     if(!alertCoin||!alertPrice) return;
-    const newAlert = { id:Date.now(), coin:alertCoin.toUpperCase(), price:parseFloat(alertPrice), type:alertType, triggered:false };
+
+    // Request browser notification permission
+    if ("Notification" in window) {
+      Notification.requestPermission().then(perm => {
+        if (perm === "granted") {
+          new Notification("🔔 YES YOU PRO Alert Set!", {
+            body: `${alertCoin.toUpperCase()} ${alertType==="above"?"⬆️ Upar":"⬇️ Neeche"} $${alertPrice} pe alert milega`,
+            icon: "/yyp_logo.gif",
+          });
+        }
+      });
+    }
+
+    const newAlert = {
+      id: Date.now(),
+      coin: alertCoin.toUpperCase(),
+      price: parseFloat(alertPrice),
+      type: alertType,
+      triggered: false,
+      createdAt: new Date().toISOString(),
+    };
     const updated = [...alerts, newAlert];
     setAlerts(updated);
-    try{localStorage.setItem("yyp_alerts",JSON.stringify(updated));}catch{}
+    try{localStorage.setItem("yyp_alerts", JSON.stringify(updated));}catch{}
     setAlertCoin(""); setAlertPrice("");
-    setAlertMsg(`✅ Alert set! ${alertCoin.toUpperCase()} $${alertPrice} pe alert milega`);
-    setTimeout(()=>setAlertMsg(""),3000);
+    setAlertMsg(`✅ Alert set! ${newAlert.coin} $${alertPrice} pe notification aayegi`);
+    setTimeout(()=>setAlertMsg(""),4000);
   };
+
   const removeAlert = (id) => {
     const updated = alerts.filter(a=>a.id!==id);
     setAlerts(updated);
     try{localStorage.setItem("yyp_alerts",JSON.stringify(updated));}catch{}
   };
+
+  // ── PRICE ALERT CHECKER — runs every 30 seconds ───────────────────────────
+  useEffect(()=>{
+    if(alerts.length===0) return;
+    const checkPrices = async () => {
+      try {
+        const coins = [...new Set(alerts.filter(a=>!a.triggered).map(a=>a.coin))];
+        if (coins.length === 0) return;
+        const results = await Promise.allSettled(
+          coins.map(c=>fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${c}USDT`).then(r=>r.json()))
+        );
+        const priceMap = {};
+        results.forEach((r,i)=>{
+          if(r.status==="fulfilled"&&r.value?.price) priceMap[coins[i]]=parseFloat(r.value.price);
+        });
+
+        const updatedAlerts = alerts.map(alert=>{
+          if(alert.triggered) return alert;
+          const livePrice = priceMap[alert.coin];
+          if(!livePrice) return alert;
+
+          const hit = alert.type==="above" ? livePrice >= alert.price : livePrice <= alert.price;
+          if(hit){
+            // Send browser notification
+            if("Notification" in window && Notification.permission==="granted"){
+              new Notification(`🎯 ${alert.coin} Alert! YES YOU PRO`, {
+                body: `${alert.coin} ab $${livePrice.toLocaleString()} hai!\nTumhara target: $${alert.price.toLocaleString()} ${alert.type==="above"?"✅ Hit!":"✅ Hit!"}`,
+                icon: "/yyp_logo.gif",
+                vibrate: [200,100,200],
+              });
+            }
+            return {...alert, triggered:true, triggeredAt: new Date().toISOString(), triggeredPrice: livePrice};
+          }
+          return alert;
+        });
+
+        setAlerts(updatedAlerts);
+        try{localStorage.setItem("yyp_alerts",JSON.stringify(updatedAlerts));}catch{}
+      } catch(_){}
+    };
+
+    checkPrices();
+    const interval = setInterval(checkPrices, 30000);
+    return ()=>clearInterval(interval);
+  },[alerts.length]);
 
   const lossRec=(()=>{
     const p=parseFloat(lossAmt); if(!lossAmt||isNaN(p)||p<=0||p>=100) return null;
@@ -1005,7 +1071,21 @@ export default function Home() {
                   {/* PRICE ALERT */}
                   {openTool==="alert" && (
                     <div>
-                      <div style={{fontWeight:700,fontSize:14,marginBottom:12,display:"flex",alignItems:"center",gap:6}}>🔔 Price Alert <span style={{fontSize:10,color:"#94a3b8",fontWeight:400}}>— target set karo</span></div>
+                      <div style={{fontWeight:700,fontSize:14,marginBottom:10,display:"flex",alignItems:"center",gap:6}}>🔔 Price Alert <span style={{fontSize:10,color:"#94a3b8",fontWeight:400}}>— browser notification milegi</span></div>
+
+                      {/* Permission banner */}
+                      {typeof Notification!=="undefined" && Notification.permission==="default" && (
+                        <div style={{background:"linear-gradient(135deg,#fffbeb,#fef3c7)",border:"1px solid #fde68a",borderRadius:10,padding:"10px 12px",marginBottom:10,display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:16}}>🔕</span>
+                          <div style={{flex:1,fontSize:11,color:"#92400e"}}>Notifications allow karo — alert ke liye zaroori hai</div>
+                          <button onClick={()=>Notification.requestPermission()}
+                            style={{background:"#f59e0b",color:"#fff",border:"none",borderRadius:8,padding:"5px 10px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",flexShrink:0}}>Allow</button>
+                        </div>
+                      )}
+                      {typeof Notification!=="undefined" && Notification.permission==="granted" && (
+                        <div style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:10,padding:"7px 12px",marginBottom:10,fontSize:11,color:"#059669",fontWeight:600}}>✅ Notifications ON — price hit hone pe alert aayegi!</div>
+                      )}
+
                       <div style={{display:"flex",gap:8,marginBottom:10}}>
                         <input value={alertCoin} onChange={e=>setAlertCoin(e.target.value.toUpperCase())}
                           placeholder="Coin: BTC, ETH…"
@@ -1030,13 +1110,17 @@ export default function Home() {
                       {alertMsg&&<div style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:10,padding:"8px 12px",fontSize:12,color:"#059669",fontWeight:600,marginBottom:8}}>{alertMsg}</div>}
                       {alerts.length>0&&(
                         <div>
-                          <div style={{fontSize:10,color:"#94a3b8",fontWeight:600,marginBottom:6}}>ACTIVE ALERTS ({alerts.length})</div>
+                          <div style={{fontSize:10,color:"#94a3b8",fontWeight:600,marginBottom:6,letterSpacing:.5}}>ACTIVE ALERTS — Har 30 sec check ✓</div>
                           {alerts.map(a=>(
-                            <div key={a.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#fffbeb",border:"1px solid #fde68a",borderRadius:10,padding:"8px 12px",marginBottom:5}}>
-                              <span className="mono" style={{fontSize:12,fontWeight:700}}>{a.coin} {a.type==="above"?"⬆️":"⬇️"} ${a.price.toLocaleString()}</span>
+                            <div key={a.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:a.triggered?"#f0fdf4":"#fffbeb",border:`1px solid ${a.triggered?"#6ee7b7":"#fde68a"}`,borderRadius:10,padding:"8px 12px",marginBottom:5}}>
+                              <div>
+                                <span className="mono" style={{fontSize:12,fontWeight:700}}>{a.coin} {a.type==="above"?"⬆️":"⬇️"} ${a.price.toLocaleString()}</span>
+                                {a.triggered&&<span style={{marginLeft:6,fontSize:10,color:"#059669",fontWeight:700}}>✅ Hit!</span>}
+                              </div>
                               <button onClick={()=>removeAlert(a.id)} style={{background:"#fef2f2",border:"1px solid #fecaca",borderRadius:8,padding:"2px 8px",cursor:"pointer",fontSize:11,color:"#dc2626",fontWeight:600}}>✕</button>
                             </div>
                           ))}
+                          <div style={{fontSize:10,color:"#94a3b8",marginTop:6,textAlign:"center"}}>💡 Website open rakho tab check hoga</div>
                         </div>
                       )}
                     </div>
