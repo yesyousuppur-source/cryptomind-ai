@@ -341,80 +341,15 @@ export async function GET() {
       });
     }
 
-    // Sort by score — best first
+    // Sort by score → take top 5
     scored.sort((a,b) => b.score - a.score);
+    const top = scored.slice(0, 5);
 
-    let top = scored.slice(0, 5);
-
-    // ── FALLBACK: Agar strict filter mein koi qualify na kare ─────────────
-    // Tab bhi top coins dikhaao — honest labeling ke saath
-    if (top.length === 0) {
-      // Relax filters — sirf score 45+ chahiye
-      const relaxed = [];
-      for (let i = 0; i < topCoins.length; i++) {
-        const { sym, ticker } = topCoins[i];
-        const klines = klineResults[i].status === "fulfilled" ? klineResults[i].value : [];
-        if (!Array.isArray(klines) || klines.length < 30) continue;
-
-        const closes  = klines.map(k => parseFloat(k[4]));
-        const highs   = klines.map(k => parseFloat(k[2]));
-        const lows    = klines.map(k => parseFloat(k[3]));
-        const volumes = klines.map(k => parseFloat(k[5]));
-        const price   = parseFloat(ticker.lastPrice);
-        const ch24    = parseFloat(ticker.priceChangePercent);
-        const vol24   = parseFloat(ticker.quoteVolume);
-        const ch7d    = closes.length >= 8
-          ? ((closes[closes.length-1] - closes[closes.length-8]) / closes[closes.length-8]) * 100
-          : ch24;
-
-        const analysis = masterScore({ closes, highs, lows, volumes, price, ch24, ch7d });
-
-        // Relaxed filter — no R:R check, score 42+, ch24 < 25%
-        if (analysis.score < 42) continue;
-        if (ch24 > 25) continue;
-
-        const tpsl = calcTPSL(price, analysis.atr, analysis.bb, analysis.support, analysis.ma50, parseFloat(analysis.rsi||50));
-
-        relaxed.push({
-          symbol: sym,
-          name:   FULL_NAME[sym] || sym,
-          price:  fmt(price),
-          rawPrice: price,
-          ch24:   ch24.toFixed(2),
-          ch7d:   ch7d.toFixed(2),
-          score:  analysis.score,
-          confluenceCount: analysis.confluenceCount,
-          risk:   "High",
-          rsi:    analysis.rsi,
-          signals: analysis.signals,
-          warnings: [...(analysis.warnings||[]), "Weak market — extra caution"],
-          volume: vol24,
-          image: `https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`,
-          signal: "WATCH",
-          signalColor: "#d97706",
-          signalBg:    "#fffbeb",
-          entry:   `${fmt(tpsl.entryLow)} – ${fmt(tpsl.entryHigh)}`,
-          stopLoss: fmt(tpsl.stopLoss),
-          tp1: fmt(tpsl.tp1), tp2: fmt(tpsl.tp2), tp3: fmt(tpsl.tp3),
-          slPct: tpsl.slPct, tp1Pct: tpsl.tp1Pct, tp2Pct: tpsl.tp2Pct, tp3Pct: tpsl.tp3Pct,
-          rrRatio: tpsl.rrRatio,
-          isRelaxed: true,
-        });
-      }
-      relaxed.sort((a,b) => b.score - a.score);
-      top = relaxed.slice(0, 3); // Max 3 in weak market
-    }
-
-    const isWeakMarket = top.length > 0 && top[0].isRelaxed;
     const result = {
       coins: top,
       scanned: topCoins.length,
       qualified: scored.length,
-      isWeakMarket,
-      message: top.length === 0 ? "no_signal"
-        : isWeakMarket ? "weak_market"
-        : top.length < 3 ? "few_signals"
-        : "normal",
+      message: top.length === 0 ? "no_signal" : top.length < 3 ? "few_signals" : "normal",
       updatedAt: new Date().toISOString(),
     };
 
