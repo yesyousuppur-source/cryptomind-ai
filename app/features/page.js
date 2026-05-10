@@ -10,13 +10,14 @@ const T = {
 };
 
 const TABS = [
-  { id:"iq",        icon:"🧠", label:"IQ Test"       },
-  { id:"health",    icon:"🏥", label:"Health Check"   },
-  { id:"portfolio", icon:"💼", label:"Portfolio"      },
-  { id:"streak",    icon:"🔥", label:"Daily Streak"   },
-  { id:"tax",       icon:"🧾", label:"Tax Calc"       },
+  { id:"iq",           icon:"🧠", label:"IQ Test"        },
+  { id:"health",       icon:"🏥", label:"Health Check"   },
+  { id:"portfolio",    icon:"💼", label:"Portfolio"      },
+  { id:"streak",       icon:"🔥", label:"Daily Streak"   },
+  { id:"tax",          icon:"🧾", label:"Tax Calc"       },
   { id:"bankvscrypto", icon:"🏦", label:"Bank vs Crypto" },
-  { id:"fomo",      icon:"😱", label:"FOMO Detector"  },
+  { id:"fomo",         icon:"😱", label:"FOMO Detector"  },
+  { id:"whitepaper",   icon:"📄", label:"Whitepaper AI"  },
 ];
 
 // ── IQ TEST QUESTIONS ─────────────────────────────────────────────────────────
@@ -209,6 +210,14 @@ export default function FeaturesPage() {
   const [streakMsg, setStreakMsg]   = useState("");
 
   // Desi state
+  // Whitepaper state
+  const [wpUrl,    setWpUrl]    = useState("");
+  const [wpText,   setWpText]   = useState("");
+  const [wpResult, setWpResult] = useState(null);
+  const [wpLoad,   setWpLoad]   = useState(false);
+  const [wpError,  setWpError]  = useState("");
+  const [wpMode,   setWpMode]   = useState("url"); // url | paste
+
   // Bank vs Crypto state
   const [bvcAmount, setBvcAmount]   = useState("100000");
   const [bvcYears, setBvcYears]     = useState("5");
@@ -337,6 +346,27 @@ export default function FeaturesPage() {
       localStorage.setItem("yyp_last_visit", today);
     } catch {}
     setStreakMsg(newStreak === 1 ? "🎉 Streak shuru! Kal bhi aana!" : `🔥 ${newStreak} din ki streak! Keep going!`);
+  };
+
+  // ── WHITEPAPER SUMMARIZER ────────────────────────────────────────────────
+  const analyzeWhitepaper = async () => {
+    setWpLoad(true); setWpResult(null); setWpError("");
+    try {
+      const r = await fetch("/api/whitepaper", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ url: wpMode==="url"?wpUrl:"", pastedText: wpMode==="paste"?wpText:"" })
+      });
+      const j = await r.json();
+      if (j.error) {
+        setWpError(j.message || "Kuch problem aayi.");
+        if (j.error==="pdf" || j.error==="fetch_failed") setWpMode("paste");
+      } else {
+        setWpResult(j.summary);
+      }
+    } catch(_) {
+      setWpError("Network error. Dobara try karo.");
+    }
+    setWpLoad(false);
   };
 
   // ── BANK VS CRYPTO CALCULATOR ────────────────────────────────────────────
@@ -1523,6 +1553,180 @@ Give response in this EXACT JSON format (no extra text):
                   style={{ width:"100%", background:"#25D366", color:"#fff", border:"none", borderRadius:12, padding:"12px", fontWeight:700, fontSize:13, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
                   📱 Dosto Ka FOMO Score Check Karwao
                 </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* WHITEPAPER SUMMARIZER                                            */}
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {tab==="whitepaper" && (
+          <div className="fadein">
+
+            {/* TIME SAVE BANNER */}
+            <div style={{ background:"linear-gradient(135deg,#0f172a,#1e3a2f)", borderRadius:20, padding:"18px", marginBottom:16, position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", top:-20, right:-20, width:100, height:100, borderRadius:"50%", background:"rgba(16,185,129,.1)" }}/>
+              <div style={{ fontSize:32, marginBottom:8 }}>⏱️</div>
+              <div style={{ fontWeight:900, fontSize:18, color:"white", marginBottom:6, lineHeight:1.3 }}>
+                2-3 Ghante Bachao!
+              </div>
+              <div style={{ fontSize:12, color:"#94a3b8", lineHeight:1.7, marginBottom:10 }}>
+                Naya coin aaya → Whitepaper 50-100 pages ka<br/>
+                Normally: <span style={{ color:"#ef4444", fontWeight:700 }}>2-3 ghante padhna</span><br/>
+                Hamara tool: <span style={{ color:"#10b981", fontWeight:700 }}>2 minute mein summary! 🚀</span>
+              </div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                {["✅ Coin kya karta hai?","✅ Real use case?","✅ Team kaisi?","✅ Risks kya?","✅ Buy karna chahiye?"].map((t,i)=>(
+                  <span key={i} style={{ background:"rgba(16,185,129,.15)", border:"1px solid rgba(16,185,129,.3)", borderRadius:20, padding:"3px 10px", fontSize:10, color:"#6ee7b7", fontWeight:600 }}>{t}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Mode Toggle */}
+            <div style={{ ...CARD, padding:"12px 14px", marginBottom:12 }}>
+              <div style={{ fontWeight:700, fontSize:13, marginBottom:12 }}>📄 Whitepaper Kaise Doge?</div>
+              <div style={{ display:"flex", gap:8, marginBottom:14 }}>
+                {[{id:"url",label:"🔗 URL Paste Karo",sub:"Link dalo — AI fetch karega"},{id:"paste",label:"📋 Text Paste Karo",sub:"PDF kholo → text copy karo"}].map(m=>(
+                  <button key={m.id} onClick={()=>{setWpMode(m.id);setWpError("");setWpResult(null);}}
+                    style={{ flex:1, background:wpMode===m.id?"linear-gradient(135deg,#10b981,#059669)":"#f8fafc",
+                      color:wpMode===m.id?"#fff":T.text2,
+                      border:`2px solid ${wpMode===m.id?"#10b981":"#e2e8f0"}`,
+                      borderRadius:12, padding:"10px 8px", cursor:"pointer", fontFamily:"'Inter',sans-serif",
+                      textAlign:"center" }}>
+                    <div style={{ fontWeight:700, fontSize:12 }}>{m.label}</div>
+                    <div style={{ fontSize:9, opacity:.7, marginTop:2 }}>{m.sub}</div>
+                  </button>
+                ))}
+              </div>
+
+              {wpMode==="url" ? (
+                <div>
+                  <div style={{ fontSize:10, color:T.text3, fontWeight:700, marginBottom:6 }}>WHITEPAPER URL</div>
+                  <input value={wpUrl} onChange={e=>setWpUrl(e.target.value)}
+                    placeholder="https://bitcoin.org/bitcoin.pdf ya coin ka website"
+                    style={{ ...INP, marginBottom:10 }}
+                    onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+                  <div style={{ fontSize:10, color:"#94a3b8", marginBottom:12, lineHeight:1.6 }}>
+                    💡 <strong>Tip:</strong> PDF links direct work nahi karte — agar error aaye to "Text Paste Karo" mode try karo
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontSize:10, color:T.text3, fontWeight:700, marginBottom:6 }}>WHITEPAPER TEXT PASTE KARO</div>
+                  <textarea value={wpText} onChange={e=>setWpText(e.target.value)}
+                    placeholder={"PDF/Website se text copy karo aur yahan paste karo...\n\nTip: Ctrl+A → Ctrl+C website pe → yahan Ctrl+V\n\nMinimum 200 words chahiye accurate summary ke liye."}
+                    rows={7}
+                    style={{ width:"100%", background:"#f8fafc", border:`2px solid ${T.border}`, borderRadius:12,
+                      padding:"12px", fontSize:12, color:T.text, resize:"vertical", lineHeight:1.6,
+                      fontFamily:"'Inter',sans-serif", boxSizing:"border-box", marginBottom:10 }}
+                    onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor=T.border}/>
+                  <div style={{ fontSize:10, color:"#94a3b8", marginBottom:12 }}>
+                    {wpText.length > 0 ? `${wpText.length} characters ` : ""}
+                    {wpText.length > 5000 ? "✅ Enough content!" : wpText.length > 200 ? "📝 Good — aur zyada better!" : ""}
+                  </div>
+                </div>
+              )}
+
+              {wpError && (
+                <div style={{ background:"#fef2f2", border:"1px solid #fca5a5", borderRadius:10, padding:"10px 12px", fontSize:12, color:"#dc2626", marginBottom:10, lineHeight:1.6 }}>
+                  ⚠️ {wpError}
+                  {(wpError.includes("PDF") || wpError.includes("fetch")) && (
+                    <div style={{ marginTop:6 }}>
+                      <button onClick={()=>setWpMode("paste")}
+                        style={{ background:"#dc2626", color:"#fff", border:"none", borderRadius:8, padding:"4px 12px", fontSize:11, cursor:"pointer", fontFamily:"'Inter',sans-serif", fontWeight:700 }}>
+                        📋 Text Paste Mode Try Karo
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <button onClick={analyzeWhitepaper}
+                disabled={wpLoad || (wpMode==="url"?!wpUrl.trim():wpText.length<100)}
+                style={{ ...BTN, width:"100%", padding:"14px", borderRadius:12, fontSize:14,
+                  background: wpLoad?"#64748b":"linear-gradient(135deg,#10b981,#059669)",
+                  boxShadow:"0 4px 14px rgba(16,185,129,.4)", opacity: wpLoad?1:(wpMode==="url"?!wpUrl.trim():wpText.length<100)?0.5:1 }}>
+                {wpLoad
+                  ? <span>⟳ AI Analyze Kar Raha Hai... (30-60 sec)</span>
+                  : "🔍 Whitepaper Analyze Karo"}
+              </button>
+
+              {wpLoad && (
+                <div style={{ marginTop:10, textAlign:"center" }}>
+                  <div style={{ fontSize:11, color:T.text3, lineHeight:1.8 }}>
+                    📖 Content padhh raha hai...<br/>
+                    🤖 AI summary bana raha hai...<br/>
+                    ⏱️ 2-3 ghante ka kaam 60 seconds mein!
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* RESULT */}
+            {wpResult && (
+              <div className="fadein">
+                {/* Time saved badge */}
+                <div style={{ background:"linear-gradient(135deg,#ecfdf5,#d1fae5)", border:"2px solid #6ee7b7", borderRadius:14, padding:"10px 14px", marginBottom:12, display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:24 }}>⏱️</span>
+                  <div>
+                    <div style={{ fontWeight:800, fontSize:13, color:"#065f46" }}>2-3 Ghante Bache! 🎉</div>
+                    <div style={{ fontSize:11, color:"#059669" }}>AI ne whitepaper analyze kar diya</div>
+                  </div>
+                </div>
+
+                {/* Summary */}
+                <div style={{ background:"#fff", border:`1px solid ${T.border}`, borderRadius:20, padding:"18px", boxShadow:"0 4px 20px rgba(0,0,0,.06)", marginBottom:12 }}>
+                  <div style={{ fontWeight:700, fontSize:14, color:T.text, marginBottom:14, display:"flex", alignItems:"center", gap:8 }}>
+                    <span style={{ fontSize:20 }}>📄</span> Whitepaper Summary — YYP AI
+                  </div>
+                  {wpResult.split("\n").map((line,i) => {
+                    if (!line.trim()) return <div key={i} style={{ height:8 }}/>;
+                    if (line.match(/^[🪙⚡👥💰📊🚨✅⏱️]/)) {
+                      return (
+                        <div key={i} style={{ background:"#f8fafc", borderRadius:12, padding:"10px 12px", marginBottom:8, borderLeft:"3px solid #10b981" }}>
+                          <div style={{ fontWeight:700, fontSize:13, color:T.text, lineHeight:1.6 }}>{line}</div>
+                        </div>
+                      );
+                    }
+                    return <div key={i} style={{ fontSize:13, color:"#475569", lineHeight:1.7, paddingLeft:4 }}>{line}</div>;
+                  })}
+                </div>
+
+                {/* Actions */}
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`📄 Whitepaper Summary — YES YOU PRO AI\n\n${wpResult.slice(0,500)}...\n\nFull analysis: yesyoupro.com/features`)}`)}
+                    style={{ flex:1, background:"#25D366", color:"#fff", border:"none", borderRadius:12, padding:"12px", fontWeight:700, fontSize:12, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+                    📱 Share Summary
+                  </button>
+                  <button onClick={()=>{setWpResult(null);setWpUrl("");setWpText("");setWpError("");}}
+                    style={{ flex:1, background:"#f8fafc", border:`1px solid ${T.border}`, borderRadius:12, padding:"12px", fontWeight:700, fontSize:12, cursor:"pointer", color:T.text, fontFamily:"'Inter',sans-serif" }}>
+                    🔄 New Whitepaper
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* How to use guide */}
+            {!wpResult && !wpLoad && (
+              <div style={{ ...CARD, background:"linear-gradient(135deg,#fffbeb,#fef3c7)", border:"1px solid #fde68a" }}>
+                <div style={{ fontWeight:700, fontSize:13, color:"#92400e", marginBottom:10 }}>📖 Kaise Use Karein?</div>
+                {[
+                  { n:"1", t:"Coin ka whitepaper dhundho", d:'Google pe search karo: "[Coin name] whitepaper" → website link copy karo' },
+                  { n:"2", t:"URL paste karo ya text copy karo", d:"URL direct paste karo ya PDF mein se text copy karke paste karo" },
+                  { n:"3", t:"Analyze button dabao", d:"AI 30-60 seconds mein poora summary de dega" },
+                  { n:"4", t:"Smart decision lo", d:"2-3 ghante ki research → 2 minute mein complete! Time aur paise dono bachao" },
+                ].map((s,i)=>(
+                  <div key={i} style={{ display:"flex", gap:10, marginBottom:12, alignItems:"flex-start" }}>
+                    <div style={{ width:28, height:28, borderRadius:"50%", background:"linear-gradient(135deg,#f59e0b,#d97706)", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:12, color:"#fff", flexShrink:0 }}>
+                      {s.n}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight:700, fontSize:12, color:"#92400e" }}>{s.t}</div>
+                      <div style={{ fontSize:11, color:"#78350f", marginTop:2, lineHeight:1.5 }}>{s.d}</div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
