@@ -646,6 +646,17 @@ export default function Home() {
               📊 Live Market
             </Link>
           </div>
+          {/* Whitepaper teaser */}
+          <Link href="/features?tab=whitepaper" style={{display:"block",textDecoration:"none",marginTop:8,background:"linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05))",border:"1px solid rgba(16,185,129,.3)",borderRadius:12,padding:"10px 14px"}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:20}}>⏱️</span>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:700,fontSize:12,color:"#10b981"}}>Whitepaper AI — 2-3 Ghante Bachao!</div>
+                <div style={{fontSize:10,color:"#64748b",marginTop:2}}>50-100 page whitepaper → 2 min summary → Smart decision</div>
+              </div>
+              <span style={{color:"#10b981",fontSize:14}}>→</span>
+            </div>
+          </Link>
         </div>
         {/* ══════════════════════════════════════════════════════════════════ */}
         {activeTab==="analyze" && (
