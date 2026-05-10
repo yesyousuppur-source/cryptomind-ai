@@ -630,7 +630,7 @@ Give response in this EXACT JSON format (no extra text):
         </div>
 
         {/* Tab Bar */}
-        <div style={{ background:"#fff", borderRadius:16, padding:"6px", marginBottom:20, boxShadow:T.shadow, border:`1px solid ${T.border}`, display:"flex", gap:2 }}>
+        <div style={{ background:"#fff", borderRadius:16, padding:"6px", marginBottom:12, boxShadow:T.shadow, border:`1px solid ${T.border}`, display:"flex", gap:2 }}>
           {TABS.map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)}
               style={{ flex:1, border: tab===t.id?"1px solid #6ee7b7":"1px solid transparent", background: tab===t.id?"linear-gradient(135deg,#ecfdf5,#d1fae5)":"transparent", color: tab===t.id?T.greenDk:T.text3, borderRadius:12, padding:"10px 4px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, transition:"all .2s", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
@@ -638,6 +638,18 @@ Give response in this EXACT JSON format (no extra text):
               <span style={{ fontSize:10 }}>{t.label}</span>
             </button>
           ))}
+        </div>
+
+        {/* AD — BELOW TAB BAR */}
+        <div style={{marginBottom:14,borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+          <div style={{fontSize:9,color:"#94a3b8",marginBottom:2,letterSpacing:1}}>ADVERTISEMENT</div>
+          <ins className="adsbygoogle"
+            style={{display:"block"}}
+            data-ad-client="ca-pub-9884021055437527"
+            data-ad-slot="AUTO"
+            data-ad-format="auto"
+            data-full-width-responsive="true"/>
+          <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════ */}
@@ -1734,6 +1746,18 @@ Give response in this EXACT JSON format (no extra text):
 
         {/* Footer */}
         <div style={{ textAlign:"center", marginTop:24 }}>
+
+          {/* AD — BEFORE FOOTER */}
+          <div style={{marginBottom:14,borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+            <div style={{fontSize:9,color:"#94a3b8",marginBottom:2,letterSpacing:1}}>ADVERTISEMENT</div>
+            <ins className="adsbygoogle"
+              style={{display:"block"}}
+              data-ad-client="ca-pub-9884021055437527"
+              data-ad-slot="AUTO"
+              data-ad-format="auto"
+              data-full-width-responsive="true"/>
+            <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+          </div>
           <Link href="/arena" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"linear-gradient(135deg,#10b981,#059669)", color:"#fff", textDecoration:"none", borderRadius:14, padding:"13px 28px", fontWeight:700, fontSize:14, boxShadow:"0 4px 20px rgba(16,185,129,.4)", marginBottom:14 }}>
             🏟️ Virtual Trading Arena →
           </Link>
