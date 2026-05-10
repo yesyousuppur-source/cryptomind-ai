@@ -257,7 +257,8 @@ let cache = { data: null, ts: 0 };
 
 export async function GET() {
   const now = Date.now();
-  if (cache.data && now - cache.ts < 10*60*1000) {
+  // Cache 2 min only
+  if (cache.data && now - cache.ts < 2*60*1000) {
     return NextResponse.json(cache.data);
   }
 
