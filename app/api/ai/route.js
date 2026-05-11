@@ -7,7 +7,7 @@ export async function POST(request) {
       decision, confidence, risk, budgetAmount, budgetCurrency, scamFlags,
       imageBase64, imageType, userSituation, coinName, newsHeadlines, scamData,
       // new
-      iqAnswers, portfolio, networkCoin, tradeDescription, desiMode } = body;
+      iqAnswers, portfolio, networkCoin, tradeDescription, desiMode, systemPrompt, coins } = body;
 
     const fmt = (n) => n >= 1
       ? "$" + n.toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 })
@@ -54,7 +54,15 @@ Format: 🎯 Situation Analysis: | 💡 My Honest Advice: | ⚠️ Important War
 Warm, honest, practical. Max 200 words.` }];
     }
     else if (mode === "compare") {
-      messages = [{ role:"user", content: systemPrompt || `Compare these crypto coins and give verdict.` }];
+      messages = [{ role:"user", content: systemPrompt ||
+        `Compare these crypto coins for Indian investors and give honest verdict in Hinglish.
+Give response in this EXACT format:
+🏆 WINNER: [coin] — [one line reason]
+📊 RANKING: [ranking with > between coins]
+💪 STRONGEST: [coin] — [reason]
+🚀 MOST POTENTIAL: [coin] — [reason]
+⚠️ AVOID NOW: [coin if any] — [reason]  
+💡 VERDICT: [2-3 lines honest advice in Hinglish]` }];
     }
     else if (mode === "explain" || mode === "explain_desi") {
       const isDesi = mode === "explain_desi" || desiMode;
@@ -217,9 +225,11 @@ Max 200 words. Keep it insightful and specific.` }];
     }
 
     const maxTokens = {
-      screenshot: 600, explain: 500, news_impact: 500, scam_ai: 450,
+      screenshot: 600, explain: 500, explain_desi: 500,
+      news_impact: 500, scam_ai: 450,
       iq_test: 600, health_checkup: 600, desi_network: 400,
-    }[mode] || 400;
+      compare: 800, fomo_detector: 600,
+    }[mode] || 500;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
