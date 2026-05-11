@@ -428,78 +428,82 @@ export default function Home() {
     if (coins.length < 2) return;
     setCompareLoad(true); setCompareData(null);
     try {
-      // Fetch ticker data for all coins
       const syms = coins.map(c=>`"${c}USDT"`).join(",");
       const [tickRes, ...klineRes] = await Promise.all([
         fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`).then(r=>r.json()),
         ...coins.map(c=>
-          fetch(`https://api.binance.com/api/v3/klines?symbol=${c}USDT&interval=1d&limit=60`)
+          fetch(`https://api.binance.com/api/v3/klines?symbol=${c}USDT&interval=1d&limit=365`)
             .then(r=>r.ok?r.json():[]).catch(()=>[])
         ),
       ]);
 
       const results = coins.map((coin,i) => {
-        const t = Array.isArray(tickRes) ? tickRes.find(x=>x.symbol===coin+"USDT") : null;
+        const t = Array.isArray(tickRes)?tickRes.find(x=>x.symbol===coin+"USDT"):null;
         if (!t) return null;
-        const closes = Array.isArray(klineRes[i]) ? klineRes[i].map(k=>parseFloat(k[4])) : [];
+        const closes = Array.isArray(klineRes[i])?klineRes[i].map(k=>parseFloat(k[4])):[];
         const price = parseFloat(t.lastPrice);
         const ch24  = parseFloat(t.priceChangePercent);
         const vol   = parseFloat(t.quoteVolume);
-
-        // RSI
-        let rsi = 50;
-        if (closes.length > 15) {
+        let rsi=50;
+        if(closes.length>15){
           let ag=0,al=0;
           for(let j=1;j<=14;j++){const d=closes[j]-closes[j-1];d>0?ag+=d:al+=Math.abs(d);}
           ag/=14;al/=14;
           for(let j=15;j<closes.length;j++){const d=closes[j]-closes[j-1];ag=(ag*13+(d>0?d:0))/14;al=(al*13+(d<0?Math.abs(d):0))/14;}
-          rsi = al===0?100:100-100/(1+ag/al);
+          rsi=al===0?100:100-100/(1+ag/al);
         }
-
-        const ma20 = closes.length>=20?closes.slice(-20).reduce((a,b)=>a+b,0)/20:price;
-        const ma50 = closes.length>=50?closes.slice(-50).reduce((a,b)=>a+b,0)/50:price;
-        const ch7d = closes.length>=8?((closes[closes.length-1]-closes[closes.length-8])/closes[closes.length-8]*100):ch24;
-        const ch30 = closes.length>=30?((closes[closes.length-1]-closes[closes.length-30])/closes[closes.length-30]*100):ch7d;
-
-        // Score (0-100)
-        let score = 50;
-        if(rsi<30) score+=25; else if(rsi<40) score+=15; else if(rsi<50) score+=8;
-        else if(rsi>70) score-=20; else if(rsi>60) score-=10;
-        if(price>ma50) score+=12; else score-=5;
-        if(price>ma20) score+=8;
-        if(ch24>=-3&&ch24<=8) score+=8;
-        else if(ch24>15) score-=15;
-        else if(ch24<-10) score+=5;
-
-        score = Math.max(0,Math.min(100,Math.round(score)));
-
-        return { coin, price, ch24, ch7d, ch30, vol, rsi:rsi.toFixed(1), score, ma20, ma50, trend: price>ma50?"Bullish":"Bearish" };
+        const ma20=closes.length>=20?closes.slice(-20).reduce((a,b)=>a+b,0)/20:price;
+        const ma50=closes.length>=50?closes.slice(-50).reduce((a,b)=>a+b,0)/50:price;
+        const ch7d=closes.length>=8?((closes[closes.length-1]-closes[closes.length-8])/closes[closes.length-8]*100):ch24;
+        const ch30=closes.length>=30?((closes[closes.length-1]-closes[closes.length-30])/closes[closes.length-30]*100):ch7d;
+        const ch365=closes.length>=360?((closes[closes.length-1]-closes[0])/closes[0]*100):null;
+        const ch90=closes.length>=90?((closes[closes.length-1]-closes[closes.length-90])/closes[closes.length-90]*100):null;
+        let score=50;
+        if(rsi<30)score+=25;else if(rsi<40)score+=15;else if(rsi<50)score+=8;
+        else if(rsi>70)score-=20;else if(rsi>60)score-=10;
+        if(price>ma50)score+=12;else score-=5;
+        if(price>ma20)score+=8;
+        if(ch24>=-3&&ch24<=8)score+=8;else if(ch24>15)score-=15;else if(ch24<-10)score+=5;
+        score=Math.max(0,Math.min(100,Math.round(score)));
+        const safetyScore=["BTC","ETH","BNB"].includes(coin)?5:["SOL","ADA","AVAX"].includes(coin)?4:["LINK","DOT","MATIC","XRP"].includes(coin)?3:2;
+        const potentialScore=rsi<40?5:rsi<50?4:ch30>20?4:score>=65?3:2;
+        const liquidityScore=vol>1e9?5:vol>5e8?4:vol>1e8?3:vol>1e7?2:1;
+        const trendScore=price>ma50&&price>ma20?5:price>ma50?4:price>ma20?3:price<ma20&&price<ma50?1:2;
+        const riskLevel=safetyScore>=4?1:safetyScore===3?2:safetyScore===2?3:4;
+        const projectedReturn=ch30>0?(1+Math.min(ch30,50)/100):ch30<-10?(1+Math.max(ch30,-40)/100):1.05;
+        const projected10k=Math.round(10000*projectedReturn);
+        const hist1y=ch365!==null?Math.round(10000*(1+ch365/100)):null;
+        const hist90d=ch90!==null?Math.round(10000*(1+ch90/100)):null;
+        return { coin, price, ch24, ch7d, ch30, ch90, ch365, vol, score, rsi:rsi.toFixed(1), ma20, ma50,
+          trend:price>ma50?"Bullish":"Bearish", safetyScore, potentialScore, liquidityScore, trendScore,
+          riskLevel, projected10k, hist1y, hist90d };
       }).filter(Boolean);
 
-      if (results.length < 2) { setCompareLoad(false); return; }
+      if(results.length<2){setCompareLoad(false);return;}
+      results.sort((a,b)=>b.score-a.score);
 
-      // AI verdict
-      const prompt = `You are a crypto analyst. Compare these ${results.length} coins for Indian investors:
-${results.map(r=>`${r.coin}: Price $${r.price.toFixed(4)}, RSI ${r.rsi}, 24h ${r.ch24.toFixed(1)}%, 7d ${r.ch7d.toFixed(1)}%, Score ${r.score}/100, Trend ${r.trend}`).join('\n')}
-
-Give response in this EXACT format:
-🏆 WINNER: [coin name] — [one line reason]
-📊 RANKING: [1st coin] > [2nd coin]${results.length>2?" > [3rd coin]":""}${results.length>3?" > [4th coin]":""}
-💪 STRONGEST: [coin] — [reason in Hindi/English mix]
+      const prompt=`You are a crypto analyst for Indian investors. Compare:
+${results.map(r=>`${r.coin}: Score ${r.score}/100, RSI ${r.rsi}, 24h ${r.ch24.toFixed(1)}%, 30d ${r.ch30?.toFixed(1)||"N/A"}%, Safety ${r.safetyScore}/5, Potential ${r.potentialScore}/5`).join("\n")}
+EXACT format (Hinglish):
+🏆 WINNER: [coin] — [reason]
+📊 RANKING: ${results.map(r=>r.coin).join(" > ")}
+💪 STRONGEST: [coin] — [reason]
 🚀 MOST POTENTIAL: [coin] — [reason]
-⚠️ AVOID NOW: [coin if any] — [reason]
-💡 VERDICT: [2-3 lines honest advice in Hinglish]`;
+⚠️ AVOID NOW: [coin or "Sab theek hain"] — [reason]
+💰 BEGINNERS KE LIYE: [coin] — [reason]
+🎯 AGAR SIRF 1 KHAREEDHNA HAI: [coin]
+🎯 AGAR 2 KHAREEDHNE HAIN: [coin1] + [coin2]
+💡 FINAL ADVICE: [2-3 lines Hinglish]`;
 
-      const aiR = await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({mode:"compare",systemPrompt:prompt,coins:results.map(r=>r.coin)})});
-      const aiJ = await aiR.json();
-
-      setCompareData({ results, verdict: aiJ.text||"" });
-    } catch(_) {}
+      const aiR=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({mode:"compare",systemPrompt:prompt})});
+      const aiJ=await aiR.json();
+      setCompareData({results,verdict:aiJ.text||""});
+    }catch(_){}
     setCompareLoad(false);
   };
 
-  // ── PRICE ALERTS ───────────────────────────────────────────────────────────
+    // ── PRICE ALERTS ───────────────────────────────────────────────────────────
   const addAlert = () => {
     if(!alertCoin||!alertPrice) return;
 
@@ -1542,51 +1546,168 @@ Give response in this EXACT format:
               {/* Results */}
               {compareData&&(
                 <div className="fadein" style={{marginTop:14}}>
-                  {/* Score cards */}
-                  <div style={{display:"grid",gridTemplateColumns:`repeat(${compareData.results.length},1fr)`,gap:6,marginBottom:12}}>
-                    {compareData.results.map((r,i)=>{
-                      const best = compareData.results[0].score===r.score&&i===0;
-                      return(
-                      <div key={r.coin} style={{background: best?"linear-gradient(135deg,#f5f3ff,#ede9fe)":"#f8fafc",
-                        border:`2px solid ${best?"#6366f1":"#e2e8f0"}`,borderRadius:14,padding:"10px 8px",textAlign:"center",
-                        boxShadow:best?"0 4px 14px rgba(99,102,241,.2)":"none"}}>
-                        {best&&<div style={{fontSize:9,color:"#6366f1",fontWeight:800,marginBottom:4}}>🏆 BEST</div>}
-                        <div className="mono" style={{fontSize:14,fontWeight:900,color:best?"#4f46e5":"#0f172a"}}>{r.coin}</div>
-                        <div style={{fontSize:18,fontWeight:900,color:r.score>=65?"#059669":r.score>=50?"#d97706":"#dc2626",margin:"4px 0"}}>{r.score}</div>
-                        <div style={{fontSize:8,color:"#94a3b8"}}>Score/100</div>
-                        <div style={{margin:"4px 0",height:3,background:"#f1f5f9",borderRadius:100}}>
-                          <div style={{height:"100%",width:`${r.score}%`,background:`linear-gradient(90deg,${r.score>=65?"#10b981":r.score>=50?"#f59e0b":"#ef4444"},${r.score>=65?"#059669":r.score>=50?"#d97706":"#dc2626"})`,borderRadius:100}}/>
+
+                  {/* 1. VISUAL BAR CHART */}
+                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10}}>
+                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>📊 Score Comparison</div>
+                    {compareData.results.map((r,i)=>(
+                      <div key={r.coin} style={{marginBottom:8}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                          <span style={{fontWeight:700,fontSize:12,color:i===0?"#4f46e5":"#0f172a"}}>{i===0?"🏆 ":""}{r.coin}</span>
+                          <span style={{fontWeight:800,fontSize:12,color:r.score>=65?"#059669":r.score>=50?"#d97706":"#dc2626"}}>{r.score}/100</span>
                         </div>
-                        <div style={{fontSize:9,color:parseFloat(r.ch24)>=0?"#059669":"#dc2626",fontWeight:700,marginTop:3}}>
-                          {parseFloat(r.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(r.ch24)).toFixed(1)}% 24h
-                        </div>
-                        <div style={{fontSize:9,color:"#94a3b8",marginTop:2}}>RSI: {r.rsi}</div>
-                        <div style={{fontSize:9,fontWeight:700,color:r.trend==="Bullish"?"#059669":"#dc2626",marginTop:2}}>
-                          {r.trend==="Bullish"?"📈":"📉"} {r.trend}
+                        <div style={{background:"#f1f5f9",borderRadius:100,height:10,overflow:"hidden"}}>
+                          <div style={{height:"100%",borderRadius:100,
+                            width:`${r.score}%`,
+                            background:i===0?"linear-gradient(90deg,#6366f1,#4f46e5)":
+                              r.score>=65?"linear-gradient(90deg,#10b981,#059669)":
+                              r.score>=50?"linear-gradient(90deg,#f59e0b,#d97706)":"linear-gradient(90deg,#ef4444,#dc2626)",
+                            transition:"width 1s ease"}}/>
                         </div>
                       </div>
-                    );})}
+                    ))}
                   </div>
 
-                  {/* AI Verdict */}
-                  {compareData.verdict&&(
-                    <div style={{background:"linear-gradient(135deg,#f5f3ff,#ede9fe)",border:"1px solid #c4b5fd",borderRadius:16,padding:"14px"}}>
-                      <div style={{fontWeight:700,fontSize:13,color:"#4f46e5",marginBottom:10}}>🤖 AI Verdict</div>
-                      {compareData.verdict.split("\n").filter(Boolean).map((line,i)=>(
-                        <div key={i} style={{fontSize:12,color:"#1e1b4b",lineHeight:1.7,marginBottom:4,
-                          fontWeight:line.startsWith("🏆")||line.startsWith("🚀")?700:400}}>
-                          {line}
+                  {/* 2. CATEGORY STARS */}
+                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10,overflowX:"auto"}}>
+                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>⭐ Category Comparison</div>
+                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+                      <thead>
+                        <tr style={{borderBottom:"2px solid #f1f5f9"}}>
+                          <td style={{padding:"4px 6px",color:"#94a3b8",fontWeight:600}}>Category</td>
+                          {compareData.results.map(r=><td key={r.coin} style={{padding:"4px 6px",textAlign:"center",fontWeight:800,color:"#4f46e5"}}>{r.coin}</td>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          {label:"🛡️ Safety",key:"safetyScore"},
+                          {label:"🚀 Potential",key:"potentialScore"},
+                          {label:"💧 Liquidity",key:"liquidityScore"},
+                          {label:"📈 Trend",key:"trendScore"},
+                        ].map(cat=>(
+                          <tr key={cat.key} style={{borderBottom:"1px solid #f8fafc"}}>
+                            <td style={{padding:"6px 6px",color:"#475569",fontWeight:600}}>{cat.label}</td>
+                            {compareData.results.map(r=>(
+                              <td key={r.coin} style={{padding:"6px 6px",textAlign:"center"}}>
+                                {"⭐".repeat(r[cat.key])}{"☆".repeat(5-r[cat.key])}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* 3. RISK LEVEL METER */}
+                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10}}>
+                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>⚠️ Risk Level</div>
+                    {compareData.results.map(r=>{
+                      const riskColors=["","#10b981","#f59e0b","#ef4444","#dc2626"];
+                      const riskLabels=["","LOW RISK","MEDIUM","HIGH","VERY HIGH"];
+                      const riskEmoji=["","🟢","🟡","🟠","🔴"];
+                      return(
+                        <div key={r.coin} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                          <div style={{width:40,fontWeight:700,fontSize:11}}>{r.coin}</div>
+                          <div style={{flex:1,display:"flex",gap:3}}>
+                            {[1,2,3,4].map(n=>(
+                              <div key={n} style={{flex:1,height:8,borderRadius:4,
+                                background:n<=r.riskLevel?riskColors[r.riskLevel]:"#f1f5f9"}}/>
+                            ))}
+                          </div>
+                          <div style={{fontSize:10,fontWeight:700,color:riskColors[r.riskLevel],width:70,textAlign:"right"}}>
+                            {riskEmoji[r.riskLevel]} {riskLabels[r.riskLevel]}
+                          </div>
                         </div>
-                      ))}
+                      );
+                    })}
+                  </div>
+
+                  {/* 4. ₹10,000 SIMULATOR */}
+                  <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:16,padding:"14px",marginBottom:10}}>
+                    <div style={{fontWeight:700,fontSize:12,color:"#059669",marginBottom:4}}>💰 ₹10,000 Aaj Invest Karo</div>
+                    <div style={{fontSize:10,color:"#94a3b8",marginBottom:10}}>30 din ke momentum ke basis pe estimate</div>
+                    {compareData.results.map((r,i)=>(
+                      <div key={r.coin} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                        background:i===0?"rgba(16,185,129,.1)":"transparent",
+                        borderRadius:8,padding:"6px 8px",marginBottom:4}}>
+                        <div style={{fontWeight:700,fontSize:12}}>{i===0?"🏆 ":""}{r.coin}</div>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontWeight:800,fontSize:13,
+                            color:r.projected10k>=10000?"#059669":"#dc2626"}}>
+                            ₹{r.projected10k.toLocaleString("en-IN")}
+                          </div>
+                          <div style={{fontSize:9,color:r.projected10k>=10000?"#10b981":"#ef4444"}}>
+                            {r.projected10k>=10000?"+":""}{((r.projected10k-10000)/100).toFixed(0)}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{fontSize:9,color:"#94a3b8",marginTop:6}}>⚠️ Estimate only — not financial advice</div>
+                  </div>
+
+                  {/* 5. HISTORICAL COMPARISON */}
+                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10}}>
+                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>📅 ₹10,000 Pehle Lagaya Hota To</div>
+                    {compareData.results.map((r,i)=>(
+                      <div key={r.coin} style={{marginBottom:8,padding:"8px",background:i===0?"#f5f3ff":"#f8fafc",borderRadius:10}}>
+                        <div style={{fontWeight:700,fontSize:12,marginBottom:4}}>{i===0?"🏆 ":""}{r.coin}</div>
+                        <div style={{display:"flex",gap:8}}>
+                          {r.hist90d&&(
+                            <div style={{flex:1,textAlign:"center",background:"#fff",borderRadius:8,padding:"5px"}}>
+                              <div style={{fontSize:9,color:"#94a3b8"}}>90 din pehle</div>
+                              <div style={{fontWeight:800,fontSize:12,color:r.hist90d>=10000?"#059669":"#dc2626"}}>
+                                ₹{r.hist90d.toLocaleString("en-IN")}
+                              </div>
+                            </div>
+                          )}
+                          {r.hist1y&&(
+                            <div style={{flex:1,textAlign:"center",background:"#fff",borderRadius:8,padding:"5px"}}>
+                              <div style={{fontSize:9,color:"#94a3b8"}}>1 saal pehle</div>
+                              <div style={{fontWeight:800,fontSize:12,color:r.hist1y>=10000?"#059669":"#dc2626"}}>
+                                ₹{r.hist1y.toLocaleString("en-IN")}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* 6. AI VERDICT + KAUNSA KHAREEDON */}
+                  {compareData.verdict&&(
+                    <div style={{background:"linear-gradient(135deg,#f5f3ff,#ede9fe)",border:"2px solid #6366f1",borderRadius:16,padding:"16px",marginBottom:10}}>
+                      <div style={{fontWeight:800,fontSize:14,color:"#4f46e5",marginBottom:12,display:"flex",alignItems:"center",gap:6}}>
+                        🤖 AI Verdict — <span style={{fontSize:11,fontWeight:400,color:"#7c3aed"}}>Poora Analysis</span>
+                      </div>
+                      {compareData.verdict.split("\n").filter(Boolean).map((line,i)=>{
+                        const isImportant = line.startsWith("🏆")||line.startsWith("🎯")||line.startsWith("🚀")||line.startsWith("💪");
+                        return(
+                          <div key={i} style={{
+                            fontSize:isImportant?13:12,
+                            color:"#1e1b4b",
+                            lineHeight:1.8,
+                            marginBottom:isImportant?8:4,
+                            fontWeight:isImportant?700:400,
+                            background:isImportant?"rgba(99,102,241,.08)":"transparent",
+                            borderRadius:isImportant?8:0,
+                            padding:isImportant?"6px 10px":"0 2px",
+                            borderLeft:isImportant?"3px solid #6366f1":"none",
+                          }}>
+                            {line}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
                   {/* Share */}
                   <button onClick={()=>{
+                    const winner=compareData.results[0];
                     const coins=compareData.results.map(r=>`${r.coin}(${r.score}/100)`).join(" vs ");
-                    window.open(`https://wa.me/?text=${encodeURIComponent(`⚔️ Coin Comparison — YES YOU PRO\n\n${coins}\n\n${compareData.verdict.slice(0,300)}\n\nyesyoupro.com`)}`);
-                  }} style={{marginTop:10,width:"100%",background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-                    📱 WhatsApp Pe Share Karo
+                    const msg=`⚔️ Crypto Battle — YES YOU PRO\n\n${coins}\n\n🏆 Winner: ${winner.coin}\n\n${compareData.verdict.slice(0,250)}\n\nyesyoupro.com`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+                  }} style={{width:"100%",background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    📱 Dosto Ko Battle Share Karo
                   </button>
                 </div>
               )}
