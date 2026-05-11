@@ -429,8 +429,17 @@ export default function Home() {
     setCompareLoad(true); setCompareData(null);
     try {
       const syms = coins.map(c=>`"${c}USDT"`).join(",");
-      const [tickRes, ...klineRes] = await Promise.all([
+      // CoinGecko IDs for market cap
+      const gckoIds = {BTC:"bitcoin",ETH:"ethereum",SOL:"solana",BNB:"binancecoin",XRP:"ripple",
+        ADA:"cardano",AVAX:"avalanche-2",DOGE:"dogecoin",LINK:"chainlink",MATIC:"matic-network",
+        DOT:"polkadot",APT:"aptos",SUI:"sui",INJ:"injective-protocol",ARB:"arbitrum",
+        OP:"optimism",NEAR:"near",ATOM:"cosmos",UNI:"uniswap",LTC:"litecoin",
+        TRX:"tron",TON:"the-open-network",AAVE:"aave",PEPE:"pepe",SOL:"solana"};
+      const geckoIds = coins.map(c=>gckoIds[c]||c.toLowerCase()).join(",");
+      const [tickRes, geckoRes, ...klineRes] = await Promise.all([
         fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`).then(r=>r.json()),
+        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${geckoIds}&order=market_cap_desc`)
+          .then(r=>r.ok?r.json():[]).catch(()=>[]),
         ...coins.map(c=>
           fetch(`https://api.binance.com/api/v3/klines?symbol=${c}USDT&interval=1d&limit=365`)
             .then(r=>r.ok?r.json():[]).catch(()=>[])
@@ -474,9 +483,12 @@ export default function Home() {
         const projected10k=Math.round(10000*projectedReturn);
         const hist1y=ch365!==null?Math.round(10000*(1+ch365/100)):null;
         const hist90d=ch90!==null?Math.round(10000*(1+ch90/100)):null;
+        const gckoData = Array.isArray(geckoRes)?geckoRes.find(g=>g.symbol?.toUpperCase()===coin||g.id?.includes(coin.toLowerCase())):null;
+        const marketCap = gckoData?.market_cap||null;
+        const mcapRank  = gckoData?.market_cap_rank||null;
         return { coin, price, ch24, ch7d, ch30, ch90, ch365, vol, score, rsi:rsi.toFixed(1), ma20, ma50,
           trend:price>ma50?"Bullish":"Bearish", safetyScore, potentialScore, liquidityScore, trendScore,
-          riskLevel, projected10k, hist1y, hist90d };
+          riskLevel, projected10k, hist1y, hist90d, marketCap, mcapRank };
       }).filter(Boolean);
 
       if(results.length<2){setCompareLoad(false);return;}
@@ -634,6 +646,7 @@ EXACT format (Hinglish):
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes fadein{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
         @keyframes shimmer{0%,100%{opacity:.4}50%{opacity:.9}}
         @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
         @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
@@ -1538,14 +1551,85 @@ EXACT format (Hinglish):
               <button className="btn" onClick={compareCoins}
                 disabled={compareLoad||compareList.filter(Boolean).length<2}
                 style={{width:"100%",padding:"12px",borderRadius:12,fontSize:13,
-                  background:"linear-gradient(135deg,#7c3aed,#6366f1)",
+                  background:compareLoad?"#64748b":"linear-gradient(135deg,#7c3aed,#6366f1)",
                   boxShadow:"0 4px 14px rgba(99,102,241,.4)"}}>
-                {compareLoad?<span style={{display:"inline-block",animation:"spin .8s linear infinite"}}>⟳ Comparing…</span>:"⚔️ Compare Karo"}
+                {compareLoad?"⟳ Data Fetch Ho Raha Hai...":"⚔️ Compare Karo"}
               </button>
+
+              {/* Loading skeleton */}
+              {compareLoad&&(
+                <div className="fadein" style={{marginTop:14}}>
+                  <div style={{background:"#f5f3ff",borderRadius:14,padding:"16px",marginBottom:10}}>
+                    <div style={{fontWeight:700,fontSize:12,color:"#6366f1",marginBottom:10}}>⏳ Analyzing...</div>
+                    {compareList.filter(Boolean).map((coin,i)=>(
+                      <div key={i} style={{marginBottom:10}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                          <span style={{fontWeight:700,fontSize:12,color:"#4f46e5"}}>{coin}</span>
+                          <span style={{fontSize:10,color:"#94a3b8"}}>fetching...</span>
+                        </div>
+                        <div style={{display:"flex",gap:8}}>
+                          {["Price","Volume","Market Cap","Score"].map(l=>(
+                            <div key={l} style={{flex:1,background:"linear-gradient(90deg,#e2e8f0,#f1f5f9,#e2e8f0)",backgroundSize:"200% 100%",animation:"shimmer 1.5s infinite",borderRadius:8,height:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                              <span style={{fontSize:9,color:"#94a3b8"}}>{l}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{marginTop:8,fontSize:11,color:"#6366f1",textAlign:"center",fontWeight:600}}>
+                      {["🔍 Binance se price fetch...","📊 RSI calculate kar raha hai...","📅 Historical data...","🤖 AI verdict bana raha hai..."][Math.floor(Date.now()/1000)%4]}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Results */}
               {compareData&&(
                 <div className="fadein" style={{marginTop:14}}>
+
+                  {/* 0. PRICE / VOLUME / MARKET CAP */}
+                  <div style={{overflowX:"auto",marginBottom:10}}>
+                    <div style={{display:"grid",gridTemplateColumns:`repeat(${compareData.results.length},1fr)`,gap:8,minWidth:compareData.results.length*140}}>
+                      {compareData.results.map((r,i)=>(
+                        <div key={r.coin} style={{background:i===0?"linear-gradient(135deg,#f5f3ff,#ede9fe)":"#fff",
+                          border:`2px solid ${i===0?"#6366f1":"#e2e8f0"}`,borderRadius:16,padding:"12px 10px",textAlign:"center"}}>
+                          {i===0&&<div style={{fontSize:9,color:"#6366f1",fontWeight:800,marginBottom:4}}>🏆 BEST SCORE</div>}
+                          <div className="mono" style={{fontSize:16,fontWeight:900,color:i===0?"#4f46e5":"#0f172a",marginBottom:6}}>{r.coin}</div>
+                          {/* Current Price */}
+                          <div style={{background:"#f8fafc",borderRadius:10,padding:"6px 4px",marginBottom:6}}>
+                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>💰 PRICE</div>
+                            <div className="mono" style={{fontSize:12,fontWeight:800,color:"#0f172a"}}>
+                              ${r.price>=1?r.price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):r.price.toPrecision(4)}
+                            </div>
+                            <div style={{fontSize:10,fontWeight:700,color:parseFloat(r.ch24)>=0?"#059669":"#dc2626"}}>
+                              {parseFloat(r.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(r.ch24)).toFixed(1)}% 24h
+                            </div>
+                          </div>
+                          {/* Volume */}
+                          <div style={{background:"#f8fafc",borderRadius:10,padding:"6px 4px",marginBottom:6}}>
+                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>📊 VOLUME 24h</div>
+                            <div className="mono" style={{fontSize:11,fontWeight:700,color:"#2563eb"}}>
+                              ${r.vol>=1e9?(r.vol/1e9).toFixed(2)+"B":r.vol>=1e6?(r.vol/1e6).toFixed(1)+"M":(r.vol/1e3).toFixed(0)+"K"}
+                            </div>
+                          </div>
+                          {/* Market Cap */}
+                          <div style={{background:"#f8fafc",borderRadius:10,padding:"6px 4px",marginBottom:6}}>
+                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>🏦 MARKET CAP</div>
+                            <div className="mono" style={{fontSize:11,fontWeight:700,color:"#7c3aed"}}>
+                              {r.marketCap?`$${r.marketCap>=1e9?(r.marketCap/1e9).toFixed(1)+"B":(r.marketCap/1e6).toFixed(0)+"M"}`:"N/A"}
+                            </div>
+                            {r.mcapRank&&<div style={{fontSize:9,color:"#94a3b8"}}>Rank #{r.mcapRank}</div>}
+                          </div>
+                          {/* Score */}
+                          <div style={{background:i===0?"rgba(99,102,241,.15)":"#f8fafc",borderRadius:10,padding:"6px 4px"}}>
+                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>🎯 SCORE</div>
+                            <div style={{fontSize:20,fontWeight:900,color:r.score>=65?"#059669":r.score>=50?"#d97706":"#dc2626"}}>{r.score}</div>
+                            <div style={{fontSize:9,color:"#94a3b8"}}>/100</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* 1. VISUAL BAR CHART */}
                   <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10}}>
