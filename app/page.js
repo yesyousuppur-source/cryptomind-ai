@@ -143,12 +143,7 @@ export default function Home() {
 
   useEffect(()=>{
     fetch("/api/feargreed").then(r=>r.json()).then(setFg).catch(()=>setFg({value:50}));
-    // Auto-scan top5 on page load
     fetchTop5();
-    // Pump Radar
-    fetchRadar();
-    const radarInterval = setInterval(fetchRadar, 60000);
-    return ()=>clearInterval(radarInterval);
   },[]);
 
   // ── ANALYZE ────────────────────────────────────────────────────────────────
@@ -980,139 +975,125 @@ EXACT format (Hinglish):
               )}
             </div>
 
-            {/* PUMP RADAR — Replaces Smart Signal Finder */}
-            <div className="hov" style={{...CARD,position:"relative",overflow:"hidden",padding:0}}>
-              <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#ef4444,#f59e0b,#ef4444)",backgroundSize:"200% auto",animation:"gradmove 3s linear infinite"}}/>
-              
-              {/* Header */}
-              <div style={{padding:"16px 16px 12px",background:"linear-gradient(135deg,#1a0505,#2d0a0a)"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                  <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{fontSize:32}}>🚨</div>
-                    <div>
-                      <div style={{fontWeight:900,fontSize:16,color:"white"}}>Pump Radar</div>
-                      <div style={{fontSize:10,color:"#9ca3af"}}>CMC + CoinGecko + Volume — Live pump detect</div>
-                    </div>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    <div style={{width:6,height:6,borderRadius:"50%",background:"#ef4444",animation:"pulse 2s infinite"}}/>
-                    <span style={{fontSize:9,color:"#ef4444",fontWeight:700}}>LIVE</span>
-                    <span style={{fontSize:9,color:"#475569"}}>60s</span>
-                  </div>
-                </div>
+            {/* SMART SIGNAL FINDER */}
+            <div className="hov" style={{...CARD,position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#f59e0b,#10b981,#6366f1)",backgroundSize:"200% auto",animation:"gradmove 3s linear infinite"}}/>
+              <SH icon="🎯" title="Smart Signal Finder" subtitle="30 coins scan → AI analysis → Best 5 signals"/>
 
-                {/* Pump signal badges */}
-                {radarSignals.length>0&&(
-                  <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
-                    {radarSignals.slice(0,5).map(c=>(
-                      <div key={c.symbol} style={{flexShrink:0,background:"rgba(239,68,68,.2)",border:"1px solid rgba(239,68,68,.5)",borderRadius:10,padding:"5px 10px",textAlign:"center"}}>
-                        <div style={{fontWeight:800,fontSize:11,color:"#fca5a5"}}>{c.symbol}</div>
-                        <div style={{fontSize:12,fontWeight:900,color:"#ef4444"}}>{c.pumpScore}</div>
-                        <div style={{display:"flex",gap:2,justifyContent:"center",marginTop:2}}>
-                          {c.isGeckoTrending&&<span style={{fontSize:7,background:"#065f46",color:"#6ee7b7",borderRadius:3,padding:"1px 3px"}}>GCK</span>}
-                          {c.isCmcTrending&&<span style={{fontSize:7,background:"#1e3a8a",color:"#93c5fd",borderRadius:3,padding:"1px 3px"}}>CMC</span>}
-                          {c.volSpike&&<span style={{fontSize:7,background:"#7c2d12",color:"#fdba74",borderRadius:3,padding:"1px 3px"}}>VOL</span>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Google Ad — inside radar */}
-              <div style={{background:"#111827",borderTop:"1px solid #1f2937",borderBottom:"1px solid #1f2937",padding:"4px 12px",textAlign:"center"}}>
-                <div style={{fontSize:9,color:"#374151",marginBottom:2,letterSpacing:1}}>ADVERTISEMENT</div>
-                <ins className="adsbygoogle" style={{display:"block"}}
-                  data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO"
-                  data-ad-format="auto" data-full-width-responsive="true"/>
-                <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
-              </div>
-
-              {/* Coin list */}
-              <div style={{background:"#0f172a",padding:"0 12px 8px"}}>
-                {radarLoad?(
-                  <div style={{textAlign:"center",padding:"20px 0"}}>
-                    <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:8}}>
-                      {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
-                    </div>
-                    <div style={{fontSize:11,color:"#64748b"}}>CMC + CoinGecko scan ho raha hai...</div>
-                  </div>
-                ):(
-                  <div>
-                  {radarCoins.slice(0,8).map((coin,i)=>(
-                  <div key={coin.symbol} style={{
-                    background:coin.pumpScore>=60?"rgba(239,68,68,.06)":coin.pumpScore>=30?"rgba(245,158,11,.04)":"transparent",
-                    border:`1px solid ${coin.pumpScore>=60?"rgba(239,68,68,.25)":coin.pumpScore>=30?"rgba(245,158,11,.15)":"#1f2937"}`,
-                    borderRadius:12,marginTop:6,padding:"9px 10px",display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:10,color:"#475569",width:18,flexShrink:0}}>#{coin.rank}</span>
-                    <img src={coin.image} alt="" onError={e=>e.target.style.display="none"} style={{width:28,height:28,borderRadius:"50%",flexShrink:0}}/>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{display:"flex",alignItems:"center",gap:3,flexWrap:"wrap"}}>
-                        <span style={{fontWeight:800,fontSize:12,color:"#f1f5f9"}}>{coin.symbol}</span>
-                        {coin.isGeckoTrending&&<span style={{fontSize:7,background:"#065f46",color:"#6ee7b7",borderRadius:3,padding:"1px 4px",fontWeight:700}}>🦎GCK</span>}
-                        {coin.isCmcTrending&&<span style={{fontSize:7,background:"#1e3a8a",color:"#93c5fd",borderRadius:3,padding:"1px 4px",fontWeight:700}}>📊CMC</span>}
-                        {coin.volSpike&&<span style={{fontSize:7,background:"#7c2d12",color:"#fdba74",borderRadius:3,padding:"1px 4px",fontWeight:700}}>⚡VOL</span>}
-                      </div>
-                      <div style={{fontSize:9,color:"#475569"}}>
-                        MCap: {coin.marketCap>=1e9?"$"+(coin.marketCap/1e9).toFixed(1)+"B":"$"+(coin.marketCap/1e6).toFixed(0)+"M"}
-                      </div>
-                    </div>
-                    <div style={{textAlign:"right",flexShrink:0}}>
-                      <div className="mono" style={{fontSize:11,fontWeight:700,color:"#f1f5f9"}}>
-                        ${coin.price>=1?coin.price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):coin.price.toPrecision(4)}
-                      </div>
-                      <div style={{fontSize:9,color:coin.ch24>=0?"#34d399":"#f87171",fontWeight:600}}>
-                        {coin.ch24>=0?"▲":"▼"}{Math.abs(coin.ch24).toFixed(1)}% 24h
-                      </div>
-                    </div>
-                    <div style={{width:36,height:36,borderRadius:"50%",flexShrink:0,
-                      background:coin.pumpScore>=60?"linear-gradient(135deg,#ef4444,#dc2626)":coin.pumpScore>=30?"linear-gradient(135deg,#f59e0b,#d97706)":"#1f2937",
-                      display:"flex",alignItems:"center",justifyContent:"center",
-                      boxShadow:coin.pumpScore>=60?"0 0 10px rgba(239,68,68,.4)":"none"}}>
-                      <div style={{textAlign:"center"}}>
-                        <div style={{fontSize:10,fontWeight:900,color:"#fff",lineHeight:1}}>{coin.pumpScore}</div>
-                        <div style={{fontSize:6,color:"rgba(255,255,255,.6)"}}>pump</div>
-                      </div>
-                    </div>
+              {/* Color legend */}
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+                {[
+                  {label:"VERY STRONG",color:"#059669",bg:"#ecfdf5",score:"80+"},
+                  {label:"STRONG",color:"#10b981",bg:"#f0fdf4",score:"65+"},
+                  {label:"WATCH",color:"#d97706",bg:"#fffbeb",score:"48+"},
+                  {label:"WEAK",color:"#dc2626",bg:"#fef2f2",score:"<48"},
+                ].map(s=>(
+                  <div key={s.label} style={{background:s.bg,border:`1px solid ${s.color}44`,borderRadius:20,padding:"3px 10px",fontSize:9,color:s.color,fontWeight:700}}>
+                    {s.label} ({s.score})
                   </div>
                 ))}
+              </div>
+
+              {!top5Fetched?(
+                <div style={{textAlign:"center",padding:"16px 0"}}>
+                  <div style={{fontSize:32,marginBottom:8}}>🎯</div>
+                  <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>30 coins scan karke best signals dhundega</p>
+                  <button className="btn" onClick={fetchTop5} style={{padding:"11px 28px",fontSize:13,borderRadius:12}}>🔍 Scan Karo</button>
+                </div>
+              ):top5Load?(
+                <div style={{textAlign:"center",padding:"16px 0"}}>
+                  <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:10}}>
+                    {[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
                   </div>
-                )}
-
-              {/* Legend */}
-              <div style={{display:"flex",gap:6,flexWrap:"wrap",padding:"8px 16px",background:"rgba(0,0,0,.2)",borderTop:"1px solid rgba(255,255,255,.05)"}}>
-                <div style={{fontSize:9,color:"#64748b",fontWeight:600,width:"100%",marginBottom:2}}>BADGES KA MATLAB:</div>
-                <div style={{display:"flex",alignItems:"center",gap:4}}>
-                  <span style={{fontSize:8,background:"#065f46",color:"#6ee7b7",borderRadius:3,padding:"2px 5px",fontWeight:700}}>🦎GCK</span>
-                  <span style={{fontSize:9,color:"#64748b"}}>= CoinGecko pe trending</span>
+                  <p style={{fontSize:12,color:"#64748b"}}>Scanning 30 coins...</p>
                 </div>
-                <div style={{display:"flex",alignItems:"center",gap:4}}>
-                  <span style={{fontSize:8,background:"#1e3a8a",color:"#93c5fd",borderRadius:3,padding:"2px 5px",fontWeight:700}}>📊CMC</span>
-                  <span style={{fontSize:9,color:"#64748b"}}>= CoinMarketCap trending</span>
+              ):top5?.coins?.length>0?(
+                <div className="fadein">
+                  {/* Weak market warning */}
+                  {top5?.isWeakMarket&&(
+                    <div style={{background:"linear-gradient(135deg,#fffbeb,#fef3c7)",border:"2px solid #fde68a",borderRadius:14,padding:"10px 14px",marginBottom:12}}>
+                      <div style={{fontWeight:700,fontSize:12,color:"#92400e",marginBottom:2}}>⚠️ Weak Market — Cautious Signals</div>
+                      <div style={{fontSize:11,color:"#78350f"}}>Chhota position lo, tight stop loss lagao.</div>
+                    </div>
+                  )}
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {top5.coins.map((coin,i)=>{
+                      const signalColors = {
+                        "VERY STRONG":{color:"#059669",bg:"#ecfdf5",border:"#6ee7b7",badge:"🔥 VERY STRONG"},
+                        "STRONG BUY":  {color:"#059669",bg:"#ecfdf5",border:"#6ee7b7",badge:"✅ STRONG BUY"},
+                        "BUY":         {color:"#10b981",bg:"#f0fdf4",border:"#a7f3d0",badge:"🟢 BUY"},
+                        "WATCH":       {color:"#d97706",bg:"#fffbeb",border:"#fde68a",badge:"👀 WATCH"},
+                        "CAUTION":     {color:"#dc2626",bg:"#fef2f2",border:"#fca5a5",badge:"⚠️ WEAK"},
+                      };
+                      const sc = signalColors[coin.signal] || signalColors["WATCH"];
+                      return(
+                        <div key={coin.symbol} style={{background:"#fff",border:`2px solid ${sc.border}`,borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.04)"}}>
+                          {/* Top bar */}
+                          <div style={{background:`linear-gradient(135deg,${sc.bg},#fff)`,padding:"11px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
+                            <img src={coin.image} alt="" onError={e=>e.target.style.display="none"} style={{width:32,height:32,borderRadius:"50%",border:"2px solid #e2e8f0",flexShrink:0}}/>
+                            <div style={{flex:1}}>
+                              <div style={{fontWeight:800,fontSize:14,color:"#0f172a"}}>{coin.name}</div>
+                              <div className="mono" style={{fontSize:10,color:"#94a3b8"}}>{coin.symbol}</div>
+                            </div>
+                            <div style={{textAlign:"right"}}>
+                              <div className="mono" style={{fontSize:14,fontWeight:800}}>{coin.price}</div>
+                              <div style={{fontSize:11,color:parseFloat(coin.ch24)>=0?"#059669":"#dc2626",fontWeight:600}}>{parseFloat(coin.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(coin.ch24)).toFixed(1)}%</div>
+                            </div>
+                          </div>
+                          {/* Signal + details */}
+                          <div style={{padding:"10px 14px"}}>
+                            <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap",alignItems:"center"}}>
+                              <span style={{background:sc.bg,border:`1px solid ${sc.border}`,borderRadius:20,padding:"4px 12px",fontSize:11,color:sc.color,fontWeight:800}}>{sc.badge}</span>
+                              <span style={{fontSize:10,color:"#94a3b8",background:"#f8fafc",padding:"2px 8px",borderRadius:20}}>RSI: {coin.rsi}</span>
+                              <span style={{fontSize:10,color:"#6366f1",background:"#eef2ff",padding:"2px 8px",borderRadius:20,fontWeight:700}}>R:R 1:{coin.rrRatio}</span>
+                              <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,
+                                background:coin.score>=72?"#ecfdf5":coin.score>=60?"#f0fdf4":coin.score>=48?"#fffbeb":"#fef2f2",
+                                color:coin.score>=72?"#059669":coin.score>=60?"#10b981":coin.score>=48?"#d97706":"#dc2626"}}>
+                                Score: {coin.score}/100
+                              </span>
+                            </div>
+                            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
+                              <div style={{background:"#fef2f2",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #fca5a5"}}>
+                                <div style={{fontSize:8,color:"#dc2626",fontWeight:700,marginBottom:2}}>🛑 SL</div>
+                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#991b1b"}}>{coin.stopLoss}</div>
+                                <div style={{fontSize:8,color:"#dc2626"}}>{coin.slPct}%</div>
+                              </div>
+                              <div style={{background:"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #86efac"}}>
+                                <div style={{fontSize:8,color:"#059669",fontWeight:700,marginBottom:2}}>🎯 TP1</div>
+                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#065f46"}}>{coin.tp1}</div>
+                                <div style={{fontSize:8,color:"#059669"}}>+{coin.tp1Pct}%</div>
+                              </div>
+                              <div style={{background:"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #4ade80"}}>
+                                <div style={{fontSize:8,color:"#059669",fontWeight:700,marginBottom:2}}>🚀 TP2</div>
+                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#065f46"}}>{coin.tp2}</div>
+                                <div style={{fontSize:8,color:"#059669"}}>+{coin.tp2Pct}%</div>
+                              </div>
+                              <div style={{background:"#eff6ff",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #93c5fd"}}>
+                                <div style={{fontSize:8,color:"#1d4ed8",fontWeight:700,marginBottom:2}}>💎 TP3</div>
+                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#1e3a8a"}}>{coin.tp3}</div>
+                                <div style={{fontSize:8,color:"#2563eb"}}>+{coin.tp3Pct}%</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
+                    <div style={{fontSize:10,color:"#94a3b8"}}>📡 {top5.scanned} coins scanned · {new Date(top5.updatedAt).toLocaleTimeString("en-IN")}</div>
+                    <button onClick={fetchTop5} style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"4px 14px",fontSize:11,color:"#059669",fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>🔄 Refresh</button>
+                  </div>
                 </div>
-                <div style={{display:"flex",alignItems:"center",gap:4}}>
-                  <span style={{fontSize:8,background:"#7c2d12",color:"#fdba74",borderRadius:3,padding:"2px 5px",fontWeight:700}}>⚡VOL</span>
-                  <span style={{fontSize:9,color:"#64748b"}}>= Volume 3x spike</span>
+              ):(
+                <div style={{textAlign:"center",padding:"16px 0"}}>
+                  <div style={{fontSize:32,marginBottom:8}}>🔍</div>
+                  <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>Koi signal nahi mila abhi</p>
+                  <button onClick={fetchTop5} style={{background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#fff",border:"none",borderRadius:12,padding:"10px 24px",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>🔄 Dobara Scan Karo</button>
                 </div>
-                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:2}}>
-                  <div style={{width:14,height:14,borderRadius:"50%",background:"linear-gradient(135deg,#ef4444,#dc2626)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,color:"#fff",fontWeight:700}}>70</div>
-                  <span style={{fontSize:9,color:"#64748b"}}>= Pump Score (60+ = strong signal)</span>
-                </div>
-              </div>
-
-              {/* View all button */}
-                <div style={{display:"flex",gap:8,marginTop:10}}>
-                  <Link href="/radar" style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,
-                    background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",textDecoration:"none",
-                    borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,
-                    boxShadow:"0 4px 14px rgba(239,68,68,.35)"}}>
-                    🚨 Full Radar — 120 Coins →
-                  </Link>
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* TOOLS divider */}
+                        {/* TOOLS divider */}
             <div style={{position:"relative",margin:"8px 0 16px"}}>
               <div style={{borderTop:"2px dashed #6ee7b7"}}/>
               <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#f0fdf8",padding:"0 14px"}}>
