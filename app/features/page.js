@@ -758,74 +758,142 @@ Give response in this EXACT JSON format (no extra text):
         {/* ════════════════════════════════════════════════════════════════ */}
         {tab==="health" && (
           <div className="fadein">
+            {/* Header */}
             <div style={{ textAlign:"center", marginBottom:16 }}>
-              <div style={{ fontSize:40, marginBottom:8 }}>🏥</div>
+              <div style={{ fontSize:48, marginBottom:8 }}>🏥</div>
               <h2 style={{ fontSize:22, fontWeight:900, letterSpacing:-1, marginBottom:6 }}>Portfolio Health Checkup</h2>
-              <p style={{ fontSize:13, color:T.text2 }}>Doctor-style report — tumhare portfolio ki full diagnosis</p>
+              <p style={{ fontSize:13, color:T.text2 }}>Dr. YYP AI tumhare portfolio ki full diagnosis karega</p>
             </div>
 
+            {/* AD — top */}
+            <div style={{ marginBottom:14, borderRadius:12, overflow:"hidden", textAlign:"center", background:"#fff", border:`1px solid ${T.border}`, padding:"4px" }}>
+              <div style={{ fontSize:9, color:"#94a3b8", marginBottom:2, letterSpacing:1 }}>ADVERTISEMENT</div>
+              <ins className="adsbygoogle" style={{display:"block"}}
+                data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO"
+                data-ad-format="auto" data-full-width-responsive="true"/>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            </div>
+
+            {/* Input Form */}
             <div style={{ ...CARD }}>
-              <div style={{ fontWeight:700, fontSize:14, marginBottom:14 }}>💊 Apna Portfolio Batao</div>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+                <span style={{ fontSize:20 }}>💊</span>
+                <div style={{ fontWeight:700, fontSize:14 }}>Apna Portfolio Batao</div>
+              </div>
 
               {coins.map((c, i) => (
-                <div key={i} style={{ display:"flex", gap:8, marginBottom:8, alignItems:"center" }}>
-                  <input value={c.coin} onChange={e=>updateCoin(i,"coin",e.target.value)}
-                    placeholder={`Coin ${i+1}: BTC, ETH, SOL…`}
-                    style={{ flex:1, ...INP }}
-                    onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-                  <select value={c.currency} onChange={e=>updateCoin(i,"currency",e.target.value)}
-                    style={{ background:"#f8fafc", border:"2px solid #e2e8f0", borderRadius:12, padding:"10px 10px", fontSize:13, cursor:"pointer", fontFamily:"'JetBrains Mono',monospace", color:T.text }}>
-                    <option value="INR">₹</option>
-                    <option value="USD">$</option>
-                  </select>
-                  <input value={c.amount} onChange={e=>updateCoin(i,"amount",e.target.value)}
-                    placeholder="Amount" type="number"
-                    style={{ width:110, ...INP }}
-                    onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-                  {coins.length > 1 && (
-                    <button onClick={()=>removeCoin(i)} style={{ background:"#fef2f2", border:"1px solid #fecaca", borderRadius:10, padding:"10px 12px", cursor:"pointer", color:"#dc2626", fontSize:14 }}>✕</button>
-                  )}
+                <div key={i} style={{ background:"#f8fafc", borderRadius:14, padding:"12px", marginBottom:8, border:`1px solid ${c.coin?T.greenDk+"44":T.border}` }}>
+                  <div style={{ fontSize:10, color:T.text3, fontWeight:600, marginBottom:6 }}>COIN #{i+1}</div>
+                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                    <input value={c.coin} onChange={e=>updateCoin(i,"coin",e.target.value.toUpperCase())}
+                      placeholder={`BTC, ETH, SOL…`}
+                      style={{ flex:1, background:"#fff", border:`2px solid ${c.coin?"#10b981":"#e2e8f0"}`, borderRadius:10, padding:"9px 12px", fontSize:14, fontWeight:700, color:T.text, fontFamily:"'JetBrains Mono',monospace" }}
+                      onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor=c.coin?"#10b981":"#e2e8f0"}/>
+                    <select value={c.currency} onChange={e=>updateCoin(i,"currency",e.target.value)}
+                      style={{ background:"#fff", border:"2px solid #e2e8f0", borderRadius:10, padding:"9px 8px", fontSize:13, cursor:"pointer", color:T.text }}>
+                      <option value="INR">₹</option>
+                      <option value="USD">$</option>
+                    </select>
+                    <input value={c.amount} onChange={e=>updateCoin(i,"amount",e.target.value)}
+                      placeholder="Amount" type="number"
+                      style={{ width:100, background:"#fff", border:"2px solid #e2e8f0", borderRadius:10, padding:"9px 10px", fontSize:13, color:T.text }}
+                      onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+                    {coins.length > 1 && (
+                      <button onClick={()=>removeCoin(i)} style={{ background:"#fef2f2", border:"1px solid #fecaca", borderRadius:10, padding:"9px 12px", cursor:"pointer", color:"#dc2626", fontSize:14, flexShrink:0 }}>✕</button>
+                    )}
+                  </div>
                 </div>
               ))}
 
-              <button onClick={addCoin} style={{ background:"#f0fdf4", border:"1px dashed #6ee7b7", borderRadius:10, padding:"8px 16px", cursor:"pointer", color:T.greenDk, fontSize:12, fontWeight:600, marginBottom:14 }}>
-                + Add Another Coin
+              <button onClick={addCoin}
+                style={{ background:"#f0fdf4", border:"2px dashed #6ee7b7", borderRadius:12, padding:"10px 16px", cursor:"pointer", color:T.greenDk, fontSize:13, fontWeight:700, marginBottom:14, width:"100%", fontFamily:"'Inter',sans-serif" }}>
+                ➕ Add Another Coin
               </button>
 
+              {/* Check frequency */}
               <div style={{ marginBottom:14 }}>
-                <div style={{ fontSize:11, color:T.text3, fontWeight:600, marginBottom:6, letterSpacing:.5 }}>DAILY PRICE CHECK FREQUENCY</div>
+                <div style={{ fontSize:11, color:T.text3, fontWeight:700, marginBottom:8, letterSpacing:.5 }}>📊 DAILY PRICE CHECK FREQUENCY</div>
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                   {["1","2","5","10","20+"].map(n=>(
                     <button key={n} onClick={()=>setCheckFreq(n)}
-                      style={{ background: checkFreq===n?"linear-gradient(135deg,#10b981,#059669)":"#f8fafc", color: checkFreq===n?"#fff":T.text2, border: checkFreq===n?"none":`1px solid ${T.border}`, borderRadius:20, padding:"5px 14px", cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Inter',sans-serif" }}>
+                      style={{ background: checkFreq===n?"linear-gradient(135deg,#10b981,#059669)":"#f8fafc",
+                        color: checkFreq===n?"#fff":T.text2,
+                        border: checkFreq===n?"none":`1px solid ${T.border}`,
+                        borderRadius:20, padding:"6px 14px", cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Inter',sans-serif" }}>
                       {n}x/day
                     </button>
                   ))}
                 </div>
               </div>
 
-              <button style={{ ...BTN, width:"100%", padding:"13px", fontSize:14, borderRadius:12 }}
+              <button style={{ ...BTN, width:"100%", padding:"14px", fontSize:14, borderRadius:12,
+                background: healthLoad?"#64748b":"linear-gradient(135deg,#10b981,#059669)",
+                boxShadow:"0 4px 14px rgba(16,185,129,.4)" }}
                 onClick={runHealthCheck} disabled={healthLoad||!coins.find(c=>c.coin&&c.amount)}>
-                {healthLoad ? <span style={{ display:"inline-block", animation:"spin .8s linear infinite" }}>⟳</span> : "🏥 Get Health Report"}
+                {healthLoad ? "⟳ Report Ban Rahi Hai..." : "🏥 Get Health Report"}
               </button>
             </div>
 
+            {/* Loading */}
             {healthLoad && (
-              <div style={{ textAlign:"center", padding:"32px 0" }}>
-                <div style={{ fontSize:36, marginBottom:10, animation:"float 2s ease-in-out infinite" }}>🩺</div>
-                <p style={{ color:T.text2, fontSize:13 }}>Dr. YYP AI portfolio analyze kar raha hai…</p>
+              <div className="fadein" style={{ marginTop:14 }}>
+                <div style={{ background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)", border:"2px solid #6ee7b7", borderRadius:16, padding:"20px", textAlign:"center" }}>
+                  <div style={{ fontSize:48, marginBottom:10, animation:"float 2s ease-in-out infinite" }}>🩺</div>
+                  <div style={{ fontWeight:800, fontSize:14, color:"#059669", marginBottom:8 }}>Dr. YYP Examine Kar Raha Hai...</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:6, textAlign:"left", maxWidth:260, margin:"0 auto" }}>
+                    {[
+                      "📊 Portfolio data collect kar raha hai",
+                      "📈 Live prices fetch ho rahi hain",
+                      "🔍 Risk analysis calculate kar raha hai",
+                      "💊 Prescription likh raha hai",
+                    ].map((s,i)=>(
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#065f46" }}>
+                        <div style={{ width:6, height:6, borderRadius:"50%", background:"#10b981", animation:`blink 1.5s ${i*.3}s infinite`, flexShrink:0 }}/>
+                        {s}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop:12, background:"rgba(16,185,129,.2)", borderRadius:100, height:5, overflow:"hidden" }}>
+                    <div style={{ height:"100%", borderRadius:100, background:"linear-gradient(90deg,#10b981,#34d399)",
+                      width:"75%", animation:"shimmer 2s infinite", backgroundSize:"200% 100%" }}/>
+                  </div>
+                </div>
               </div>
             )}
 
+            {/* Result */}
             {healthResult && !healthLoad && (
-              <div className="fadein" style={{ background:"linear-gradient(135deg,#ecfdf5,#f0fdf4)", border:"1px solid #6ee7b7", borderRadius:20, padding:"20px", position:"relative", overflow:"hidden" }}>
-                <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:"linear-gradient(90deg,#10b981,#6ee7b7,#10b981)", backgroundSize:"200% auto", animation:"gradmove 3s linear infinite" }}/>
-                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
-                  <div style={{ background:"linear-gradient(135deg,#10b981,#059669)", borderRadius:10, padding:"6px 12px", fontWeight:900, fontSize:13, color:"#fff" }}>YYP</div>
-                  <div><div style={{ fontWeight:800, fontSize:14, color:"#065f46" }}>Dr. YYP AI</div><div className="mono" style={{ fontSize:9, color:T.greenDk }}>MD (Market Dynamics)</div></div>
+              <div className="fadein" style={{ marginTop:14 }}>
+
+                {/* AD — before result */}
+                <div style={{ marginBottom:12, borderRadius:12, overflow:"hidden", textAlign:"center", background:"#fff", border:`1px solid ${T.border}`, padding:"4px" }}>
+                  <div style={{ fontSize:9, color:"#94a3b8", marginBottom:2, letterSpacing:1 }}>ADVERTISEMENT</div>
+                  <ins className="adsbygoogle" style={{display:"block"}}
+                    data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO"
+                    data-ad-format="auto" data-full-width-responsive="true"/>
+                  <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
                 </div>
-                <p style={{ fontSize:13, color:"#166534", lineHeight:1.85, whiteSpace:"pre-line", fontWeight:500 }}>{healthResult}</p>
-                <div className="mono" style={{ fontSize:9, color:T.text3, marginTop:12, textAlign:"right" }}>YES YOU PRO AI · yesyoupro.com</div>
+
+                <div style={{ background:"linear-gradient(135deg,#0f172a,#1e3a2f)", borderRadius:20, padding:"20px", position:"relative", overflow:"hidden" }}>
+                  <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:"linear-gradient(90deg,#10b981,#6ee7b7,#10b981)", backgroundSize:"200% auto", animation:"gradmove 3s linear infinite" }}/>
+                  {/* Doctor header */}
+                  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
+                    <div style={{ width:44, height:44, borderRadius:12, background:"linear-gradient(135deg,#10b981,#059669)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:22 }}>🩺</div>
+                    <div>
+                      <div style={{ fontWeight:900, fontSize:15, color:"white" }}>Dr. YYP AI</div>
+                      <div className="mono" style={{ fontSize:9, color:"#6ee7b7" }}>MD — Market Dynamics · YES YOU PRO</div>
+                    </div>
+                    <div style={{ marginLeft:"auto", background:"rgba(16,185,129,.2)", border:"1px solid rgba(16,185,129,.4)", borderRadius:20, padding:"4px 10px", fontSize:9, color:"#6ee7b7", fontWeight:700 }}>
+                      REPORT READY
+                    </div>
+                  </div>
+                  <p style={{ fontSize:13, color:"#d1fae5", lineHeight:1.9, whiteSpace:"pre-line", fontWeight:400 }}>{healthResult}</p>
+                  {/* Share */}
+                  <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`🏥 Mera Portfolio Health Report — Dr. YYP AI\n\n${healthResult.slice(0,400)}\n\nyesyoupro.com/features`)}`)}
+                    style={{ marginTop:14, width:"100%", background:"#25D366", color:"#fff", border:"none", borderRadius:12, padding:"11px", fontWeight:700, fontSize:12, cursor:"pointer", fontFamily:"'Inter',sans-serif" }}>
+                    📱 CA Ya Dost Ko Share Karo
+                  </button>
+                </div>
               </div>
             )}
           </div>
