@@ -593,6 +593,7 @@ Give response in this EXACT JSON format (no extra text):
         *{box-sizing:border-box;margin:0;padding:0}
         @keyframes fadein{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+        @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
         @keyframes shimmer{0%,100%{opacity:.4}50%{opacity:.9}}
         @keyframes spin{to{transform:rotate(360deg)}}
         @keyframes gradmove{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
@@ -1657,19 +1658,66 @@ Give response in this EXACT JSON format (no extra text):
               <button onClick={analyzeWhitepaper}
                 disabled={wpLoad || (wpMode==="url"?!wpUrl.trim():wpText.length<100)}
                 style={{ ...BTN, width:"100%", padding:"14px", borderRadius:12, fontSize:14,
-                  background: wpLoad?"#64748b":"linear-gradient(135deg,#10b981,#059669)",
+                  background: wpLoad?"#475569":"linear-gradient(135deg,#10b981,#059669)",
                   boxShadow:"0 4px 14px rgba(16,185,129,.4)", opacity: wpLoad?1:(wpMode==="url"?!wpUrl.trim():wpText.length<100)?0.5:1 }}>
-                {wpLoad
-                  ? <span>⟳ AI Analyze Kar Raha Hai... (30-60 sec)</span>
-                  : "🔍 Whitepaper Analyze Karo"}
+                {wpLoad ? "⟳ Analyzing..." : "🔍 Whitepaper Analyze Karo"}
               </button>
 
+              {/* AD — below analyze button */}
+              {!wpLoad && !wpResult && (
+                <div style={{ marginTop:14, borderRadius:12, overflow:"hidden", textAlign:"center", background:"#fff", border:`1px solid ${T.border}`, padding:"4px" }}>
+                  <div style={{ fontSize:9, color:"#94a3b8", marginBottom:2, letterSpacing:1 }}>ADVERTISEMENT</div>
+                  <ins className="adsbygoogle" style={{display:"block"}}
+                    data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO"
+                    data-ad-format="auto" data-full-width-responsive="true"/>
+                  <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+                </div>
+              )}
+
+              {/* LOADING — animated skeleton */}
               {wpLoad && (
-                <div style={{ marginTop:10, textAlign:"center" }}>
-                  <div style={{ fontSize:11, color:T.text3, lineHeight:1.8 }}>
-                    📖 Content padhh raha hai...<br/>
-                    🤖 AI summary bana raha hai...<br/>
-                    ⏱️ 2-3 ghante ka kaam 60 seconds mein!
+                <div className="fadein" style={{ marginTop:14 }}>
+                  {/* Steps */}
+                  <div style={{ background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)", border:"2px solid #6ee7b7", borderRadius:16, padding:"16px", marginBottom:12 }}>
+                    <div style={{ fontWeight:800, fontSize:13, color:"#059669", marginBottom:12, textAlign:"center" }}>
+                      ⏳ AI Whitepaper Padh Raha Hai...
+                    </div>
+                    {[
+                      {step:"1", text:"🌐 Website/URL fetch ho raha hai", done:true},
+                      {step:"2", text:"📖 Content extract kar raha hai", done:true},
+                      {step:"3", text:"🤖 AI analysis kar raha hai", done:false},
+                      {step:"4", text:"📝 Summary ready ho rahi hai", done:false},
+                    ].map((s,i)=>(
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+                        <div style={{ width:24, height:24, borderRadius:"50%", flexShrink:0,
+                          background:s.done?"linear-gradient(135deg,#10b981,#059669)":"rgba(16,185,129,.15)",
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          fontSize:s.done?10:11, color:s.done?"#fff":"#10b981",
+                          animation:!s.done?"blink 1.5s infinite":"none" }}>
+                          {s.done?"✓":s.step}
+                        </div>
+                        <div style={{ fontSize:12, color:s.done?"#059669":"#94a3b8", fontWeight:s.done?600:400 }}>{s.text}</div>
+                      </div>
+                    ))}
+                    <div style={{ marginTop:12, background:"rgba(16,185,129,.1)", borderRadius:100, height:6, overflow:"hidden" }}>
+                      <div style={{ height:"100%", borderRadius:100, background:"linear-gradient(90deg,#10b981,#34d399)",
+                        width:"70%", animation:"shimmer 2s infinite", backgroundSize:"200% 100%" }}/>
+                    </div>
+                    <div style={{ fontSize:10, color:"#94a3b8", textAlign:"center", marginTop:6 }}>
+                      ⏱️ 30-60 seconds — 2-3 ghante ka kaam ho raha hai!
+                    </div>
+                  </div>
+
+                  {/* Skeleton preview */}
+                  <div style={{ background:"#fff", border:`1px solid ${T.border}`, borderRadius:16, padding:"16px" }}>
+                    <div style={{ fontWeight:700, fontSize:12, color:"#94a3b8", marginBottom:12 }}>📄 Summary aa rahi hai...</div>
+                    {["🪙 COIN KYA HAI","⚡ REAL USE CASE","👥 TEAM","💰 TOKENOMICS","📊 TECHNOLOGY","🚨 RISKS","✅ BUY KARNA CHAHIYE?"].map((s,i)=>(
+                      <div key={i} style={{ background:"linear-gradient(90deg,#f1f5f9,#e2e8f0,#f1f5f9)", backgroundSize:"200% 100%",
+                        animation:"shimmer 1.5s infinite", borderRadius:8, height:i===0?40:28, marginBottom:8, padding:"8px 10px",
+                        display:"flex", alignItems:"center" }}>
+                        <span style={{ fontSize:11, color:"#94a3b8" }}>{s}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1685,6 +1733,15 @@ Give response in this EXACT JSON format (no extra text):
                     <div style={{ fontWeight:800, fontSize:13, color:"#065f46" }}>2-3 Ghante Bache! 🎉</div>
                     <div style={{ fontSize:11, color:"#059669" }}>AI ne whitepaper analyze kar diya</div>
                   </div>
+                </div>
+
+                {/* AD — after result loads */}
+                <div style={{ marginBottom:12, borderRadius:12, overflow:"hidden", textAlign:"center", background:"#fff", border:`1px solid ${T.border}`, padding:"4px" }}>
+                  <div style={{ fontSize:9, color:"#94a3b8", marginBottom:2, letterSpacing:1 }}>ADVERTISEMENT</div>
+                  <ins className="adsbygoogle" style={{display:"block"}}
+                    data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO"
+                    data-ad-format="auto" data-full-width-responsive="true"/>
+                  <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
                 </div>
 
                 {/* Summary */}
