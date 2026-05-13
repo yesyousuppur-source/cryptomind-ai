@@ -143,7 +143,8 @@ export default function Home() {
 
   useEffect(()=>{
     fetch("/api/feargreed").then(r=>r.json()).then(setFg).catch(()=>setFg({value:50}));
-    fetchTop5();
+    // Auto scan on page load
+    setTimeout(()=>fetchTop5(), 800);
   },[]);
 
   // ── ANALYZE ────────────────────────────────────────────────────────────────
