@@ -587,7 +587,7 @@ Give response in this EXACT JSON format (no extra text):
   );
 
   return (
-    <main style={{ fontFamily:"'Inter',sans-serif", background:T.page, minHeight:"100vh", color:T.text }}>
+    <main style={{ fontFamily:"'Inter',sans-serif", background:T.page, minHeight:"100vh", color:T.text, overflowX:"hidden", maxWidth:"100vw" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
@@ -782,25 +782,42 @@ Give response in this EXACT JSON format (no extra text):
               </div>
 
               {coins.map((c, i) => (
-                <div key={i} style={{ background:"#f8fafc", borderRadius:14, padding:"12px", marginBottom:8, border:`1px solid ${c.coin?T.greenDk+"44":T.border}` }}>
-                  <div style={{ fontSize:10, color:T.text3, fontWeight:600, marginBottom:6 }}>COIN #{i+1}</div>
-                  <div style={{ display:"flex", gap:8, alignItems:"center" }}>
-                    <input value={c.coin} onChange={e=>updateCoin(i,"coin",e.target.value.toUpperCase())}
-                      placeholder={`BTC, ETH, SOL…`}
-                      style={{ flex:1, background:"#fff", border:`2px solid ${c.coin?"#10b981":"#e2e8f0"}`, borderRadius:10, padding:"9px 12px", fontSize:14, fontWeight:700, color:T.text, fontFamily:"'JetBrains Mono',monospace" }}
-                      onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor=c.coin?"#10b981":"#e2e8f0"}/>
+                <div key={i} style={{ background:"#f8fafc", borderRadius:14, padding:"12px", marginBottom:8,
+                  border:`1px solid ${c.coin?T.greenDk+"44":T.border}`, boxSizing:"border-box" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                    <div style={{ fontSize:10, color:T.text3, fontWeight:700 }}>COIN #{i+1}</div>
+                    {coins.length > 1 && (
+                      <button onClick={()=>removeCoin(i)}
+                        style={{ background:"#fef2f2", border:"1px solid #fecaca", borderRadius:8,
+                          padding:"3px 10px", cursor:"pointer", color:"#dc2626", fontSize:12, fontWeight:600 }}>✕ Hatao</button>
+                    )}
+                  </div>
+                  {/* Row 1: Coin symbol */}
+                  <input value={c.coin} onChange={e=>updateCoin(i,"coin",e.target.value.toUpperCase())}
+                    placeholder="Coin ka naam: BTC, ETH, SOL, APT…"
+                    style={{ width:"100%", background:"#fff", border:`2px solid ${c.coin?"#10b981":"#e2e8f0"}`,
+                      borderRadius:10, padding:"11px 12px", fontSize:15, fontWeight:800,
+                      color:T.text, fontFamily:"'JetBrains Mono',monospace",
+                      boxSizing:"border-box", marginBottom:8 }}
+                    onFocus={e=>e.target.style.borderColor="#10b981"}
+                    onBlur={e=>e.target.style.borderColor=c.coin?"#10b981":"#e2e8f0"}/>
+                  {/* Row 2: Currency + Amount — side by side */}
+                  <div style={{ display:"flex", gap:8 }}>
                     <select value={c.currency} onChange={e=>updateCoin(i,"currency",e.target.value)}
-                      style={{ background:"#fff", border:"2px solid #e2e8f0", borderRadius:10, padding:"9px 8px", fontSize:13, cursor:"pointer", color:T.text }}>
-                      <option value="INR">₹</option>
-                      <option value="USD">$</option>
+                      style={{ background:"#fff", border:"2px solid #e2e8f0", borderRadius:10,
+                        padding:"10px 8px", fontSize:13, cursor:"pointer", color:T.text,
+                        width:90, flexShrink:0 }}>
+                      <option value="INR">₹ INR</option>
+                      <option value="USD">$ USD</option>
                     </select>
                     <input value={c.amount} onChange={e=>updateCoin(i,"amount",e.target.value)}
-                      placeholder="Amount" type="number"
-                      style={{ width:100, background:"#fff", border:"2px solid #e2e8f0", borderRadius:10, padding:"9px 10px", fontSize:13, color:T.text }}
-                      onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-                    {coins.length > 1 && (
-                      <button onClick={()=>removeCoin(i)} style={{ background:"#fef2f2", border:"1px solid #fecaca", borderRadius:10, padding:"9px 12px", cursor:"pointer", color:"#dc2626", fontSize:14, flexShrink:0 }}>✕</button>
-                    )}
+                      placeholder="Amount invested (e.g. 5000)"
+                      type="number"
+                      style={{ flex:1, background:"#fff", border:"2px solid #e2e8f0", borderRadius:10,
+                        padding:"10px 12px", fontSize:13, color:T.text,
+                        boxSizing:"border-box", minWidth:0 }}
+                      onFocus={e=>e.target.style.borderColor="#10b981"}
+                      onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
                   </div>
                 </div>
               ))}
