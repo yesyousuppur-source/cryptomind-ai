@@ -1079,7 +1079,28 @@ EXACT format (Hinglish):
                   </div>
                 )}
 
-                {/* View all button */}
+              {/* Legend */}
+              <div style={{display:"flex",gap:6,flexWrap:"wrap",padding:"8px 16px",background:"rgba(0,0,0,.2)",borderTop:"1px solid rgba(255,255,255,.05)"}}>
+                <div style={{fontSize:9,color:"#64748b",fontWeight:600,width:"100%",marginBottom:2}}>BADGES KA MATLAB:</div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}>
+                  <span style={{fontSize:8,background:"#065f46",color:"#6ee7b7",borderRadius:3,padding:"2px 5px",fontWeight:700}}>🦎GCK</span>
+                  <span style={{fontSize:9,color:"#64748b"}}>= CoinGecko pe trending</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}>
+                  <span style={{fontSize:8,background:"#1e3a8a",color:"#93c5fd",borderRadius:3,padding:"2px 5px",fontWeight:700}}>📊CMC</span>
+                  <span style={{fontSize:9,color:"#64748b"}}>= CoinMarketCap trending</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:4}}>
+                  <span style={{fontSize:8,background:"#7c2d12",color:"#fdba74",borderRadius:3,padding:"2px 5px",fontWeight:700}}>⚡VOL</span>
+                  <span style={{fontSize:9,color:"#64748b"}}>= Volume 3x spike</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:4,marginTop:2}}>
+                  <div style={{width:14,height:14,borderRadius:"50%",background:"linear-gradient(135deg,#ef4444,#dc2626)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:7,color:"#fff",fontWeight:700}}>70</div>
+                  <span style={{fontSize:9,color:"#64748b"}}>= Pump Score (60+ = strong signal)</span>
+                </div>
+              </div>
+
+              {/* View all button */}
                 <div style={{display:"flex",gap:8,marginTop:10}}>
                   <Link href="/radar" style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",gap:6,
                     background:"linear-gradient(135deg,#ef4444,#dc2626)",color:"#fff",textDecoration:"none",
