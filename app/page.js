@@ -979,7 +979,7 @@ EXACT format (Hinglish):
             {/* SMART SIGNAL FINDER */}
             <div className="hov" style={{...CARD,position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#f59e0b,#10b981,#6366f1)",backgroundSize:"200% auto",animation:"gradmove 3s linear infinite"}}/>
-              <SH icon="🎯" title="Smart Signal Finder" subtitle="30 coins scan → AI analysis → Best 5 signals"/>
+              <SH icon="🏆" title="Expert Choice" subtitle="30 coins scan → AI analysis → Top 5 expert picks"/>
 
               {/* Color legend */}
               <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
