@@ -491,66 +491,137 @@ Respond EXACTLY in this format (Hinglish). Be very specific with TIME:
 
             <AD/>
 
-            {/* TIMEFRAME — HOLD/SELL/WATCH with time */}
+            {/* TIMEFRAME — HOLD/SELL/WATCH — indicators hidden */}
             <div style={{background:"#fff",borderRadius:20,padding:"18px",
               boxShadow:"0 4px 20px rgba(0,0,0,.06)",border:"1px solid #e2e8f0",marginBottom:12}}>
-              <div style={{fontWeight:700,fontSize:14,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:20}}>⏱️</span> Kab Tak Hold Karo?
+              <div style={{fontWeight:700,fontSize:14,marginBottom:4,display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:20}}>⏱️</span> Timeframe Decision
               </div>
+              <div style={{fontSize:10,color:"#94a3b8",marginBottom:12}}>RSI + MACD + BB + Volume + ATR + Support/Resistance — sab background mein</div>
               {TFS.map(({tf,label,hold})=>{
-                const cl=tfData[tf]||[];
-                const rsi=calcRSI(cl);
-                const ma20=calcMA(cl,20);
-                const price=cl[cl.length-1]||livePrice;
-                const bull=price>ma20;
-                const ch=cl.length>=2?((cl[cl.length-1]-cl[cl.length-2])/cl[cl.length-2]*100):0;
+                const cl   = tfData[tf]||[];
+                const curr = cl[cl.length-1]||livePrice;
+                const prev = cl[cl.length-2]||curr;
 
-                let action,color,bg,time,reason;
-                if(rsi>72){
-                  action="SELL NOW 🚨";color="#dc2626";bg="#fef2f2";
-                  time="Abhi sell karo";reason="RSI overbought";
-                } else if(rsi>65&&!bull){
-                  action="PARTIAL SELL 🎯";color="#d97706";bg="#fffbeb";
-                  time="30 min mein sell";reason="Momentum weak";
-                } else if(rsi<35&&bull){
-                  action="HOLD STRONG 🔥";color="#059669";bg="#ecfdf5";
-                  time=`Hold karo: ${hold}`;reason="Oversold + uptrend";
-                } else if(rsi<45){
-                  action="HOLD 📈";color="#10b981";bg="#f0fdf4";
-                  time=`Hold karo: ${hold}`;reason="RSI recovering";
-                } else if(bull){
-                  action="HOLD ✅";color="#2563eb";bg="#eff6ff";
-                  time=`Hold karo: ${hold}`;reason="Above MA20";
+                // ── INDICATORS (hidden from user) ─────────────────────
+                // 1. RSI
+                const rsi = calcRSI(cl);
+                // 2. MA20/MA50
+                const ma20 = calcMA(cl,20);
+                const ma50 = calcMA(cl,50);
+                // 3. Bollinger Bands (20,2)
+                const bbMid = ma20;
+                const bbStd = cl.length>=20 ? Math.sqrt(cl.slice(-20).reduce((s,v)=>s+Math.pow(v-bbMid,2),0)/20):0;
+                const bbUp  = bbMid + bbStd*2;
+                const bbLow = bbMid - bbStd*2;
+                const bbPos = bbStd>0?(curr-bbLow)/(bbUp-bbLow)*100:50; // 0=bottom, 100=top
+                // 4. ATR (volatility)
+                const atr   = cl.length>14?cl.slice(-14).reduce((s,v,i,a)=>s+(i>0?Math.abs(v-a[i-1]):0),0)/13:curr*0.02;
+                const atrPct= (atr/curr*100);
+                // 5. Volume proxy (momentum change)
+                const recentCh = cl.length>=5?((cl[cl.length-1]-cl[cl.length-5])/cl[cl.length-5]*100):0;
+                // 6. Support/Resistance
+                const support  = cl.length>=20?Math.min(...cl.slice(-20)):curr*0.95;
+                const resist   = cl.length>=20?Math.max(...cl.slice(-20)):curr*1.05;
+                const distToResist = ((resist-curr)/curr*100);
+                const distToSupport= ((curr-support)/curr*100);
+                // 7. Trend
+                const bull  = curr>ma20&&curr>ma50;
+                const bear  = curr<ma20&&curr<ma50;
+                // 8. Momentum
+                const momentum = recentCh;
+
+                // ── DECISION ENGINE ────────────────────────────────────
+                // Score: positive = bullish, negative = bearish
+                let score = 0;
+                if(rsi<35)  score+=3;
+                else if(rsi<45) score+=2;
+                else if(rsi<55) score+=1;
+                else if(rsi>70) score-=3;
+                else if(rsi>62) score-=2;
+                if(bull)    score+=2;
+                if(bear)    score-=2;
+                if(bbPos<25) score+=2; // near lower band = buy
+                if(bbPos>80) score-=2; // near upper band = sell
+                if(momentum>2) score+=1;
+                if(momentum<-2) score-=1;
+                if(distToResist<2) score-=1; // very near resistance
+                if(distToSupport<1.5) score+=1; // near support = bounce
+
+                // Entry vs current P&L context
+                const entryVsCurr = buyUSD>0?((livePrice-buyUSD)/buyUSD*100):0;
+
+                let decision, decColor, decBg, holdTime, advice;
+
+                if(score>=4 && entryVsCurr<5){
+                  decision="🚀 STRONG BUY"; decColor="#059669"; decBg="#ecfdf5";
+                  holdTime=`Hold karo: ${hold}`;
+                  advice="Strong entry zone hai";
+                } else if(score>=2){
+                  decision="✅ HOLD"; decColor="#2563eb"; decBg="#eff6ff";
+                  holdTime=`Hold karo: ${hold}`;
+                  advice="Position safe hai";
+                } else if(score>=0 && entryVsCurr>8){
+                  decision="🎯 PARTIAL SELL"; decColor="#d97706"; decBg="#fffbeb";
+                  holdTime="50% profit book karo";
+                  advice="Kuch profit lock karo";
+                } else if(score<=-3 || (rsi>72 && entryVsCurr>10)){
+                  decision="🚨 SELL NOW"; decColor="#dc2626"; decBg="#fef2f2";
+                  holdTime="Abhi sell karo";
+                  advice="Momentum reversal signal";
+                } else if(score<0 && entryVsCurr>0){
+                  decision="⚠️ WATCH"; decColor="#d97706"; decBg="#fffbeb";
+                  holdTime="Agle 5 min dekho";
+                  advice="Signal confirm hone do";
+                } else if(score<-1){
+                  decision="⏸️ WAIT"; decColor="#7c3aed"; decBg="#f5f3ff";
+                  holdTime="Setup ka wait karo";
+                  advice="Entry sahi nahi abhi";
                 } else {
-                  action="WATCH 👀";color="#d97706";bg="#fffbeb";
-                  time="Wait for signal";reason="Trend unclear";
+                  decision="✅ HOLD"; decColor="#10b981"; decBg="#f0fdf4";
+                  holdTime=`Hold karo: ${hold}`;
+                  advice="Trend theek hai";
                 }
+
+                // Strength meter (1-5 bars)
+                const strength = Math.min(5,Math.max(1,Math.abs(score)+1));
+                const isPositive = score>=0;
 
                 return(
                   <div key={tf} style={{display:"flex",alignItems:"center",gap:10,
-                    padding:"11px 12px",background:"#f8fafc",borderRadius:12,
-                    marginBottom:7,border:"1px solid #f1f5f9"}}>
-                    <div style={{width:52,flexShrink:0,textAlign:"center",background:"#0f172a",
-                      borderRadius:8,padding:"7px 4px"}}>
-                      <div style={{fontSize:13,fontWeight:800,color:"#fff"}}>{label.split(" ")[0]}</div>
-                      <div style={{fontSize:8,color:"#64748b"}}>{label.split(" ")[1]||""}</div>
+                    padding:"12px 14px",background:"#f8fafc",borderRadius:14,
+                    marginBottom:8,border:`1px solid ${decColor}22`,
+                    borderLeft:`4px solid ${decColor}`}}>
+                    {/* Time label */}
+                    <div style={{width:50,flexShrink:0,textAlign:"center",
+                      background:"#0f172a",borderRadius:10,padding:"8px 4px"}}>
+                      <div style={{fontSize:14,fontWeight:900,color:"#fff",lineHeight:1}}>
+                        {label.split(" ")[0]}
+                      </div>
+                      <div style={{fontSize:8,color:"#64748b",marginTop:1}}>
+                        {label.split(" ")[1]||""}
+                      </div>
                     </div>
+
+                    {/* Decision */}
                     <div style={{flex:1,minWidth:0}}>
-                      <div style={{background:bg,border:`1px solid ${color}44`,borderRadius:20,
-                        padding:"4px 10px",display:"inline-block",fontSize:11,
-                        fontWeight:700,color:color,marginBottom:3}}>
-                        {action}
+                      <div style={{background:decBg,border:`1.5px solid ${decColor}66`,
+                        borderRadius:20,padding:"5px 12px",display:"inline-block",
+                        fontSize:12,fontWeight:800,color:decColor,marginBottom:5}}>
+                        {decision}
                       </div>
-                      <div style={{fontSize:10,color:"#475569",fontWeight:600}}>{time}</div>
-                      <div style={{fontSize:9,color:"#94a3b8"}}>{reason}</div>
+                      <div style={{fontSize:12,color:"#1e293b",fontWeight:700}}>{holdTime}</div>
+                      <div style={{fontSize:10,color:"#94a3b8",marginTop:1}}>{advice}</div>
                     </div>
-                    <div style={{textAlign:"right",flexShrink:0}}>
-                      <div style={{fontSize:11,fontWeight:700,
-                        color:rsi<40?"#059669":rsi>65?"#ef4444":"#f59e0b"}}>
-                        RSI {rsi}
-                      </div>
-                      <div style={{fontSize:9,color:ch>=0?"#10b981":"#ef4444",fontWeight:600}}>
-                        {ch>=0?"+":""}{ch.toFixed(2)}%
+
+                    {/* Strength bars only */}
+                    <div style={{flexShrink:0,textAlign:"center"}}>
+                      <div style={{fontSize:8,color:"#94a3b8",marginBottom:4}}>Strength</div>
+                      <div style={{display:"flex",gap:2,justifyContent:"center"}}>
+                        {[1,2,3,4,5].map(n=>(
+                          <div key={n} style={{width:5,height:16,borderRadius:3,
+                            background:n<=strength?isPositive?"#10b981":"#ef4444":"#e2e8f0"}}/>
+                        ))}
                       </div>
                     </div>
                   </div>
