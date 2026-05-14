@@ -862,6 +862,9 @@ EXACT format (Hinglish):
             <Link href="/radar" style={{flex:1,background:"rgba(239,68,68,.15)",color:"#fca5a5",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(239,68,68,.3)"}}>
               🚨 Pump Radar
             </Link>
+            <Link href="/trade" style={{flex:1,background:"rgba(16,185,129,.15)",color:"#6ee7b7",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(16,185,129,.3)"}}>
+              📈 Trade Manager
+            </Link>
           </div>
           {/* Whitepaper teaser */}
           <Link href="/features?tab=whitepaper" style={{display:"block",textDecoration:"none",marginTop:8,background:"linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05))",border:"1px solid rgba(16,185,129,.3)",borderRadius:12,padding:"10px 14px"}}>
