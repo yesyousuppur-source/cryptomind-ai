@@ -158,7 +158,7 @@ const EXCHANGES = [
    }},
 ];
 
-
+const TFS = [
   {tf:"1m", label:"1 Min",  interval:"1m",  hold:"30sec–2min"},
   {tf:"5m", label:"5 Min",  interval:"5m",  hold:"5–15min"},
   {tf:"15m",label:"15 Min", interval:"15m", hold:"15–45min"},
