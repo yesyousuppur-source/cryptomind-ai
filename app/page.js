@@ -822,6 +822,40 @@ EXACT format (Hinglish):
           ))}
         </div>
 
+        {/* SEO Content Section */}
+        <div style={{background:"#fff",borderRadius:16,padding:"18px",marginBottom:14,
+          boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
+          <h2 style={{fontSize:16,fontWeight:900,color:"#0f172a",marginBottom:10,letterSpacing:-.3}}>
+            India Ka #1 Free Crypto AI Analysis Platform
+          </h2>
+          <p style={{fontSize:13,color:"#475569",lineHeight:1.8,marginBottom:10}}>
+            YES YOU PRO India ka pehla free AI-powered cryptocurrency analysis tool hai.
+            Yahan aap Bitcoin, Ethereum, Solana aur 120+ coins ka real-time analysis kar sakte ho
+            — bilkul free mein, koi signup nahi. RSI, MACD, Bollinger Bands — sab indicators
+            ek saath use karke AI aapko batayega BUY karein, SELL karein ya HOLD karein.
+          </p>
+          <p style={{fontSize:13,color:"#475569",lineHeight:1.8,marginBottom:10}}>
+            Hamara <strong>Expert Choice</strong> feature 30 coins daily scan karta hai aur
+            best 5 investment opportunities dhundh nikalta hai — complete entry price, stop loss
+            aur 3 profit targets ke saath. Yeh sab information jo pehle sirf paid platforms par
+            milti thi, ab bilkul free hai.
+          </p>
+          <p style={{fontSize:13,color:"#475569",lineHeight:1.8}}>
+            India mein crypto tax ka tension? Hamara <strong>Tax Calculator</strong> use karo —
+            CSV upload karo aur instant tax calculation pao. Pump hone wale coins dhundh rahe ho?
+            <strong> Pump Radar</strong> 120 coins monitor karta hai aur volume spikes detect
+            karta hai real-time mein.
+          </p>
+          <div style={{marginTop:12,display:"flex",gap:8,flexWrap:"wrap"}}>
+            <Link href="/blog" style={{display:"inline-block",background:"#f0fdf4",border:"1px solid #6ee7b7",
+              color:"#059669",borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
+              textDecoration:"none"}}>📚 Crypto Sikho Blog →</Link>
+            <Link href="/about" style={{display:"inline-block",background:"#f8fafc",border:"1px solid #e2e8f0",
+              color:"#64748b",borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
+              textDecoration:"none"}}>ℹ️ About Us →</Link>
+          </div>
+        </div>
+
         {/* ✨ EXCLUSIVE FEATURES BANNER — always visible below tabs */}
         <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:20,padding:"16px 18px",marginBottom:16,position:"relative",overflow:"hidden"}}>
           <div style={{position:"absolute",top:-20,right:-20,width:100,height:100,borderRadius:"50%",background:"radial-gradient(circle,rgba(16,185,129,.15),transparent)"}}/>
@@ -1883,7 +1917,7 @@ EXACT format (Hinglish):
               <span style={{fontSize:11,color:"#94a3b8"}}>by YesYouPro</span>
             </div>
             <div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap",marginBottom:12}}>
-              {[{label:"🏠 Home",href:"/"},{label:"👋 About",href:"/about"},{label:"✨ Features",href:"/features"},{label:"🏟️ Arena",href:"/arena"},{label:"🔒 Privacy",href:"/privacy"},{label:"💬 Contact",href:"/contact"}].map((l,i)=>(
+              {[{label:"🏠 Home",href:"/"},{label:"👋 About",href:"/about"},{label:"📚 Blog",href:"/blog"},{label:"✨ Features",href:"/features"},{label:"🏟️ Arena",href:"/arena"},{label:"🔒 Privacy",href:"/privacy"},{label:"💬 Contact",href:"/contact"}].map((l,i)=>(
                 <Link key={i} href={l.href} style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:20,padding:"5px 14px",fontSize:12,color:"#475569",fontWeight:600,textDecoration:"none"}}>
                   {l.label}
                 </Link>
