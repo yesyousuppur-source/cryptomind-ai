@@ -23,7 +23,142 @@ const COINS = [
   "ORDI","CFX","FLOW","ICP","EGLD","RUNE","THETA","KAVA","CELO","ZEC",
 ];
 
-const TFS = [
+const EXCHANGES = [
+  // Indian Exchanges (INR)
+  {id:"wazirx",   name:"WazirX",   flag:"🇮🇳", currency:"INR", type:"indian",
+   color:"#1a1a2e", logo:"W",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.wazirx.com/sapi/v1/ticker/24hr?symbol=${sym.toLowerCase()}inr`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("WazirX failed");
+     const j=await r.json();
+     return{price:parseFloat(j.lastPrice),ch24:parseFloat(j.priceChangePercent),
+       high:parseFloat(j.highPrice),low:parseFloat(j.lowPrice),vol:parseFloat(j.quoteVolume)};
+   }},
+  {id:"coindcx",  name:"CoinDCX",  flag:"🇮🇳", currency:"INR", type:"indian",
+   color:"#00a8ff", logo:"D",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.coindcx.com/exchange/ticker`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("CoinDCX failed");
+     const j=await r.json();
+     const t=j.find(x=>x.market===`${sym}INR`||x.market===`${sym.toUpperCase()}INR`);
+     if(!t)throw new Error("Pair not found");
+     return{price:parseFloat(t.last_price),ch24:parseFloat(t.change_24_hour)||0,
+       high:parseFloat(t.high),low:parseFloat(t.low),vol:parseFloat(t.volume)};
+   }},
+  // Global Exchanges (USDT)
+  {id:"binance",  name:"Binance",  flag:"🌍", currency:"USD", type:"global",
+   color:"#f0b90b", logo:"B",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("Binance failed");
+     const j=await r.json();
+     return{price:parseFloat(j.lastPrice),ch24:parseFloat(j.priceChangePercent),
+       high:parseFloat(j.highPrice),low:parseFloat(j.lowPrice),vol:parseFloat(j.quoteVolume)};
+   }},
+  {id:"bybit",    name:"Bybit",    flag:"🌍", currency:"USD", type:"global",
+   color:"#f7a600", logo:"By",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.bybit.com/v5/market/tickers?category=spot&symbol=${sym}USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("Bybit failed");
+     const j=await r.json();
+     const t=j.result?.list?.[0];
+     if(!t)throw new Error("No data");
+     return{price:parseFloat(t.lastPrice),ch24:parseFloat(t.price24hPcnt)*100,
+       high:parseFloat(t.highPrice24h),low:parseFloat(t.lowPrice24h),vol:parseFloat(t.turnover24h)};
+   }},
+  {id:"okx",      name:"OKX",      flag:"🌍", currency:"USD", type:"global",
+   color:"#000", logo:"OKX",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://www.okx.com/api/v5/market/ticker?instId=${sym}-USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("OKX failed");
+     const j=await r.json();
+     const t=j.data?.[0];
+     if(!t)throw new Error("No data");
+     return{price:parseFloat(t.last),ch24:((parseFloat(t.last)-parseFloat(t.open24h))/parseFloat(t.open24h)*100),
+       high:parseFloat(t.high24h),low:parseFloat(t.low24h),vol:parseFloat(t.volCcy24h)};
+   }},
+  {id:"kucoin",   name:"KuCoin",   flag:"🌍", currency:"USD", type:"global",
+   color:"#00c076", logo:"KC",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.kucoin.com/api/v1/market/orderbook/level1?symbol=${sym}-USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("KuCoin failed");
+     const j=await r.json();
+     const t=j.data;
+     return{price:parseFloat(t.price),ch24:0,high:0,low:0,vol:parseFloat(t.size)};
+   }},
+  {id:"mexc",     name:"MEXC",     flag:"🌍", currency:"USD", type:"global",
+   color:"#1d6fa4", logo:"M",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.mexc.com/api/v3/ticker/24hr?symbol=${sym}USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("MEXC failed");
+     const j=await r.json();
+     return{price:parseFloat(j.lastPrice),ch24:parseFloat(j.priceChangePercent),
+       high:parseFloat(j.highPrice),low:parseFloat(j.lowPrice),vol:parseFloat(j.quoteVolume)};
+   }},
+  {id:"gate",     name:"Gate.io",  flag:"🌍", currency:"USD", type:"global",
+   color:"#2354e6", logo:"G",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.gateio.ws/api/v4/spot/tickers?currency_pair=${sym}_USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("Gate.io failed");
+     const j=await r.json();
+     const t=j[0];
+     if(!t)throw new Error("No data");
+     return{price:parseFloat(t.last),ch24:parseFloat(t.change_percentage),
+       high:parseFloat(t.high_24h),low:parseFloat(t.low_24h),vol:parseFloat(t.quote_volume)};
+   }},
+  {id:"bitget",   name:"Bitget",   flag:"🌍", currency:"USD", type:"global",
+   color:"#00cdd1", logo:"BG",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.bitget.com/api/v2/spot/market/tickers?symbol=${sym}USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("Bitget failed");
+     const j=await r.json();
+     const t=j.data?.[0];
+     if(!t)throw new Error("No data");
+     return{price:parseFloat(t.lastPr),ch24:parseFloat(t.change24h)*100,
+       high:parseFloat(t.high24h),low:parseFloat(t.low24h),vol:parseFloat(t.usdtVolume)};
+   }},
+  {id:"htx",      name:"HTX",      flag:"🌍", currency:"USD", type:"global",
+   color:"#1565c0", logo:"H",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.huobi.pro/market/detail/merged?symbol=${sym.toLowerCase()}usdt`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("HTX failed");
+     const j=await r.json();
+     const t=j.tick;
+     return{price:parseFloat(t.close),ch24:((t.close-t.open)/t.open*100),
+       high:parseFloat(t.high),low:parseFloat(t.low),vol:parseFloat(t.amount)};
+   }},
+  {id:"kraken",   name:"Kraken",   flag:"🌍", currency:"USD", type:"global",
+   color:"#5741d9", logo:"Kr",
+   fetch: async(sym)=>{
+     const pair=sym==="BTC"?"XBTUSD":`${sym}USD`;
+     const r=await fetch(`https://api.kraken.com/0/public/Ticker?pair=${pair}`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("Kraken failed");
+     const j=await r.json();
+     const key=Object.keys(j.result)[0];
+     const t=j.result[key];
+     return{price:parseFloat(t.c[0]),ch24:0,high:parseFloat(t.h[1]),low:parseFloat(t.l[1]),vol:parseFloat(t.v[1])};
+   }},
+  {id:"coinbase", name:"Coinbase", flag:"🌍", currency:"USD", type:"global",
+   color:"#1652f0", logo:"CB",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.coinbase.com/v2/prices/${sym}-USD/spot`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("Coinbase failed");
+     const j=await r.json();
+     return{price:parseFloat(j.data.amount),ch24:0,high:0,low:0,vol:0};
+   }},
+  {id:"crypto",   name:"Crypto.com",flag:"🌍", currency:"USD", type:"global",
+   color:"#002d74", logo:"CRO",
+   fetch: async(sym)=>{
+     const r=await fetch(`https://api.crypto.com/exchange/v1/public/get-ticker?instrument_name=${sym}_USDT`,{signal:AbortSignal.timeout(5000)});
+     if(!r.ok)throw new Error("Crypto.com failed");
+     const j=await r.json();
+     const t=j.result?.data?.[0];
+     if(!t)throw new Error("No data");
+     return{price:parseFloat(t.a),ch24:0,high:parseFloat(t.h),low:parseFloat(t.l),vol:parseFloat(t.v)};
+   }},
+];
+
+
   {tf:"1m", label:"1 Min",  interval:"1m",  hold:"30sec–2min"},
   {tf:"5m", label:"5 Min",  interval:"5m",  hold:"5–15min"},
   {tf:"15m",label:"15 Min", interval:"15m", hold:"15–45min"},
@@ -44,6 +179,8 @@ function calcMA(cl,n){if(cl.length<n)return cl[cl.length-1]||0;return cl.slice(-
 
 export default function TradePage(){
   const [coin,setCoin]       = useState("APT");
+  const [exchange,setExchange]= useState("binance");
+  const [showExDD,setShowExDD]= useState(false);
   const [search,setSearch]   = useState("");
   const [showDD,setShowDD]   = useState(false);
   const [buyPrice,setBuyPrice]= useState("");
@@ -66,14 +203,21 @@ export default function TradePage(){
   const filtered = COINS.filter(c=>c.includes(search.toUpperCase()));
 
   // format price
+  const selectedEx = EXCHANGES.find(e=>e.id===exchange)||EXCHANGES[2];
+  const isINRex    = selectedEx.currency==="INR";
+
   const fmt = useCallback((usdPrice)=>{
     if(!usdPrice) return "—";
+    if(isINRex){
+      // Price already in INR from exchange
+      return "₹"+usdPrice.toLocaleString("en-IN",{maximumFractionDigits:usdPrice>=100?2:4});
+    }
     if(currency==="INR"){
       const inr = usdPrice*USD_INR;
       return "₹"+inr.toLocaleString("en-IN",{maximumFractionDigits:inr>=100?2:4});
     }
     return usdPrice>=1?"$"+usdPrice.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):"$"+usdPrice.toPrecision(5);
-  },[currency]);
+  },[currency,isINRex]);
 
   // localStorage
   useEffect(()=>{
@@ -92,8 +236,8 @@ export default function TradePage(){
     }catch(_){}
   },[]);
 
-  const savePos=(c,bp,amt,cur,ai)=>{
-    const pos={coin:c,bp,amt,cur,active:true,ts:Date.now(),ai:ai||null};
+  const savePos=(c,bp,amt,cur,ex,ai)=>{
+    const pos={coin:c,bp,amt,cur,ex:ex||"binance",active:true,ts:Date.now(),ai:ai||null};
     const prev=JSON.parse(localStorage.getItem("yyp_pos")||"[]");
     const updated=[pos,...prev.filter(p=>p.coin!==c)].slice(0,5);
     localStorage.setItem("yyp_pos",JSON.stringify(updated));
@@ -106,22 +250,29 @@ export default function TradePage(){
     setSaved(updated);
   };
 
-  // WebSocket — every ~1 second
-  const startWS=useCallback((sym)=>{
-    if(wsRef.current)wsRef.current.close();
-    const ws=new WebSocket(`wss://stream.binance.com:9443/ws/${sym.toLowerCase()}usdt@ticker`);
-    ws.onmessage=(e)=>{
-      const d=JSON.parse(e.data);
-      const p=parseFloat(d.c);
-      if(prevRef.current!==null)setPD(p>prevRef.current?"up":p<prevRef.current?"down":null);
+  // Price fetch from selected exchange every 3 sec
+  const priceIntervalRef = useRef(null);
+
+  const fetchExchangePrice = useCallback(async(sym, exId)=>{
+    const ex = EXCHANGES.find(e=>e.id===exId)||EXCHANGES[2];
+    try{
+      const data = await ex.fetch(sym);
+      const p = data.price;
+      if(prevRef.current!==null) setPD(p>prevRef.current?"up":p<prevRef.current?"down":null);
       prevRef.current=p;
       setLP(p);
-      setT24({ch24:parseFloat(d.P),high:parseFloat(d.h),low:parseFloat(d.l),vol:parseFloat(d.q)});
+      setT24({ch24:data.ch24||0,high:data.high||0,low:data.low||0,vol:data.vol||0});
       setLU(new Date().toLocaleTimeString("en-IN"));
-    };
-    ws.onerror=()=>{ws.close();setTimeout(()=>startWS(sym),3000);};
-    wsRef.current=ws;
+    }catch(err){
+      console.log("Price fetch error:",err.message);
+    }
   },[]);
+
+  const startPriceFetch = useCallback((sym, exId)=>{
+    if(priceIntervalRef.current) clearInterval(priceIntervalRef.current);
+    fetchExchangePrice(sym, exId);
+    priceIntervalRef.current = setInterval(()=>fetchExchangePrice(sym, exId), 3000);
+  },[fetchExchangePrice]);
 
   const fetchTF=useCallback(async(sym)=>{
     const res={};
@@ -135,9 +286,9 @@ export default function TradePage(){
   const start=async()=>{
     if(!coin||!buyPrice||!amount)return;
     setActive(true);setAI(null);aiDone.current=false;
-    savePos(coin,buyPrice,amount,currency,null);
+    savePos(coin,buyPrice,amount,currency,exchange,null);
     await fetchTF(coin);
-    startWS(coin);
+    startPriceFetch(coin, exchange);
   };
 
   // AI advice
@@ -212,7 +363,10 @@ Respond EXACTLY in this format (Hinglish). Be very specific with TIME:
     return()=>clearInterval(t);
   },[active,livePrice,tfData,getAI]);
 
-  useEffect(()=>{return()=>{if(wsRef.current)wsRef.current.close();};},[]);
+  useEffect(()=>{return()=>{
+    if(wsRef.current)wsRef.current.close();
+    if(priceIntervalRef.current)clearInterval(priceIntervalRef.current);
+  };},[]);
 
   // P&L
   const buyUSD  = currency==="INR"?parseFloat(buyPrice||0)/USD_INR:parseFloat(buyPrice||0);
@@ -299,6 +453,37 @@ Respond EXACTLY in this format (Hinglish). Be very specific with TIME:
             boxShadow:"0 4px 20px rgba(0,0,0,.06)",border:"1px solid #e2e8f0",marginBottom:14}}>
             <div style={{fontWeight:700,fontSize:15,marginBottom:16,display:"flex",alignItems:"center",gap:8}}>
               <span style={{fontSize:22}}>💼</span> Position Enter Karo
+            </div>
+
+            {/* Exchange Selector */}
+            <div style={{marginBottom:12}}>
+              <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:5,letterSpacing:.5}}>EXCHANGE SELECT KARO</div>
+              <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
+                {EXCHANGES.map(ex=>(
+                  <div key={ex.id} onClick={()=>{setExchange(ex.id);setCurrency(ex.currency);}}
+                    style={{flexShrink:0,background:exchange===ex.id?ex.color:"#f8fafc",
+                      border:`2px solid ${exchange===ex.id?ex.color:"#e2e8f0"}`,
+                      borderRadius:12,padding:"8px 10px",cursor:"pointer",
+                      textAlign:"center",minWidth:64,
+                      boxShadow:exchange===ex.id?"0 4px 12px rgba(0,0,0,.2)":"none",
+                      transition:"all .2s"}}>
+                    <div style={{fontSize:12,marginBottom:2}}>{ex.flag}</div>
+                    <div style={{fontSize:10,fontWeight:800,
+                      color:exchange===ex.id?"#fff":"#0f172a"}}>{ex.name}</div>
+                    <div style={{fontSize:8,
+                      color:exchange===ex.id?"rgba(255,255,255,.7)":"#94a3b8"}}>
+                      {ex.currency}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Indian vs Global tag */}
+              <div style={{marginTop:6,display:"flex",gap:6}}>
+                <span style={{fontSize:9,background:"#fef3c7",color:"#92400e",borderRadius:20,
+                  padding:"2px 8px",fontWeight:600}}>🇮🇳 Indian: WazirX, CoinDCX</span>
+                <span style={{fontSize:9,background:"#eff6ff",color:"#1e40af",borderRadius:20,
+                  padding:"2px 8px",fontWeight:600}}>🌍 Global: 11 exchanges</span>
+              </div>
             </div>
 
             {/* Coin */}
@@ -423,8 +608,12 @@ Respond EXACTLY in this format (Hinglish). Be very specific with TIME:
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16}}>
                 <div>
                   <div style={{fontWeight:900,fontSize:24,color:"white"}}>{coin}</div>
-                  <div style={{fontSize:10,color:"#64748b",marginTop:2}}>
-                    {coinsQty.toFixed(4)} coins · Buy: {fmt(buyUSD)}
+                  <div style={{fontSize:10,color:"#64748b",marginTop:2,display:"flex",alignItems:"center",gap:6}}>
+                    <span>{coinsQty.toFixed(4)} coins</span>
+                    <span style={{background:EXCHANGES.find(e=>e.id===exchange)?.color||"#333",
+                      borderRadius:6,padding:"1px 6px",fontSize:9,color:"#fff",fontWeight:700}}>
+                      {EXCHANGES.find(e=>e.id===exchange)?.name}
+                    </span>
                   </div>
                 </div>
                 <div style={{textAlign:"right"}}>
