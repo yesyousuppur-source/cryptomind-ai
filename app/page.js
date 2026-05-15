@@ -1438,27 +1438,14 @@ EXACT format (Hinglish):
               )}
             </div>
 
-            {/* Loss Recovery */}
-            <div className="hov" style={{...CARD}}>
-              <SH icon="🩹" title="Loss Recovery Planner" subtitle="Recovery plan calculate karo" bg="linear-gradient(135deg,#fff1f2,#fee2e2)" br="#fca5a5"/>
-              <input value={lossAmt} onChange={e=>setLossAmt(e.target.value)} placeholder="Your loss % (e.g. 30 = lost 30%)" type="number"
-                style={{...INP,marginBottom:10}} onFocus={e=>e.target.style.borderColor="#ef4444"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-              {lossRec&&(
-                <div>
-                  <div style={{background:"linear-gradient(135deg,#fff1f2,#fee2e2)",border:"1px solid #fca5a5",borderRadius:12,padding:"12px 14px",marginBottom:10,display:"flex",alignItems:"center",gap:10}}>
-                    <span style={{fontSize:22}}>📉</span>
-                    <div><div style={{fontSize:12,color:"#dc2626",fontWeight:500}}>To break even from {lossAmt}% loss:</div><div className="mono" style={{fontSize:17,fontWeight:900,color:"#991b1b"}}>Need +{lossRec.req}% gain</div></div>
-                  </div>
-                  {[{icon:"🐢",name:"Safe",plan:lossRec.safe,c:"#059669",bg:"linear-gradient(135deg,#f0fdf4,#dcfce7)",br:"#86efac"},
-                    {icon:"⚖️",name:"Moderate",plan:lossRec.mod,c:"#d97706",bg:"linear-gradient(135deg,#fffbeb,#fef3c7)",br:"#fde68a"},
-                    {icon:"🎲",name:"Aggressive",plan:lossRec.agg,c:"#dc2626",bg:"linear-gradient(135deg,#fff1f2,#fee2e2)",br:"#fca5a5"}].map((p,i)=>(
-                    <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",background:p.bg,border:`1px solid ${p.br}`,borderRadius:12,padding:"10px 12px",marginBottom:7}}>
-                      <span style={{fontSize:18,flexShrink:0}}>{p.icon}</span>
-                      <div><span style={{fontSize:12,color:p.c,fontWeight:800}}>{p.name}: </span><span style={{fontSize:12,color:"#475569"}}>{p.plan}</span></div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            {/* Ad in place of Loss Recovery */}
+            <div style={{borderRadius:14,overflow:"hidden",textAlign:"center",
+              background:"#fff",border:"1px solid #e2e8f0",padding:"6px"}}>
+              <div style={{fontSize:9,color:"#94a3b8",marginBottom:2,letterSpacing:1}}>ADVERTISEMENT</div>
+              <ins className="adsbygoogle" style={{display:"block"}}
+                data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO"
+                data-ad-format="auto" data-full-width-responsive="true"/>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
             </div>
           </div>
         )}
