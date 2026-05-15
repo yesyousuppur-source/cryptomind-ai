@@ -884,15 +884,6 @@ EXACT format (Hinglish):
         {activeTab==="analyze" && (
           <div className="fadein">
 
-            <ins className="adsbygoogle"
-                style={{display:"block"}}
-                data-ad-client="ca-pub-9884021055437527"
-                data-ad-slot="AUTO"
-                data-ad-format="auto"
-                data-full-width-responsive="true"/>
-              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
-            </div>
-
             {/* Fear & Greed */}
             {fgInfo&&fg&&(
               <div className="hov" style={{...CARD}}>
@@ -982,9 +973,12 @@ EXACT format (Hinglish):
             <div className="hov" style={{...CARD,position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#f59e0b,#10b981,#6366f1)",backgroundSize:"200% auto",animation:"gradmove 3s linear infinite"}}/>
 <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"14px 0"}}>
+            {/* Ad */}
+            <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
               <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
               <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
-              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/></div>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            </div>
               <SH icon="🏆" title="Expert Choice" subtitle="30 coins scan → AI analysis → Top 5 expert picks"/>
 
               {/* Color legend */}
@@ -1129,8 +1123,6 @@ EXACT format (Hinglish):
             )}
 
 
-              <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
-                <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
               </div>
             {/* ── COMPARE COINS TOOL ── */}
             <div className="hov" style={{...CARD}}>
@@ -1452,13 +1444,16 @@ EXACT format (Hinglish):
             </div>
           </div>
           <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"14px 0"}}>
-              <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
-              <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
-              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/></div>
         )}
 
         {/* ══════════════════════════════════════════════════════════════════ */}
 
+            {/* Ad */}
+            <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
+              <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
+              <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            </div>
         {/* TAB: EXPLAIN COIN                                                  */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {activeTab==="explain" && (
@@ -1552,9 +1547,6 @@ EXACT format (Hinglish):
 
         {/* ══════════════════════════════════════════════════════════════════ */}
           <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"14px 0"}}>
-              <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
-              <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
-              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/></div>
         {/* TAB: SCAM CHECK                                                    */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {activeTab==="scam" && (
@@ -1771,9 +1763,12 @@ EXACT format (Hinglish):
         {/* ══════════════════════════════════════════════════════════════════ */}
 
           <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"14px 0"}}>
+            {/* Ad */}
+            <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
               <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
               <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
-              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/></div>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            </div>
         {/* TAB: WHALE ALERT                                                   */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {activeTab==="whale" && (
@@ -1894,19 +1889,16 @@ EXACT format (Hinglish):
         )}
 
         <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"14px 0"}}>
+            {/* Ad */}
+            <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
               <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
               <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
-              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/></div>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            </div>
         {/* FOOTER */}
         <div style={{marginTop:20}}>
 
-          <ins className="adsbygoogle"
               style={{display:"block"}}
-              data-ad-client="ca-pub-9884021055437527"
-              data-ad-slot="AUTO"
-              data-ad-format="auto"
-              data-full-width-responsive="true"/>
-            <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
           </div>
 
           <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:14,padding:"14px 18px",textAlign:"center",marginBottom:12}}>
