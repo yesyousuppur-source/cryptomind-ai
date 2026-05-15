@@ -541,6 +541,14 @@ export default function BlogPage() {
                 </p>
               );
             })}
+
+            {/* Ad inside article */}
+            <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#f8fafc",border:"1px solid #e2e8f0",padding:"4px",margin:"20px 0"}}>
+              <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
+              <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            </div>
+
           </div>
           <div style={{marginTop:16,background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",
             borderRadius:14,padding:"14px",border:"1px solid #6ee7b7",textAlign:"center"}}>
@@ -553,6 +561,14 @@ export default function BlogPage() {
               yesyoupro.com → Free mein try karo
             </Link>
           </div>
+
+          {/* Ad after article CTA */}
+          <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
+            <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
+            <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
+            <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+          </div>
+
         </div>
       </main>
     );
@@ -592,7 +608,8 @@ export default function BlogPage() {
 
         {/* Articles */}
         {ARTICLES.map((art,i)=>(
-          <div key={art.id} onClick={()=>setSelected(i)}
+          <div key={art.id}>
+            <div onClick={()=>setSelected(i)}
             style={{background:"#fff",borderRadius:16,padding:"16px",marginBottom:12,
               cursor:"pointer",boxShadow:"0 2px 12px rgba(0,0,0,.06)",
               border:"1px solid #e2e8f0",transition:"all .2s"}}
@@ -628,6 +645,16 @@ export default function BlogPage() {
                 Poora padhein →
               </span>
             </div>
+          </div>
+          {/* Ad after every 2nd article */}
+          {(i+1)%2===0&&(
+            <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",
+              border:"1px solid #e2e8f0",padding:"4px",margin:"8px 0 16px"}}>
+              <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
+              <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
+              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            </div>
+          )}
           </div>
         ))}
 
