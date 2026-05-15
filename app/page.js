@@ -1438,14 +1438,44 @@ EXACT format (Hinglish):
               )}
             </div>
 
-            {/* Ad in place of Loss Recovery */}
-            <div style={{borderRadius:14,overflow:"hidden",textAlign:"center",
-              background:"#fff",border:"1px solid #e2e8f0",padding:"6px"}}>
-              <div style={{fontSize:9,color:"#94a3b8",marginBottom:2,letterSpacing:1}}>ADVERTISEMENT</div>
-              <ins className="adsbygoogle" style={{display:"block"}}
-                data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO"
-                data-ad-format="auto" data-full-width-responsive="true"/>
-              <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+            {/* Content Card — Platform Info */}
+            <div style={{background:"#fff",borderRadius:16,padding:"18px",
+              boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
+              <h3 style={{fontSize:15,fontWeight:900,color:"#0f172a",marginBottom:10,letterSpacing:-.3}}>
+                🚀 YES YOU PRO — Sab Ek Jagah Free
+              </h3>
+              <p style={{fontSize:13,color:"#475569",lineHeight:1.85,marginBottom:10}}>
+                India ka pehla free AI-powered crypto platform. Koi subscription nahi,
+                koi signup nahi — bas open karo aur use karo. Bitcoin se lekar latest
+                altcoins tak — 120+ coins ka real-time analysis milta hai.
+              </p>
+              <p style={{fontSize:13,color:"#475569",lineHeight:1.85,marginBottom:10}}>
+                <strong style={{color:"#059669"}}>Expert Choice</strong> feature daily
+                best 5 coins dhundhta hai — entry price, stop loss aur 3 targets ke saath.
+                <strong style={{color:"#6366f1"}}> Pump Radar</strong> se pump hone se
+                pehle alert milta hai. <strong style={{color:"#d97706"}}> Tax Calculator
+                </strong> se instant tax calculation hoti hai.
+              </p>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <Link href="/blog" style={{display:"inline-flex",alignItems:"center",gap:5,
+                  background:"#f0fdf4",border:"1px solid #6ee7b7",color:"#059669",
+                  borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
+                  textDecoration:"none"}}>
+                  📚 Crypto Sikho Blog →
+                </Link>
+                <Link href="/features" style={{display:"inline-flex",alignItems:"center",gap:5,
+                  background:"#f5f3ff",border:"1px solid #c4b5fd",color:"#6366f1",
+                  borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
+                  textDecoration:"none"}}>
+                  ✨ All Features →
+                </Link>
+                <Link href="/trade" style={{display:"inline-flex",alignItems:"center",gap:5,
+                  background:"#f0fdf4",border:"1px solid #10b981",color:"#10b981",
+                  borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
+                  textDecoration:"none"}}>
+                  📈 Trade Manager →
+                </Link>
+              </div>
             </div>
           </div>
         )}
