@@ -1442,18 +1442,19 @@ EXACT format (Hinglish):
                 </Link>
               </div>
             </div>
-          </div>
-          <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"14px 0"}}>
-        )}
 
-        {/* ══════════════════════════════════════════════════════════════════ */}
-
-            {/* Ad */}
+            {/* Ad — end of analyze tab */}
             <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
               <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
               <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
               <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
             </div>
+
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════ */}
+
         {/* TAB: EXPLAIN COIN                                                  */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {activeTab==="explain" && (
