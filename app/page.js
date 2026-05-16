@@ -979,117 +979,138 @@ EXACT format (Hinglish):
               <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
               <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
             </div>
-              <SH icon="🏆" title="Expert Choice" subtitle="30 coins scan → AI analysis → Top 5 expert picks"/>
+              <SH icon="🏆" title="Expert Choice" subtitle="120 coins scan → 6 indicators → Top 5 expert picks"/>
 
               {/* Color legend */}
               <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
                 {[
-                  {label:"VERY STRONG",color:"#059669",bg:"#ecfdf5",score:"80+"},
-                  {label:"STRONG",color:"#10b981",bg:"#f0fdf4",score:"65+"},
-                  {label:"WATCH",color:"#d97706",bg:"#fffbeb",score:"48+"},
-                  {label:"WEAK",color:"#dc2626",bg:"#fef2f2",score:"<48"},
+                  {label:"VERY STRONG 🔥",color:"#059669",bg:"#ecfdf5"},
+                  {label:"STRONG BUY ✅",color:"#10b981",bg:"#f0fdf4"},
+                  {label:"WATCH 👀",color:"#d97706",bg:"#fffbeb"},
+                  {label:"CAUTION ⚠️",color:"#ef4444",bg:"#fef2f2"},
                 ].map(s=>(
-                  <div key={s.label} style={{background:s.bg,border:`1px solid ${s.color}44`,borderRadius:20,padding:"3px 10px",fontSize:9,color:s.color,fontWeight:700}}>
-                    {s.label} ({s.score})
+                  <div key={s.label} style={{background:s.bg,border:`1px solid ${s.color}33`,borderRadius:20,padding:"3px 10px",fontSize:9,color:s.color,fontWeight:700}}>
+                    {s.label}
                   </div>
                 ))}
               </div>
 
               {!top5Fetched?(
                 <div style={{textAlign:"center",padding:"16px 0"}}>
-                  <div style={{fontSize:32,marginBottom:8}}>🎯</div>
-                  <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>30 coins scan karke best signals dhundega</p>
-                  <button className="btn" onClick={fetchTop5} style={{padding:"11px 28px",fontSize:13,borderRadius:12}}>🔍 Scan Karo</button>
+                  <div style={{fontSize:36,marginBottom:10}}>🎯</div>
+                  <p style={{fontSize:13,fontWeight:600,color:"#0f172a",marginBottom:4}}>120 Coins Scan Karo</p>
+                  <p style={{fontSize:11,color:"#64748b",marginBottom:14}}>RSI + MACD + Bollinger Bands + ATR + Support/Resistance + Volume<br/>sab background mein calculate hoga — sirf best picks dikhenge</p>
+                  <button className="btn" onClick={fetchTop5} style={{padding:"12px 32px",fontSize:14,borderRadius:12}}>🔍 Expert Scan Karo</button>
                 </div>
               ):top5Load?(
                 <div style={{textAlign:"center",padding:"16px 0"}}>
                   <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:10}}>
                     {[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
                   </div>
-                  <p style={{fontSize:12,color:"#64748b"}}>Scanning 30 coins...</p>
+                  <p style={{fontSize:12,color:"#64748b"}}>120 coins scan ho rahe hain...</p>
+                  <p style={{fontSize:10,color:"#94a3b8",marginTop:4}}>RSI · MACD · BB · ATR · Support/Resistance · Volume</p>
                 </div>
               ):top5?.coins?.length>0?(
                 <div className="fadein">
-                  {/* Weak market warning */}
-                  {top5?.isWeakMarket&&(
-                    <div style={{background:"linear-gradient(135deg,#fffbeb,#fef3c7)",border:"2px solid #fde68a",borderRadius:14,padding:"10px 14px",marginBottom:12}}>
-                      <div style={{fontWeight:700,fontSize:12,color:"#92400e",marginBottom:2}}>⚠️ Weak Market — Cautious Signals</div>
-                      <div style={{fontSize:11,color:"#78350f"}}>Chhota position lo, tight stop loss lagao.</div>
-                    </div>
-                  )}
+                  {/* Market strength banner */}
+                  <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:12,padding:"8px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <div style={{fontSize:11,color:"#059669",fontWeight:700}}>📡 {top5.scanned} coins scanned</div>
+                    <div style={{fontSize:11,color:"#059669",fontWeight:700}}>Market: {top5.marketStrength}</div>
+                  </div>
+
                   <div style={{display:"flex",flexDirection:"column",gap:10}}>
                     {top5.coins.map((coin,i)=>{
-                      const signalColors = {
-                        "VERY STRONG":{color:"#059669",bg:"#ecfdf5",border:"#6ee7b7",badge:"🔥 VERY STRONG"},
-                        "STRONG BUY":  {color:"#059669",bg:"#ecfdf5",border:"#6ee7b7",badge:"✅ STRONG BUY"},
-                        "BUY":         {color:"#10b981",bg:"#f0fdf4",border:"#a7f3d0",badge:"🟢 BUY"},
-                        "WATCH":       {color:"#d97706",bg:"#fffbeb",border:"#fde68a",badge:"👀 WATCH"},
-                        "CAUTION":     {color:"#dc2626",bg:"#fef2f2",border:"#fca5a5",badge:"⚠️ WEAK"},
-                      };
-                      const sc = signalColors[coin.signal] || signalColors["WATCH"];
+                      // Parse signal from text
+                      const isVeryStrong = coin.signal?.includes("VERY STRONG");
+                      const isStrong     = coin.signal?.includes("STRONG BUY");
+                      const isWatch      = coin.signal?.includes("WATCH");
+                      const isCaution    = coin.signal?.includes("CAUTION")||coin.signal?.includes("NEUTRAL");
+                      const sc = isVeryStrong ? {color:"#059669",bg:"#ecfdf5",border:"#6ee7b7"}
+                               : isStrong     ? {color:"#10b981",bg:"#f0fdf4",border:"#a7f3d0"}
+                               : isWatch      ? {color:"#d97706",bg:"#fffbeb",border:"#fde68a"}
+                               : isCaution    ? {color:"#6366f1",bg:"#eff6ff",border:"#c7d2fe"}
+                               :               {color:"#ef4444",bg:"#fef2f2",border:"#fca5a5"};
                       return(
-                        <div key={coin.symbol} style={{background:"#fff",border:`2px solid ${sc.border}`,borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.04)"}}>
-                          {/* Top bar */}
-                          <div style={{background:`linear-gradient(135deg,${sc.bg},#fff)`,padding:"11px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
-                            <img src={coin.image} alt="" onError={e=>e.target.style.display="none"} style={{width:32,height:32,borderRadius:"50%",border:"2px solid #e2e8f0",flexShrink:0}}/>
+                        <div key={coin.symbol} style={{background:"#fff",border:`2px solid ${sc.border}`,borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+                          {/* Header */}
+                          <div style={{background:`linear-gradient(135deg,${sc.bg},#fff)`,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
+                            <img src={coin.image} alt="" onError={e=>e.target.style.display="none"}
+                              style={{width:34,height:34,borderRadius:"50%",border:"2px solid #e2e8f0",flexShrink:0}}/>
                             <div style={{flex:1}}>
-                              <div style={{fontWeight:800,fontSize:14,color:"#0f172a"}}>{coin.name}</div>
-                              <div className="mono" style={{fontSize:10,color:"#94a3b8"}}>{coin.symbol}</div>
+                              <div style={{fontWeight:900,fontSize:15,color:"#0f172a"}}>{coin.name}</div>
+                              <div style={{fontSize:10,color:"#94a3b8",fontFamily:"'JetBrains Mono',monospace"}}>{coin.symbol}/USDT</div>
                             </div>
                             <div style={{textAlign:"right"}}>
-                              <div className="mono" style={{fontSize:14,fontWeight:800}}>{coin.price}</div>
-                              <div style={{fontSize:11,color:parseFloat(coin.ch24)>=0?"#059669":"#dc2626",fontWeight:600}}>{parseFloat(coin.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(coin.ch24)).toFixed(1)}%</div>
+                              <div style={{fontSize:15,fontWeight:900,fontFamily:"'JetBrains Mono',monospace"}}>{coin.price}</div>
+                              <div style={{fontSize:11,fontWeight:700,color:parseFloat(coin.ch24)>=0?"#059669":"#dc2626"}}>
+                                {parseFloat(coin.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(coin.ch24))}% 24h
+                              </div>
                             </div>
                           </div>
-                          {/* Signal + details */}
+
                           <div style={{padding:"10px 14px"}}>
+                            {/* Signal badge + score + hold time */}
                             <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap",alignItems:"center"}}>
-                              <span style={{background:sc.bg,border:`1px solid ${sc.border}`,borderRadius:20,padding:"4px 12px",fontSize:11,color:sc.color,fontWeight:800}}>{sc.badge}</span>
-                              <span style={{fontSize:10,color:"#94a3b8",background:"#f8fafc",padding:"2px 8px",borderRadius:20}}>RSI: {coin.rsi}</span>
-                              <span style={{fontSize:10,color:"#6366f1",background:"#eef2ff",padding:"2px 8px",borderRadius:20,fontWeight:700}}>R:R 1:{coin.rrRatio}</span>
-                              <span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:20,
-                                background:coin.score>=72?"#ecfdf5":coin.score>=60?"#f0fdf4":coin.score>=48?"#fffbeb":"#fef2f2",
-                                color:coin.score>=72?"#059669":coin.score>=60?"#10b981":coin.score>=48?"#d97706":"#dc2626"}}>
+                              <span style={{background:sc.bg,border:`1.5px solid ${sc.border}`,borderRadius:20,padding:"5px 12px",fontSize:12,color:sc.color,fontWeight:800}}>
+                                {coin.signal}
+                              </span>
+                              <span style={{fontSize:10,fontWeight:700,color:sc.color,background:sc.bg,padding:"3px 8px",borderRadius:20,border:`1px solid ${sc.border}`}}>
                                 Score: {coin.score}/100
                               </span>
+                              {coin.holdTime&&coin.holdTime!=="—"&&(
+                                <span style={{fontSize:10,color:"#6366f1",background:"#eff6ff",padding:"3px 8px",borderRadius:20,fontWeight:600}}>
+                                  ⏱️ {coin.holdTime}
+                                </span>
+                              )}
+                              <span style={{fontSize:10,color:"#6366f1",background:"#eff6ff",padding:"3px 8px",borderRadius:20,fontWeight:600}}>
+                                R:R 1:{coin.rrRatio}
+                              </span>
                             </div>
+
+                            {/* Description (no indicator values shown) */}
+                            {coin.description&&(
+                              <div style={{fontSize:11,color:"#475569",background:"#f8fafc",borderRadius:8,padding:"7px 10px",marginBottom:8,lineHeight:1.5}}>
+                                💡 {coin.description}
+                              </div>
+                            )}
+
+                            {/* TP/SL grid */}
                             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
                               <div style={{background:"#fef2f2",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #fca5a5"}}>
                                 <div style={{fontSize:8,color:"#dc2626",fontWeight:700,marginBottom:2}}>🛑 SL</div>
-                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#991b1b"}}>{coin.stopLoss}</div>
+                                <div style={{fontSize:9,fontWeight:800,color:"#991b1b",fontFamily:"'JetBrains Mono',monospace"}}>{coin.stopLoss}</div>
                                 <div style={{fontSize:8,color:"#dc2626"}}>{coin.slPct}%</div>
                               </div>
-                              <div style={{background:"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #86efac"}}>
-                                <div style={{fontSize:8,color:"#059669",fontWeight:700,marginBottom:2}}>🎯 TP1</div>
-                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#065f46"}}>{coin.tp1}</div>
-                                <div style={{fontSize:8,color:"#059669"}}>+{coin.tp1Pct}%</div>
-                              </div>
-                              <div style={{background:"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #4ade80"}}>
-                                <div style={{fontSize:8,color:"#059669",fontWeight:700,marginBottom:2}}>🚀 TP2</div>
-                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#065f46"}}>{coin.tp2}</div>
-                                <div style={{fontSize:8,color:"#059669"}}>+{coin.tp2Pct}%</div>
-                              </div>
-                              <div style={{background:"#eff6ff",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #93c5fd"}}>
-                                <div style={{fontSize:8,color:"#1d4ed8",fontWeight:700,marginBottom:2}}>💎 TP3</div>
-                                <div className="mono" style={{fontSize:9,fontWeight:800,color:"#1e3a8a"}}>{coin.tp3}</div>
-                                <div style={{fontSize:8,color:"#2563eb"}}>+{coin.tp3Pct}%</div>
-                              </div>
+                              {[{label:"TP1",val:coin.tp1,pct:coin.tp1Pct},{label:"TP2",val:coin.tp2,pct:coin.tp2Pct},{label:"TP3",val:coin.tp3,pct:coin.tp3Pct}].map((tp,j)=>(
+                                <div key={j} style={{background:j===2?"#eff6ff":"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:`1px solid ${j===2?"#93c5fd":"#4ade80"}`}}>
+                                  <div style={{fontSize:8,color:j===2?"#1d4ed8":"#059669",fontWeight:700,marginBottom:2}}>{j===2?"💎":"🎯"} {tp.label}</div>
+                                  <div style={{fontSize:9,fontWeight:800,color:j===2?"#1e3a8a":"#065f46",fontFamily:"'JetBrains Mono',monospace"}}>{tp.val}</div>
+                                  <div style={{fontSize:8,color:j===2?"#2563eb":"#059669"}}>+{tp.pct}%</div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
                       );
                     })}
                   </div>
+
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
-                    <div style={{fontSize:10,color:"#94a3b8"}}>📡 {top5.scanned} coins scanned · {new Date(top5.updatedAt).toLocaleTimeString("en-IN")}</div>
-                    <button onClick={fetchTop5} style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"4px 14px",fontSize:11,color:"#059669",fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>🔄 Refresh</button>
+                    <div style={{fontSize:10,color:"#94a3b8"}}>
+                      🕐 {new Date(top5.updatedAt).toLocaleTimeString("en-IN")} · 2 min cache
+                    </div>
+                    <button onClick={fetchTop5} style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"5px 14px",fontSize:11,color:"#059669",fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                      🔄 Refresh
+                    </button>
                   </div>
                 </div>
               ):(
                 <div style={{textAlign:"center",padding:"16px 0"}}>
                   <div style={{fontSize:32,marginBottom:8}}>🔍</div>
-                  <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>Koi signal nahi mila abhi</p>
-                  <button onClick={fetchTop5} style={{background:"linear-gradient(135deg,#f59e0b,#d97706)",color:"#fff",border:"none",borderRadius:12,padding:"10px 24px",fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>🔄 Dobara Scan Karo</button>
+                  <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>Scan karo — 120 coins mein best opportunities dhundega</p>
+                  <button onClick={fetchTop5} style={{background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:12,padding:"12px 28px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    🔍 Scan Karo
+                  </button>
                 </div>
               )}
             </div>
