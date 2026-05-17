@@ -410,7 +410,7 @@ export default function Home() {
   };
 
   // ── HEATMAP FETCH ──────────────────────────────────────────────────────────
-  const HEATMAP_COINS = ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","LINK","APT","SUI","INJ","MATIC","TRX","ARB"];
+  const HEATMAP_COINS = ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","LINK","APT","SUI","INJ","MATIC","TRX","ARB","OP","NEAR","TON","UNI","PEPE","LTC","ATOM","FTM","HBAR","WIF","BONK","ORDI","RUNE","GRT","AAVE","STX","IMX","CFX","THETA","GALA","SAND","CHZ","VET","FIL","XLM"];
   const fetchHeatmap=async()=>{
     setHeatLoad(true);setHeatFetched(true);
     try{
@@ -938,7 +938,7 @@ EXACT format (Hinglish):
               </div>
               {!heatFetched&&(
                 <div style={{textAlign:"center",padding:"8px 0",fontSize:12,color:"#94a3b8"}}>
-                  Load dabao — 15 coins ka live heatmap dikhega 🌡️
+                  Load dabao — 40 coins ka live heatmap dikhega 🌡️
                 </div>
               )}
               {heatLoad&&<div style={{height:40,background:"#f0fdf4",borderRadius:10,animation:"shimmer 1.5s infinite"}}/>}
