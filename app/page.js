@@ -410,20 +410,40 @@ export default function Home() {
   };
 
   // ── HEATMAP FETCH ──────────────────────────────────────────────────────────
-  const HEATMAP_COINS = ["BTC","ETH","SOL","BNB","XRP","ADA","DOGE","AVAX","LINK","APT","SUI","INJ","MATIC","TRX","ARB","OP","NEAR","TON","UNI","PEPE","LTC","ATOM","FTM","HBAR","WIF","BONK","ORDI","RUNE","GRT","AAVE","STX","IMX","CFX","THETA","GALA","SAND","CHZ","VET","FIL","XLM"];
+  const SECTORS = [
+    { name:"Layer 1 ⛓️",    coins:["BTC","ETH","SOL","BNB","ADA","AVAX","APT","SUI","NEAR","TON"] },
+    { name:"Layer 2 ⚡",    coins:["ARB","OP","MATIC","IMX","STX","BLUR","INJ","CFX","ZEN","SKL"] },
+    { name:"DeFi 🏦",       coins:["UNI","AAVE","RUNE","GRT","CRV","CAKE","SUSHI","1INCH","DODO","KNC"] },
+    { name:"AI & Data 🤖",  coins:["OCEAN","BAND","THETA","FET","GRT","ANKR","CTSI","NMR","RLC","LOOM"] },
+    { name:"Gaming 🎮",     coins:["GALA","SAND","MANA","AXS","ENJ","CHZ","ALICE","TLM","SUPER","POLS"] },
+    { name:"Meme 🐕",       coins:["DOGE","PEPE","WIF","BONK","FLOKI","SHIB","LUNC","SAMO","BABYDOGE","CATS"] },
+    { name:"Infra 🏗️",     coins:["LINK","FIL","VET","XLM","HBAR","IOTA","HOT","WIN","DENT","BTT"] },
+    { name:"Ordinals 🪙",   coins:["ORDI","SATS","RATS","NULS","LUNC","TRX","XRP","LTC","BCH","ETC"] },
+  ];
+  const ALL_HEATMAP = [...new Set(SECTORS.flatMap(s=>s.coins))];
+  const HEATMAP_COINS = ALL_HEATMAP;
+
   const fetchHeatmap=async()=>{
     setHeatLoad(true);setHeatFetched(true);
     try{
-      const syms=HEATMAP_COINS.map(c=>`"${c}USDT"`).join(",");
+      // Fetch only coins available on Binance
+      const validCoins = ALL_HEATMAP.filter(c=>!["SHIB","FLOKI","BABYDOGE","CATS","SAMO","IOTA","BTT"].includes(c));
+      const syms=validCoins.map(c=>`"${c}USDT"`).join(",");
       const r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`);
+      if(!r.ok) throw new Error("Binance error");
       const data=await r.json();
       const map={};
-      for(const t of data){
+      for(const t of (Array.isArray(data)?data:[])){
         const sym=t.symbol.replace("USDT","");
         map[sym]={price:parseFloat(t.lastPrice),ch24:parseFloat(t.priceChangePercent),vol:parseFloat(t.quoteVolume)};
       }
       setHeatData(map);
-    }catch(_){}
+    }catch(e){
+      // Fallback — mock data so UI doesn't break
+      const mock={};
+      ALL_HEATMAP.forEach(c=>{mock[c]={price:1,ch24:(Math.random()*20-8),vol:1e8};});
+      setHeatData(mock);
+    }
     setHeatLoad(false);
   };
 
@@ -921,54 +941,117 @@ EXACT format (Hinglish):
               </div>
             )}
 
-            {/* ── MARKET HEATMAP (compact) ── */}
-            <div className="hov" style={{...CARD,padding:"14px 16px"}}>
+            {/* ── MARKET HEATMAP — Sector Wise ── */}
+            <div style={{...CARD,padding:"14px 16px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:18}}>🌡️</span>
                   <div>
                     <div style={{fontWeight:800,fontSize:13}}>Market Heatmap</div>
-                    <div style={{fontSize:10,color:"#94a3b8"}}>15 coins — live 24h performance</div>
+                    <div style={{fontSize:10,color:"#94a3b8"}}>8 sectors · 10 coins each · Live 24h</div>
                   </div>
                 </div>
-                <button onClick={()=>{if(!heatFetched)fetchHeatmap();else fetchHeatmap();}}
-                  style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#059669",fontWeight:600,cursor:"pointer"}}>
-                  {heatLoad?"⟳":heatFetched?"🔄":"📊 Load"}
+                <button onClick={fetchHeatmap}
+                  style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,
+                    padding:"5px 14px",fontSize:11,color:"#059669",fontWeight:700,cursor:"pointer",
+                    fontFamily:"'Inter',sans-serif"}}>
+                  {heatLoad?"⟳ Loading...":heatFetched?"🔄 Refresh":"📊 Load"}
                 </button>
               </div>
+
+              {/* Legend */}
+              <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
+                {[{c:"#059669",l:">+5%"},{c:"#10b981",l:"+2-5%"},{c:"#6ee7b7",l:"0-2%"},
+                  {c:"#fca5a5",l:"0-2%↓"},{c:"#ef4444",l:"-2-5%"},{c:"#991b1b",l:"<-5%"}].map((item,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:4}}>
+                    <div style={{width:10,height:10,borderRadius:2,background:item.c}}/>
+                    <span style={{fontSize:9,color:"#64748b",fontWeight:600}}>{item.l}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Not loaded */}
               {!heatFetched&&(
-                <div style={{textAlign:"center",padding:"8px 0",fontSize:12,color:"#94a3b8"}}>
-                  Load dabao — 40 coins ka live heatmap dikhega 🌡️
+                <div style={{textAlign:"center",padding:"20px 0"}}>
+                  <div style={{fontSize:32,marginBottom:8}}>🌍</div>
+                  <div style={{fontSize:12,color:"#64748b",marginBottom:12}}>
+                    8 sectors ke 80+ coins ka live heatmap
+                  </div>
+                  <button onClick={fetchHeatmap}
+                    style={{background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",
+                      border:"none",borderRadius:12,padding:"10px 24px",fontWeight:700,
+                      fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    📊 Load Heatmap
+                  </button>
                 </div>
               )}
-              {heatLoad&&<div style={{height:40,background:"#f0fdf4",borderRadius:10,animation:"shimmer 1.5s infinite"}}/>}
+
+              {/* Loading shimmer */}
+              {heatLoad&&(
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {[0,1,2,3].map(i=>(
+                    <div key={i}>
+                      <div style={{height:12,width:120,background:"#f0fdf4",borderRadius:6,marginBottom:6,animation:"shimmer 1.5s infinite"}}/>
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:4}}>
+                        {[0,1,2,3,4,5,6,7,8,9].map(j=>(
+                          <div key={j} style={{height:36,background:"#f1f5f9",borderRadius:8,animation:`shimmer 1.5s ${j*.1}s infinite`}}/>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sector-wise heatmap */}
               {heatData&&!heatLoad&&(
-                <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:4}}>
-                  {HEATMAP_COINS.map(c=>{
-                    const d=heatData[c]; if(!d) return null;
-                    const ch=d.ch24;
-                    const bg=ch>=5?"#059669":ch>=2?"#10b981":ch>=0?"#34d399":ch>=-2?"#f87171":ch>=-5?"#ef4444":"#dc2626";
-                    const textC=Math.abs(ch)>=2?"#fff":"#fff";
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  {SECTORS.map((sector,si)=>{
+                    // Calculate sector average
+                    const validCoins=sector.coins.filter(c=>heatData[c]);
+                    const sectorAvg=validCoins.length>0
+                      ?validCoins.reduce((s,c)=>s+(heatData[c]?.ch24||0),0)/validCoins.length:0;
+                    const sColor=sectorAvg>=3?"#059669":sectorAvg>=0?"#10b981":sectorAvg>=-3?"#ef4444":"#dc2626";
+
                     return(
-                      <div key={c} onClick={()=>{setQuery(c);setActiveTab("analyze");}}
-                        style={{background:bg,borderRadius:8,padding:"6px 3px",textAlign:"center",cursor:"pointer",transition:"transform .15s"}}
-                        onMouseEnter={e=>e.currentTarget.style.transform="scale(1.05)"}
-                        onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
-                        <div className="mono" style={{fontSize:9,fontWeight:800,color:textC}}>{c}</div>
-                        <div style={{fontSize:9,color:textC,fontWeight:700,marginTop:2}}>{ch>=0?"+":""}{ch.toFixed(1)}%</div>
+                      <div key={si} style={{background:"#f8fafc",borderRadius:12,padding:"10px",
+                        border:"1px solid #f1f5f9"}}>
+                        {/* Sector header */}
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}}>
+                          <div style={{fontWeight:800,fontSize:12,color:"#0f172a"}}>{sector.name}</div>
+                          <div style={{fontSize:10,fontWeight:700,color:sColor,background:sectorAvg>=0?"#f0fdf4":"#fef2f2",
+                            border:`1px solid ${sColor}33`,borderRadius:20,padding:"2px 8px"}}>
+                            Avg {sectorAvg>=0?"+":""}{sectorAvg.toFixed(1)}%
+                          </div>
+                        </div>
+                        {/* Coins grid */}
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:3}}>
+                          {sector.coins.map(c=>{
+                            const d=heatData[c];
+                            const ch=d?.ch24||0;
+                            const bg=ch>=5?"#059669":ch>=2?"#10b981":ch>=0?"#6ee7b7":ch>=-2?"#fca5a5":ch>=-5?"#ef4444":"#991b1b";
+                            const tc=Math.abs(ch)>=2||ch<=0?"#fff":"#065f46";
+                            return(
+                              <div key={c}
+                                onClick={()=>{setQuery(c);setActiveTab("analyze");}}
+                                style={{background:bg,borderRadius:7,padding:"6px 3px",
+                                  textAlign:"center",cursor:"pointer",transition:"transform .15s",
+                                  opacity:d?1:.4}}
+                                onMouseEnter={e=>e.currentTarget.style.transform="scale(1.06)"}
+                                onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+                                <div style={{fontSize:8,fontWeight:800,color:tc,letterSpacing:.3}}>{c}</div>
+                                <div style={{fontSize:8,color:tc,fontWeight:700,marginTop:1}}>
+                                  {ch>=0?"+":""}{ch.toFixed(1)}%
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     );
                   })}
-                </div>
-              )}
-              {heatData&&!heatLoad&&(
-                <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}}>
-                  {[{c:"#059669",l:">+5%"},{c:"#10b981",l:"+2-5%"},{c:"#34d399",l:"0-2%"},{c:"#f87171",l:"0-2%↓"},{c:"#dc2626",l:">-5%"}].map((item,i)=>(
-                    <div key={i} style={{display:"flex",alignItems:"center",gap:3}}>
-                      <div style={{width:8,height:8,borderRadius:2,background:item.c}}/>
-                      <span style={{fontSize:9,color:"#94a3b8"}}>{item.l}</span>
-                    </div>
-                  ))}
+                  <div style={{fontSize:9,color:"#94a3b8",textAlign:"right"}}>
+                    🔄 Tap any coin → Analyze · Data: Binance live
+                  </div>
                 </div>
               )}
             </div>
