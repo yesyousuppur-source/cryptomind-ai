@@ -143,8 +143,12 @@ export default function Home() {
 
   useEffect(()=>{
     fetch("/api/feargreed").then(r=>r.json()).then(setFg).catch(()=>setFg({value:50}));
-    // Auto scan on page load
-    setTimeout(()=>fetchTop5(), 800);
+    // Auto scan immediately on page load
+    setTop5Load(true);setTop5Fetched(true);
+    fetch("/api/top5")
+      .then(r=>r.json())
+      .then(j=>{setTop5(j);setTop5Load(false);})
+      .catch(()=>{setTop5({coins:[],updatedAt:new Date().toISOString()});setTop5Load(false);});
   },[]);
 
   // ── ANALYZE ────────────────────────────────────────────────────────────────
@@ -995,20 +999,13 @@ EXACT format (Hinglish):
                 ))}
               </div>
 
-              {!top5Fetched?(
-                <div style={{textAlign:"center",padding:"16px 0"}}>
-                  <div style={{fontSize:36,marginBottom:10}}>🎯</div>
-                  <p style={{fontSize:13,fontWeight:600,color:"#0f172a",marginBottom:4}}>120 Coins Scan Karo</p>
-                  <p style={{fontSize:11,color:"#64748b",marginBottom:14}}>RSI + MACD + Bollinger Bands + ATR + Support/Resistance + Volume<br/>sab background mein calculate hoga — sirf best picks dikhenge</p>
-                  <button className="btn" onClick={fetchTop5} style={{padding:"12px 32px",fontSize:14,borderRadius:12}}>🔍 Expert Scan Karo</button>
-                </div>
-              ):top5Load?(
-                <div style={{textAlign:"center",padding:"16px 0"}}>
-                  <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:10}}>
+              {top5Load?(
+                <div style={{textAlign:"center",padding:"24px 0"}}>
+                  <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
                     {[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
                   </div>
-                  <p style={{fontSize:12,color:"#64748b"}}>120 coins scan ho rahe hain...</p>
-                  <p style={{fontSize:10,color:"#94a3b8",marginTop:4}}>RSI · MACD · BB · ATR · Support/Resistance · Volume</p>
+                  <p style={{fontSize:13,fontWeight:700,color:"#0f172a",marginBottom:4}}>120 Coins Scan Ho Rahe Hain...</p>
+                  <p style={{fontSize:11,color:"#94a3b8"}}>RSI · MACD · Bollinger Bands · ATR · Support/Resistance · Volume</p>
                 </div>
               ):top5?.coins?.length>0?(
                 <div className="fadein">
@@ -1020,16 +1017,16 @@ EXACT format (Hinglish):
 
                   <div style={{display:"flex",flexDirection:"column",gap:10}}>
                     {top5.coins.map((coin,i)=>{
-                      // Parse signal from text
                       const isVeryStrong = coin.signal?.includes("VERY STRONG");
-                      const isStrong     = coin.signal?.includes("STRONG BUY");
+                      const isStrong     = coin.signal?.includes("STRONG BUY")||coin.signal?.includes("STRONG ✅");
                       const isWatch      = coin.signal?.includes("WATCH");
                       const isCaution    = coin.signal?.includes("CAUTION")||coin.signal?.includes("NEUTRAL");
-                      const sc = isVeryStrong ? {color:"#059669",bg:"#ecfdf5",border:"#6ee7b7"}
-                               : isStrong     ? {color:"#10b981",bg:"#f0fdf4",border:"#a7f3d0"}
-                               : isWatch      ? {color:"#d97706",bg:"#fffbeb",border:"#fde68a"}
-                               : isCaution    ? {color:"#6366f1",bg:"#eff6ff",border:"#c7d2fe"}
-                               :               {color:"#ef4444",bg:"#fef2f2",border:"#fca5a5"};
+                      // Use colors from API, fallback to calculated
+                      const sc = {
+                        color: coin.sColor || (isVeryStrong?"#059669":isStrong?"#10b981":isWatch?"#d97706":isCaution?"#6366f1":"#ef4444"),
+                        bg:    coin.sBg    || (isVeryStrong?"#ecfdf5":isStrong?"#f0fdf4":isWatch?"#fffbeb":isCaution?"#eff6ff":"#fef2f2"),
+                        border:isVeryStrong?"#6ee7b7":isStrong?"#a7f3d0":isWatch?"#fde68a":isCaution?"#c7d2fe":"#fca5a5",
+                      };
                       return(
                         <div key={coin.symbol} style={{background:"#fff",border:`2px solid ${sc.border}`,borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
                           {/* Header */}
@@ -1068,9 +1065,9 @@ EXACT format (Hinglish):
                             </div>
 
                             {/* Description (no indicator values shown) */}
-                            {coin.description&&(
+                            {(coin.desc||coin.description)&&(
                               <div style={{fontSize:11,color:"#475569",background:"#f8fafc",borderRadius:8,padding:"7px 10px",marginBottom:8,lineHeight:1.5}}>
-                                💡 {coin.description}
+                                💡 {coin.desc||coin.description}
                               </div>
                             )}
 
@@ -1106,10 +1103,10 @@ EXACT format (Hinglish):
                 </div>
               ):(
                 <div style={{textAlign:"center",padding:"16px 0"}}>
-                  <div style={{fontSize:32,marginBottom:8}}>🔍</div>
-                  <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>Scan karo — 120 coins mein best opportunities dhundega</p>
+                  <div style={{fontSize:32,marginBottom:8}}>🔄</div>
+                  <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>Scan ho raha hai — thoda wait karo</p>
                   <button onClick={fetchTop5} style={{background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:12,padding:"12px 28px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-                    🔍 Scan Karo
+                    🔄 Dobara Try Karo
                   </button>
                 </div>
               )}
