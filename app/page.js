@@ -161,9 +161,10 @@ export default function Home() {
   },[heatFetched]);
 
   // ── ANALYZE ────────────────────────────────────────────────────────────────
-  const analyze = async () => {
-    const raw=query.trim().toLowerCase(); if(!raw) return;
-    const sym=INPUT_MAP[raw]||raw.toUpperCase();
+  const analyzeSymbol = async (sym) => {
+    if(!sym||!sym.trim()) return;
+    sym = (INPUT_MAP[sym.trim().toLowerCase()] || sym.trim().toUpperCase());
+    setQuery(sym);
     setError(null);setAiText("");setResult(null);setScamInfo(null);setScamText("");
     const now=Date.now();
     if(cache.current[sym]&&now-cache.current[sym].ts<60000){
@@ -172,8 +173,8 @@ export default function Home() {
     setLoading(true);
     try{
       const [tickR,klinesR]=await Promise.all([
-        fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}USDT`),
-        fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1d&limit=200`),
+        fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}USDT`,{signal:AbortSignal.timeout(10000)}),
+        fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1d&limit=200`,{signal:AbortSignal.timeout(10000)}),
       ]);
       if(!tickR.ok) throw new Error(`"${sym}" not found. Try: BTC, ETH, SOL, APT…`);
       const tick=await tickR.json(); const klines=klinesR.ok?await klinesR.json():[];
@@ -185,7 +186,7 @@ export default function Home() {
       const ma200=closes.length>=200?calcMA(closes,200):null;
       const dec=buildDecision({rsi,price,ma50,ma200,ch24,ch7d});
       let marketCap=0;
-      try{const ccR=await fetch(`https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${sym}&tsyms=USD`);
+      try{const ccR=await fetch(`https://min-api.cryptocompare.com/data/pricemultifull?fsyms=${sym}&tsyms=USD`,{signal:AbortSignal.timeout(5000)});
         if(ccR.ok){const cc=await ccR.json();marketCap=cc?.RAW?.[sym]?.USD?.MKTCAP||0;}}catch(_){}
       const data={...dec,name:FULL_NAME[sym]||sym,symbol:sym,price,ch24,ch7d,volume,marketCap,
         image:`https://assets.coincap.io/assets/icons/${sym.toLowerCase()}@2x.png`};
@@ -193,7 +194,12 @@ export default function Home() {
       const scam=detectScam(data);
       setResult(data);setScamInfo(scam);setLoading(false);
       callAI(data); if(scam.pts>=3) callScamAI(data,scam.flags);
-    }catch(e){setError(e.message||"Failed.");setLoading(false);}
+    }catch(e){setError(e.message||"Failed. Check coin name.");setLoading(false);}
+  };
+
+  const analyze = async () => {
+    const raw=query.trim().toLowerCase(); if(!raw) return;
+    await analyzeSymbol(raw);
   };
 
   const callAI=async(d)=>{
@@ -937,7 +943,186 @@ EXACT format (Hinglish):
         {activeTab==="analyze" && (
           <div className="fadein">
 
-            {/* Fear & Greed */}
+            {/* ── COIN ANALYZE INPUT ── */}
+            <div style={{...CARD,background:"linear-gradient(135deg,#f0fdf4,#fff)",border:"2px solid #6ee7b7"}}>
+              <div style={{fontWeight:800,fontSize:15,marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:22}}>🔍</span> Coin Analyze Karo
+              </div>
+              <div style={{display:"flex",gap:8,marginBottom:10}}>
+                <input value={query} onChange={e=>setQuery(e.target.value.toUpperCase())}
+                  onKeyDown={e=>e.key==="Enter"&&analyze()}
+                  placeholder="BTC, ETH, SOL, APT, PEPE…"
+                  style={{flex:1,background:"#fff",border:"2px solid #e2e8f0",borderRadius:12,
+                    padding:"13px 16px",fontSize:16,fontWeight:800,color:"#0f172a",
+                    fontFamily:"'JetBrains Mono',monospace",outline:"none",minWidth:0}}
+                  onFocus={e=>e.target.style.borderColor="#10b981"}
+                  onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+                <button onClick={analyze} disabled={loading||!query.trim()}
+                  style={{background:loading||!query.trim()?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+                    color:loading||!query.trim()?"#94a3b8":"#fff",border:"none",borderRadius:12,
+                    padding:"13px 20px",fontWeight:800,fontSize:14,cursor:"pointer",
+                    fontFamily:"'Inter',sans-serif",flexShrink:0,
+                    boxShadow:loading||!query.trim()?"none":"0 4px 14px rgba(16,185,129,.4)"}}>
+                  {loading?"⟳":"Analyze"}
+                </button>
+              </div>
+              {/* Quick picks */}
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {["BTC","ETH","SOL","APT","AVAX","PEPE","WIF","LINK","ARB","BNB"].map(c=>(
+                  <button key={c} onClick={()=>analyzeSymbol(c)}
+                    style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:20,
+                      padding:"4px 12px",fontSize:11,fontWeight:700,color:"#475569",
+                      cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Error */}
+            {error&&(
+              <div style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:12,
+                padding:"12px 16px",marginBottom:12,fontSize:13,color:"#dc2626",fontWeight:600}}>
+                ⚠️ {error}
+              </div>
+            )}
+
+            {/* Loading */}
+            {loading&&(
+              <div style={{...CARD,textAlign:"center",padding:"28px"}}>
+                <div style={{display:"flex",justifyContent:"center",gap:10,marginBottom:12}}>
+                  {[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",
+                    background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+                </div>
+                <div style={{fontWeight:700,fontSize:14}}>Analyzing {query}...</div>
+                <div style={{fontSize:11,color:"#94a3b8",marginTop:4}}>RSI · MA50 · MA200 · Volume · AI analysis</div>
+              </div>
+            )}
+
+            {/* Result */}
+            {result&&!loading&&(()=>{
+              const isGreen=result.decision==="BUY";
+              const isRed=result.decision==="SELL";
+              const dc=DC_P?.[result.decision];
+              return(
+                <div className="fadein">
+                  {/* Main card */}
+                  <div style={{...CARD,padding:0,overflow:"hidden",
+                    border:`2px solid ${isGreen?"#6ee7b7":isRed?"#fca5a5":"#e2e8f0"}`}}>
+                    {/* Header */}
+                    <div style={{background:`linear-gradient(135deg,${isGreen?"#0f172a":"#0f172a"},${isGreen?"#1e3a2f":isRed?"#3b0f0f":"#1e1b2e"})`,
+                      padding:"16px 18px",display:"flex",alignItems:"center",gap:12}}>
+                      <img src={result.image} alt="" onError={e=>e.target.style.display="none"}
+                        style={{width:42,height:42,borderRadius:"50%",border:"2px solid rgba(255,255,255,.2)"}}/>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:900,fontSize:18,color:"#fff"}}>{result.name}</div>
+                        <div style={{fontSize:11,color:"rgba(255,255,255,.5)",fontFamily:"'JetBrains Mono',monospace"}}>
+                          {result.symbol}/USDT
+                        </div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:22,fontWeight:900,color:"#fff",fontFamily:"'JetBrains Mono',monospace"}}>
+                          ${result.price>=1?result.price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):result.price.toPrecision(4)}
+                        </div>
+                        <div style={{fontSize:12,fontWeight:700,
+                          color:result.ch24>=0?"#34d399":"#f87171"}}>
+                          {result.ch24>=0?"▲":"▼"}{Math.abs(result.ch24).toFixed(2)}% 24h
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Decision badge */}
+                    <div style={{padding:"14px 18px",
+                      background:isGreen?"linear-gradient(135deg,#ecfdf5,#f0fdf4)":isRed?"linear-gradient(135deg,#fef2f2,#fff1f2)":"linear-gradient(135deg,#fffbeb,#fff)",
+                      borderBottom:"1px solid #f1f5f9",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                      <div>
+                        <div style={{fontSize:24,fontWeight:900,
+                          color:isGreen?"#059669":isRed?"#dc2626":result.decision==="HOLD"?"#2563eb":"#d97706"}}>
+                          {dc?.emoji||"📊"} {result.decision}
+                        </div>
+                        <div style={{fontSize:12,color:"#475569",marginTop:2}}>
+                          Confidence: <strong>{result.confidence}%</strong> · Risk: <strong>{result.risk}</strong>
+                        </div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:11,color:"#94a3b8",marginBottom:3}}>Health Score</div>
+                        <div style={{fontSize:28,fontWeight:900,
+                          color:result.healthScore>=65?"#059669":result.healthScore>=45?"#d97706":"#dc2626"}}>
+                          {result.healthScore}<span style={{fontSize:14,color:"#94a3b8"}}>/100</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Indicators row */}
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",
+                      borderBottom:"1px solid #f1f5f9"}}>
+                      {[
+                        {l:"RSI",     v:result.rsi,   c:parseFloat(result.rsi)<35?"#059669":parseFloat(result.rsi)>65?"#dc2626":"#d97706"},
+                        {l:"MA50",    v:result.ma50!=="—"?`$${parseFloat(result.ma50).toFixed(4)}`:result.ma50, c:"#6366f1"},
+                        {l:"MA200",   v:result.ma200!=="—"?`$${parseFloat(result.ma200).toFixed(4)}`:result.ma200, c:"#0891b2"},
+                      ].map((s,i)=>(
+                        <div key={i} style={{padding:"10px 12px",borderRight:i<2?"1px solid #f1f5f9":"none",textAlign:"center"}}>
+                          <div style={{fontSize:9,color:"#94a3b8",marginBottom:3,fontWeight:600}}>{s.l}</div>
+                          <div style={{fontSize:12,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Entry / SL / Target */}
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)"}}>
+                      {[
+                        {l:"🎯 Entry", v:`$${result.entryLow?.toFixed?.(4)||"—"}`, c:"#6366f1", bg:"#eff6ff"},
+                        {l:"🛑 Stop Loss", v:`$${result.stopLoss?.toFixed?.(4)||"—"}`, c:"#dc2626", bg:"#fef2f2"},
+                        {l:"🚀 Target", v:`$${result.exitTarget?.toFixed?.(4)||"—"}`, c:"#059669", bg:"#ecfdf5"},
+                      ].map((s,i)=>(
+                        <div key={i} style={{padding:"10px 12px",background:s.bg,
+                          borderRight:i<2?"1px solid #f1f5f9":"none",textAlign:"center"}}>
+                          <div style={{fontSize:9,color:"#94a3b8",marginBottom:3,fontWeight:600}}>{s.l}</div>
+                          <div style={{fontSize:11,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* AI Analysis */}
+                  {(aiLoading||aiText)&&(
+                    <div style={{...CARD}}>
+                      <div style={{fontWeight:700,fontSize:13,marginBottom:12,display:"flex",alignItems:"center",gap:8}}>
+                        <span>🤖</span> AI Analysis
+                      </div>
+                      {aiLoading?(
+                        <div style={{display:"flex",gap:8,justifyContent:"center",padding:"12px 0"}}>
+                          {[0,1,2].map(i=><div key={i} style={{width:7,height:7,borderRadius:"50%",
+                            background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+                        </div>
+                      ):(
+                        <div style={{fontSize:13,color:"#374151",lineHeight:1.8,
+                          whiteSpace:"pre-wrap",background:"#f8fafc",borderRadius:10,padding:"12px 14px"}}>
+                          {aiText}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Factors */}
+            {result&&!loading&&result.factors?.length>0&&(
+              <div style={{...CARD}}>
+                <div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"#475569"}}>📋 Key Factors</div>
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {result.factors.map((f,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8,fontSize:12,color:"#374151"}}>
+                      <div style={{width:6,height:6,borderRadius:"50%",background:"#10b981",flexShrink:0}}/>
+                      {f}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+
             {fgInfo&&fg&&(
               <div className="hov" style={{...CARD}}>
                 <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:12}}>
@@ -1075,7 +1260,7 @@ EXACT format (Hinglish):
                             const tc=Math.abs(ch)>=2||ch<=0?"#fff":"#065f46";
                             return(
                               <div key={c}
-                                onClick={()=>{setQuery(c);setActiveTab("analyze");}}
+                                onClick={()=>{analyzeSymbol(c);setActiveTab("analyze");}}
                                 style={{background:bg,borderRadius:7,padding:"6px 3px",
                                   textAlign:"center",cursor:"pointer",transition:"transform .15s",
                                   opacity:d?1:.4}}
