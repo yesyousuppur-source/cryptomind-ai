@@ -149,7 +149,16 @@ export default function Home() {
       .then(r=>r.json())
       .then(j=>{setTop5(j);setTop5Load(false);})
       .catch(()=>{setTop5({coins:[],updatedAt:new Date().toISOString()});setTop5Load(false);});
+    // Auto load heatmap
+    setTimeout(()=>fetchHeatmap(), 1200);
   },[]);
+
+  // Auto-refresh heatmap every 30 seconds
+  useEffect(()=>{
+    if(!heatFetched) return;
+    const t = setInterval(()=>fetchHeatmap(), 30000);
+    return ()=>clearInterval(t);
+  },[heatFetched]);
 
   // ── ANALYZE ────────────────────────────────────────────────────────────────
   const analyze = async () => {
@@ -409,40 +418,60 @@ export default function Home() {
     }
   };
 
-  // ── HEATMAP FETCH ──────────────────────────────────────────────────────────
+  // ── HEATMAP — Real Binance API ─────────────────────────────────────────────
   const SECTORS = [
-    { name:"Layer 1 ⛓️",    coins:["BTC","ETH","SOL","BNB","ADA","AVAX","APT","SUI","NEAR","TON"] },
-    { name:"Layer 2 ⚡",    coins:["ARB","OP","MATIC","IMX","STX","BLUR","INJ","CFX","ZEN","SKL"] },
-    { name:"DeFi 🏦",       coins:["UNI","AAVE","RUNE","GRT","CRV","CAKE","SUSHI","1INCH","DODO","KNC"] },
-    { name:"AI & Data 🤖",  coins:["OCEAN","BAND","THETA","FET","GRT","ANKR","CTSI","NMR","RLC","LOOM"] },
-    { name:"Gaming 🎮",     coins:["GALA","SAND","MANA","AXS","ENJ","CHZ","ALICE","TLM","SUPER","POLS"] },
-    { name:"Meme 🐕",       coins:["DOGE","PEPE","WIF","BONK","FLOKI","SHIB","LUNC","SAMO","BABYDOGE","CATS"] },
-    { name:"Infra 🏗️",     coins:["LINK","FIL","VET","XLM","HBAR","IOTA","HOT","WIN","DENT","BTT"] },
-    { name:"Ordinals 🪙",   coins:["ORDI","SATS","RATS","NULS","LUNC","TRX","XRP","LTC","BCH","ETC"] },
+    { name:"Layer 1 ⛓️",  coins:["BTC","ETH","SOL","BNB","ADA","AVAX","APT","SUI","NEAR","TON"] },
+    { name:"Layer 2 ⚡",   coins:["ARB","OP","MATIC","IMX","STX","INJ","CFX","ZEN","BLUR","SKL"] },
+    { name:"DeFi 🏦",      coins:["UNI","AAVE","RUNE","GRT","CRV","CAKE","SUSHI","1INCH","KNC","LRC"] },
+    { name:"AI & Data 🤖", coins:["OCEAN","BAND","THETA","FET","ANKR","CTSI","RLC","NMR","LOOM","OXT"] },
+    { name:"Gaming 🎮",    coins:["GALA","SAND","MANA","AXS","ENJ","CHZ","ALICE","TLM","SUPER","POLS"] },
+    { name:"Meme 🐕",      coins:["DOGE","PEPE","WIF","BONK","FLOKI","NULS","LUNC","PEOPLE","HIGH","REEF"] },
+    { name:"Infra 🏗️",    coins:["LINK","FIL","VET","XLM","HBAR","HOT","WIN","DENT","STORJ","CELER"] },
+    { name:"Ordinals & BTC 🪙", coins:["ORDI","SATS","XRP","LTC","TRX","BCH","ATOM","FTM","DOT","EGLD"] },
   ];
-  const ALL_HEATMAP = [...new Set(SECTORS.flatMap(s=>s.coins))];
-  const HEATMAP_COINS = ALL_HEATMAP;
 
-  const fetchHeatmap=async()=>{
-    setHeatLoad(true);setHeatFetched(true);
-    try{
-      // Fetch only coins available on Binance
-      const validCoins = ALL_HEATMAP.filter(c=>!["SHIB","FLOKI","BABYDOGE","CATS","SAMO","IOTA","BTT"].includes(c));
-      const syms=validCoins.map(c=>`"${c}USDT"`).join(",");
-      const r=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=[${syms}]`);
-      if(!r.ok) throw new Error("Binance error");
-      const data=await r.json();
-      const map={};
-      for(const t of (Array.isArray(data)?data:[])){
-        const sym=t.symbol.replace("USDT","");
-        map[sym]={price:parseFloat(t.lastPrice),ch24:parseFloat(t.priceChangePercent),vol:parseFloat(t.quoteVolume)};
+  // Only coins that definitely exist on Binance as USDT pairs
+  const KNOWN_BINANCE = new Set([
+    "BTC","ETH","SOL","BNB","ADA","AVAX","APT","SUI","NEAR","TON",
+    "ARB","OP","MATIC","IMX","STX","INJ","CFX","BLUR","SKL",
+    "UNI","AAVE","RUNE","GRT","CRV","CAKE","SUSHI","1INCH","KNC","LRC",
+    "OCEAN","BAND","THETA","FET","ANKR","CTSI","RLC","LOOM","OXT",
+    "GALA","SAND","MANA","AXS","ENJ","CHZ","ALICE","TLM","SUPER","POLS",
+    "DOGE","PEPE","WIF","BONK","FLOKI","PEOPLE","HIGH","REEF",
+    "LINK","FIL","VET","XLM","HBAR","HOT","DENT","STORJ",
+    "ORDI","XRP","LTC","TRX","ATOM","FTM","DOT","EGLD","NULS",
+  ]);
+
+  const fetchHeatmap = async () => {
+    setHeatLoad(true); setHeatFetched(true);
+    try {
+      // Build symbols list — only valid Binance pairs
+      const allCoins = [...new Set(SECTORS.flatMap(s => s.coins))].filter(c => KNOWN_BINANCE.has(c));
+      const symsArr = allCoins.map(c => `"${c}USDT"`).join(",");
+
+      const r = await fetch(
+        `https://api.binance.com/api/v3/ticker/24hr?symbols=[${symsArr}]`,
+        { signal: AbortSignal.timeout(10000) }
+      );
+      if (!r.ok) throw new Error("Binance " + r.status);
+
+      const data = await r.json();
+      if (!Array.isArray(data)) throw new Error("Bad response");
+
+      const map = {};
+      for (const t of data) {
+        const sym = t.symbol.replace("USDT","");
+        map[sym] = {
+          price: parseFloat(t.lastPrice),
+          ch24:  parseFloat(t.priceChangePercent),
+          vol:   parseFloat(t.quoteVolume),
+          high:  parseFloat(t.highPrice),
+          low:   parseFloat(t.lowPrice),
+        };
       }
       setHeatData(map);
-    }catch(e){
-      // Fallback — mock data so UI doesn't break
-      const mock={};
-      ALL_HEATMAP.forEach(c=>{mock[c]={price:1,ch24:(Math.random()*20-8),vol:1e8};});
-      setHeatData(mock);
+    } catch(e) {
+      console.error("Heatmap error:", e.message);
     }
     setHeatLoad(false);
   };
@@ -948,15 +977,29 @@ EXACT format (Hinglish):
                   <span style={{fontSize:18}}>🌡️</span>
                   <div>
                     <div style={{fontWeight:800,fontSize:13}}>Market Heatmap</div>
-                    <div style={{fontSize:10,color:"#94a3b8"}}>8 sectors · 10 coins each · Live 24h</div>
+                    <div style={{fontSize:10,color:"#94a3b8"}}>
+                      {heatData
+                        ? `8 sectors · Live · Auto-refresh 30s`
+                        : "8 sectors · 10 coins each · Binance live"}
+                    </div>
                   </div>
                 </div>
-                <button onClick={fetchHeatmap}
-                  style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,
-                    padding:"5px 14px",fontSize:11,color:"#059669",fontWeight:700,cursor:"pointer",
-                    fontFamily:"'Inter',sans-serif"}}>
-                  {heatLoad?"⟳ Loading...":heatFetched?"🔄 Refresh":"📊 Load"}
-                </button>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  {heatData&&!heatLoad&&(
+                    <div style={{display:"flex",alignItems:"center",gap:4,
+                      background:"rgba(16,185,129,.1)",border:"1px solid rgba(16,185,129,.3)",
+                      borderRadius:20,padding:"3px 8px"}}>
+                      <div style={{width:5,height:5,borderRadius:"50%",background:"#10b981"}}/>
+                      <span style={{fontSize:8,color:"#059669",fontWeight:700}}>LIVE</span>
+                    </div>
+                  )}
+                  <button onClick={fetchHeatmap}
+                    style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,
+                      padding:"5px 14px",fontSize:11,color:"#059669",fontWeight:700,cursor:"pointer",
+                      fontFamily:"'Inter',sans-serif"}}>
+                    {heatLoad?"⟳ Loading...":heatFetched?"🔄":"📊 Load"}
+                  </button>
+                </div>
               </div>
 
               {/* Legend */}
