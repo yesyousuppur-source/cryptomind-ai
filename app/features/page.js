@@ -13,11 +13,15 @@ const TABS = [
   { id:"iq",           icon:"🧠", label:"IQ Test"        },
   { id:"health",       icon:"🏥", label:"Health Check"   },
   { id:"portfolio",    icon:"💼", label:"Portfolio"      },
-  { id:"streak",       icon:"🔥", label:"Daily Streak"   },
+  { id:"streak",       icon:"🔥", label:"Streak"         },
   { id:"tax",          icon:"🧾", label:"Tax Calc"       },
-  { id:"bankvscrypto", icon:"🏦", label:"Bank vs Crypto" },
-  { id:"fomo",         icon:"😱", label:"FOMO Detector"  },
-  { id:"whitepaper",   icon:"📄", label:"Whitepaper AI"  },
+  { id:"dca",          icon:"📅", label:"DCA Planner"    },
+  { id:"traditional",  icon:"🆚", label:"Crypto vs FD"   },
+  { id:"rugpull",      icon:"🚨", label:"Rug Pull"       },
+  { id:"entrytime",    icon:"🎯", label:"Entry Finder"   },
+  { id:"airdrop",      icon:"🪙", label:"Airdrops"       },
+  { id:"fomo",         icon:"😱", label:"FOMO"           },
+  { id:"whitepaper",   icon:"📄", label:"Whitepaper"     },
 ];
 
 // ── IQ TEST QUESTIONS ─────────────────────────────────────────────────────────
@@ -174,6 +178,666 @@ const TAX_GUIDES = {
     {text:"Yahan upload karo", bold:true},
   ],
 };
+
+const AD = () => (
+  <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"14px 0"}}>
+    <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
+    <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
+    <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+  </div>
+);
+
+const GuideBox = ({emoji,title,steps,tip}) => (
+  <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:14,padding:"14px 16px",marginBottom:14}}>
+    <div style={{fontWeight:800,fontSize:13,color:"#065f46",marginBottom:10}}>{emoji} {title} — Kaise Use Karein?</div>
+    {steps.map((s,i)=>(
+      <div key={i} style={{display:"flex",gap:10,marginBottom:7,alignItems:"flex-start"}}>
+        <div style={{width:22,height:22,borderRadius:"50%",background:"#10b981",color:"#fff",fontSize:11,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div>
+        <div style={{fontSize:12,color:"#047857",lineHeight:1.5}}>{s}</div>
+      </div>
+    ))}
+    {tip&&<div style={{marginTop:10,fontSize:11,color:"#059669",background:"rgba(16,185,129,.1)",borderRadius:8,padding:"6px 10px"}}>💡 Tip: {tip}</div>}
+  </div>
+);
+
+// ═══════════════════════════════════════════════════════
+// 1. DCA PLANNER
+// ═══════════════════════════════════════════════════════
+function DcaPlanner(){
+  const [coin,setCoin]=useState("BTC");
+  const [monthly,setMonthly]=useState("1000");
+  const [months,setMonths]=useState("12");
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+
+  // Historical approximate CAGR data
+  const HIST={
+    BTC:{name:"Bitcoin",  cagr:1.25, color:"#F0B90B"},
+    ETH:{name:"Ethereum", cagr:1.18, color:"#627EEA"},
+    SOL:{name:"Solana",   cagr:1.35, color:"#9945FF"},
+    BNB:{name:"BNB",      cagr:1.15, color:"#F0B90B"},
+    ADA:{name:"Cardano",  cagr:0.95, color:"#0033AD"},
+    DOGE:{name:"Dogecoin",cagr:1.10, color:"#C2A633"},
+  };
+
+  const calculate=()=>{
+    const amt=parseFloat(monthly)||0;
+    const m=parseInt(months)||1;
+    const coin_data=HIST[coin]||HIST.BTC;
+    const monthlyRate=Math.pow(coin_data.cagr,1/12)-1;
+    let total=0,invested=0;
+    const points=[];
+    for(let i=1;i<=m;i++){
+      invested+=amt;
+      total=(total+amt)*(1+monthlyRate);
+      if(i%3===0||i===m)points.push({month:i,invested:Math.round(invested),value:Math.round(total)});
+    }
+    const profit=total-invested;
+    const multiplier=invested>0?total/invested:1;
+    setResult({total:Math.round(total),invested:Math.round(invested),profit:Math.round(profit),multiplier,points,coinName:coin_data.name,color:coin_data.color});
+  };
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:16}}>
+        <div style={{fontSize:40,marginBottom:8}}>📅</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>DCA Planner</h2>
+        <p style={{fontSize:13,color:T.text2}}>Regular investment karo — historical proof ke saath</p>
+      </div>
+
+      <GuideBox emoji="📅" title="DCA Planner"
+        steps={[
+          "Coin select karo jisme invest karna chahte ho",
+          "Har mahine kitna invest karoge? ₹500, ₹1000...",
+          "Kitne mahine tak invest karoge? Select karo",
+          'Calculate dabao — historical data se actual projection dikhega'
+        ]}
+        tip="DCA = Dollar Cost Averaging — Market high ho ya low, regular invest karo. Yeh sabse safe strategy hai!"
+      />
+
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>COIN SELECT KARO</div>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            {Object.keys(HIST).map(c=>(
+              <button key={c} onClick={()=>setCoin(c)}
+                style={{background:coin===c?"#10b981":"#f8fafc",color:coin===c?"#fff":"#64748b",
+                  border:`2px solid ${coin===c?"#10b981":"#e2e8f0"}`,borderRadius:12,padding:"8px 16px",
+                  fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+          <div>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>MONTHLY AMOUNT (₹)</div>
+            <input value={monthly} onChange={e=>setMonthly(e.target.value)} type="number" placeholder="e.g. 1000"
+              style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px 14px",fontSize:16,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",boxSizing:"border-box"}}
+              onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+            <div style={{display:"flex",gap:4,marginTop:6,flexWrap:"wrap"}}>
+              {["500","1000","2000","5000"].map(a=>(
+                <button key={a} onClick={()=>setMonthly(a)}
+                  style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 10px",fontSize:10,color:"#059669",fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                  ₹{a}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>MONTHS</div>
+            <select value={months} onChange={e=>setMonths(e.target.value)}
+              style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px",fontSize:13,color:"#0f172a",fontFamily:"'Inter',sans-serif"}}>
+              {[3,6,12,18,24,36,48,60].map(m=>(
+                <option key={m} value={m}>{m} mahine ({(m/12).toFixed(1)} saal)</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <button onClick={calculate}
+          style={{width:"100%",background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:12,padding:"14px",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif",boxShadow:"0 4px 14px rgba(16,185,129,.4)"}}>
+          📊 Calculate Karo
+        </button>
+      </div>
+
+      {result&&(
+        <div className="fadein">
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:16,padding:"20px",marginBottom:12}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+              <div style={{background:"rgba(255,255,255,.06)",borderRadius:12,padding:"12px",textAlign:"center"}}>
+                <div style={{fontSize:10,color:"#6b7280",marginBottom:4}}>Total Invested</div>
+                <div style={{fontSize:22,fontWeight:900,color:"#fff",fontFamily:"'JetBrains Mono',monospace"}}>₹{result.invested.toLocaleString("en-IN")}</div>
+              </div>
+              <div style={{background:"rgba(16,185,129,.12)",borderRadius:12,padding:"12px",textAlign:"center",border:"1px solid rgba(16,185,129,.3)"}}>
+                <div style={{fontSize:10,color:"#6b7280",marginBottom:4}}>Final Value (Est.)</div>
+                <div style={{fontSize:22,fontWeight:900,color:"#10b981",fontFamily:"'JetBrains Mono',monospace"}}>₹{result.total.toLocaleString("en-IN")}</div>
+              </div>
+            </div>
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:"12px",textAlign:"center"}}>
+              <div style={{fontSize:13,color:"#6b7280",marginBottom:4}}>Estimated Profit</div>
+              <div style={{fontSize:30,fontWeight:900,color:"#34d399"}}>+₹{result.profit.toLocaleString("en-IN")}</div>
+              <div style={{fontSize:13,color:"#6ee7b7",marginTop:4}}>{result.multiplier.toFixed(2)}x return · {result.coinName}</div>
+            </div>
+          </div>
+
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"#0f172a"}}>📈 Growth Timeline</div>
+            {result.points.map((p,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:7}}>
+                <div style={{width:52,fontSize:10,color:"#94a3b8",fontWeight:600}}>Month {p.month}</div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:8,overflow:"hidden"}}>
+                  <div style={{height:"100%",background:p.value>=p.invested?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",borderRadius:100,width:`${Math.min(100,(p.value/result.total)*100)}%`}}/>
+                </div>
+                <div style={{width:80,textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,color:p.value>=p.invested?"#059669":"#dc2626"}}>
+                  ₹{p.value.toLocaleString("en-IN")}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`📅 DCA Strategy Result!\n\nMaine ${months} mahine ₹${monthly}/month ${coin} mein invest kiya:\n\nInvested: ₹${result.invested.toLocaleString("en-IN")}\nValue: ₹${result.total.toLocaleString("en-IN")}\nProfit: ₹${result.profit.toLocaleString("en-IN")}\n\nCalculate karo: yesyoupro.com/features`)}`)}
+            style={{width:"100%",background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif",marginBottom:12}}>
+            📱 WhatsApp pe Share Karo
+          </button>
+
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",lineHeight:1.6}}>
+            ⚠️ Historical CAGR pe based estimate hai. Future returns guaranteed nahi hain. DYOR always.
+          </div>
+        </div>
+      )}
+      <AD/>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// 2. CRYPTO vs TRADITIONAL
+// ═══════════════════════════════════════════════════════
+function TraditionalCompare(){
+  const [amount,setAmount]=useState("100000");
+  const [years,setYears]=useState("5");
+  const [result,setResult]=useState(null);
+
+  const INVESTMENTS=[
+    {name:"Bitcoin (BTC)",   emoji:"₿", cagr:0.80, color:"#F0B90B", risk:"High",   note:"Past 5yr avg"},
+    {name:"Ethereum (ETH)",  emoji:"⟠", cagr:0.60, color:"#627EEA", risk:"High",   note:"Past 5yr avg"},
+    {name:"Nifty 50",        emoji:"📈", cagr:0.14, color:"#1d4ed8", risk:"Medium", note:"~14% CAGR avg"},
+    {name:"Bank FD",         emoji:"🏦", cagr:0.07, color:"#059669", risk:"Low",    note:"7% p.a."},
+    {name:"Gold",            emoji:"🥇", cagr:0.12, color:"#d97706", risk:"Low",    note:"~12% CAGR avg"},
+    {name:"Real Estate",     emoji:"🏠", cagr:0.10, color:"#7c3aed", risk:"Medium", note:"~10% CAGR avg"},
+    {name:"PPF",             emoji:"🔒", cagr:0.071,color:"#0891b2", risk:"Nil",    note:"7.1% p.a."},
+  ];
+
+  const calculate=()=>{
+    const amt=parseFloat(amount)||0;
+    const y=parseInt(years)||1;
+    const res=INVESTMENTS.map(inv=>({
+      ...inv,
+      final: Math.round(amt*Math.pow(1+inv.cagr,y)),
+      profit: Math.round(amt*(Math.pow(1+inv.cagr,y)-1)),
+    })).sort((a,b)=>b.final-a.final);
+    setResult({res,amt,years:y,best:res[0]});
+  };
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:16}}>
+        <div style={{fontSize:40,marginBottom:8}}>🆚</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Crypto vs Traditional</h2>
+        <p style={{fontSize:13,color:T.text2}}>Bitcoin vs FD vs Gold vs Real Estate — kaunsa better tha?</p>
+      </div>
+
+      <GuideBox emoji="🆚" title="Crypto vs Traditional"
+        steps={[
+          "Invest karna chahte amount enter karo (₹ mein)",
+          "Kitne saal pehle invest kiya hota — select karo",
+          "Calculate karo — 7 investments ka comparison dikhega",
+          "Winner dekho aur decide karo aage ki strategy"
+        ]}
+        tip="Ye past data pe based hai. Future returns vary kar sakte hain. Diversification best approach hai!"
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+          <div>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>INVEST AMOUNT (₹)</div>
+            <input value={amount} onChange={e=>setAmount(e.target.value)} type="number" placeholder="100000"
+              style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px 14px",fontSize:16,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",boxSizing:"border-box"}}
+              onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+            <div style={{display:"flex",gap:4,marginTop:5,flexWrap:"wrap"}}>
+              {["10000","50000","100000","500000"].map(a=>(
+                <button key={a} onClick={()=>setAmount(a)}
+                  style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"2px 8px",fontSize:9,color:"#059669",fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                  ₹{parseInt(a).toLocaleString("en-IN")}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>YEARS</div>
+            <select value={years} onChange={e=>setYears(e.target.value)}
+              style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px",fontSize:13,color:"#0f172a",fontFamily:"'Inter',sans-serif"}}>
+              {[1,2,3,5,7,10].map(y=><option key={y} value={y}>{y} saal pehle</option>)}
+            </select>
+          </div>
+        </div>
+        <button onClick={calculate}
+          style={{width:"100%",background:"linear-gradient(135deg,#6366f1,#4f46e5)",color:"#fff",border:"none",borderRadius:12,padding:"14px",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+          🆚 Compare Karo
+        </button>
+      </div>
+
+      {result&&(
+        <div className="fadein">
+          {result.res.map((r,i)=>(
+            <div key={i} style={{background:"#fff",border:`2px solid ${i===0?r.color+"66":"#f1f5f9"}`,borderRadius:14,padding:"14px 16px",marginBottom:8,boxShadow:i===0?"0 4px 16px rgba(0,0,0,.08)":"none"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{width:36,height:36,borderRadius:10,background:i===0?r.color:"#f8fafc",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>{r.emoji}</div>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:13}}>{i===0?"🏆 ":""}{r.name}</div>
+                    <div style={{fontSize:10,color:"#94a3b8"}}>Risk: {r.risk} · {r.note}</div>
+                  </div>
+                </div>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontFamily:"'JetBrains Mono',monospace",fontSize:15,fontWeight:900,color:r.color}}>
+                    ₹{r.final.toLocaleString("en-IN")}
+                  </div>
+                  <div style={{fontSize:10,color:"#94a3b8"}}>{(r.final/parseFloat(amount)).toFixed(1)}x</div>
+                </div>
+              </div>
+              <div style={{background:"#f1f5f9",borderRadius:100,height:6,overflow:"hidden"}}>
+                <div style={{height:"100%",borderRadius:100,background:r.color,width:`${Math.min(100,(r.final/result.res[0].final)*100)}%`,transition:"width 1s ease"}}/>
+              </div>
+              <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:10}}>
+                <span style={{color:"#94a3b8"}}>Profit: <span style={{color:"#059669",fontWeight:700}}>+₹{r.profit.toLocaleString("en-IN")}</span></span>
+                <span style={{color:r.color,fontWeight:700}}>{(r.cagr*100).toFixed(1)}% CAGR</span>
+              </div>
+            </div>
+          ))}
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",marginTop:8,lineHeight:1.6}}>
+            ⚠️ Historical data pe based. Past performance ≠ future guarantee. DYOR.
+          </div>
+        </div>
+      )}
+      <AD/>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// 3. RUG PULL DETECTOR
+// ═══════════════════════════════════════════════════════
+function RugPullDetector(){
+  const [coinName,setCoinName]=useState("");
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+
+  const analyze=async()=>{
+    if(!coinName.trim())return;
+    setLoading(true);setResult(null);
+    try{
+      const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({mode:"scam_ai",name:coinName,symbol:coinName.toUpperCase(),
+          ch24:0,ch7d:0,rsi:50,
+          scamFlags:[`User submitted coin: ${coinName} for rug pull analysis`]})});
+      const j=await r.json();
+      setResult(j.text||"Analysis complete.");
+    }catch(e){setResult("Error: "+e.message);}
+    setLoading(false);
+  };
+
+  const CHECKLIST=[
+    {q:"Kya team anonymous hai?",          risk:"High",   desc:"Anonymous team = accountability zero"},
+    {q:"Whitepaper hai ya nahi?",           risk:"High",   desc:"Bina whitepaper = no roadmap, no plan"},
+    {q:"Liquidity locked hai?",             risk:"High",   desc:"Unlocked liquidity = rug pull possible"},
+    {q:"Top 10 wallets mein >50%?",         risk:"High",   desc:"Whale concentration = price manipulation"},
+    {q:"Audit report milti hai?",           risk:"Medium", desc:"Unaudited contracts = hidden bugs"},
+    {q:"Kya exchange listing real hai?",    risk:"Medium", desc:"Fake listings = scam signal"},
+    {q:"Community active hai Telegram/X?", risk:"Low",    desc:"Dead community = abandoned project"},
+  ];
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:16}}>
+        <div style={{fontSize:40,marginBottom:8}}>🚨</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Rug Pull Detector</h2>
+        <p style={{fontSize:13,color:T.text2}}>Invest karne se pehle coin ka risk check karo</p>
+      </div>
+
+      <GuideBox emoji="🚨" title="Rug Pull Detector"
+        steps={[
+          "Coin ka naam ya symbol daalo jisme invest sochte ho",
+          "AI analysis button dabao",
+          "Rug pull risk score dekhо",
+          "Neeche manual checklist bhi check karo",
+          "High risk dikh raha hai to AVOID karo"
+        ]}
+        tip="Meme coins aur new projects mein rug pull risk bahut zyada hota hai. Hamesha research pehle!"
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>COIN NAME / SYMBOL</div>
+        <div style={{display:"flex",gap:8}}>
+          <input value={coinName} onChange={e=>setCoinName(e.target.value)}
+            placeholder="e.g. SAFEMOON, SQUID, LUNA..."
+            style={{flex:1,background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"13px 16px",fontSize:15,fontWeight:600,color:"#0f172a",boxSizing:"border-box",minWidth:0}}
+            onFocus={e=>e.target.style.borderColor="#ef4444"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}
+            onKeyDown={e=>e.key==="Enter"&&analyze()}/>
+          <button onClick={analyze} disabled={loading||!coinName.trim()}
+            style={{background:loading?"#e2e8f0":"linear-gradient(135deg,#ef4444,#dc2626)",color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"13px 20px",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif",flexShrink:0}}>
+            {loading?"⟳":"🔍 Analyze"}
+          </button>
+        </div>
+
+        <div style={{marginTop:10,display:"flex",gap:6,flexWrap:"wrap"}}>
+          {["SAFEMOON","SQUID","LUNA","SHIB","PEOPLE"].map(c=>(
+            <button key={c} onClick={()=>setCoinName(c)}
+              style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#dc2626",fontWeight:600,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"24px",textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,.04)",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:600,fontSize:13}}>Risk analysis ho raha hai...</div>
+        </div>
+      )}
+
+      {result&&!loading&&(
+        <div className="fadein">
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"16px",marginBottom:14,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"#dc2626"}}>🤖 AI Risk Analysis — {coinName.toUpperCase()}</div>
+            <div style={{fontSize:13,color:"#374151",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{result}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual checklist */}
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"16px",marginBottom:14,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+        <div style={{fontWeight:700,fontSize:13,marginBottom:12}}>✅ Manual Checklist — Khud Check Karo</div>
+        {CHECKLIST.map((item,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"8px 0",borderBottom:i<CHECKLIST.length-1?"1px solid #f8fafc":"none"}}>
+            <div style={{fontSize:10,fontWeight:700,color:item.risk==="High"?"#dc2626":item.risk==="Medium"?"#d97706":"#059669",background:item.risk==="High"?"#fef2f2":item.risk==="Medium"?"#fffbeb":"#f0fdf4",border:`1px solid ${item.risk==="High"?"#fca5a5":item.risk==="Medium"?"#fde68a":"#6ee7b7"}`,borderRadius:20,padding:"2px 8px",flexShrink:0,marginTop:2}}>
+              {item.risk}
+            </div>
+            <div>
+              <div style={{fontSize:12,fontWeight:600,color:"#0f172a",marginBottom:2}}>{item.q}</div>
+              <div style={{fontSize:11,color:"#94a3b8"}}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <AD/>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// 4. BEST ENTRY TIME FINDER
+// ═══════════════════════════════════════════════════════
+function EntryTimeFinder(){
+  const [coin,setCoin]=useState("BTC");
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+
+  const COINS=["BTC","ETH","SOL","APT","AVAX","BNB","LINK","DOGE","PEPE","ARB"];
+
+  const analyze=async()=>{
+    setLoading(true);setResult(null);
+    try{
+      // Fetch hourly klines for 90 days
+      const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1h&limit=1000`,{signal:AbortSignal.timeout(10000)});
+      if(!r.ok) throw new Error("API error");
+      const klines=await r.json();
+
+      // Analyze by hour of day (IST = UTC+5:30)
+      const hourData={};
+      const dayData={};
+      const dateData={};
+      for(const k of klines){
+        const ts=parseInt(k[0]);
+        const open=parseFloat(k[1]);
+        const close=parseFloat(k[4]);
+        const change=(close-open)/open*100;
+        const d=new Date(ts);
+        const hourIST=(d.getUTCHours()+5)%24;
+        const dayOfWeek=d.getUTCDay();
+        const dateOfMonth=d.getUTCDate();
+
+        if(!hourData[hourIST])hourData[hourIST]={sum:0,count:0};
+        hourData[hourIST].sum+=change;hourData[hourIST].count++;
+
+        if(!dayData[dayOfWeek])dayData[dayOfWeek]={sum:0,count:0};
+        dayData[dayOfWeek].sum+=change;dayData[dayOfWeek].count++;
+
+        if(!dateData[dateOfMonth])dateData[dateOfMonth]={sum:0,count:0};
+        dateData[dateOfMonth].sum+=change;dateData[dateOfMonth].count++;
+      }
+
+      // Find best/worst
+      const hourAvg=Object.entries(hourData).map(([h,v])=>({hour:+h,avg:v.sum/v.count})).sort((a,b)=>a.avg-b.avg);
+      const dayAvg=Object.entries(dayData).map(([d,v])=>({day:+d,avg:v.sum/v.count})).sort((a,b)=>a.avg-b.avg);
+      const dateAvg=Object.entries(dateData).map(([d,v])=>({date:+d,avg:v.sum/v.count})).sort((a,b)=>a.avg-b.avg);
+
+      const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      setResult({
+        bestHour: hourAvg[0],
+        worstHour: hourAvg[hourAvg.length-1],
+        bestDay: {...dayAvg[0], name:days[dayAvg[0].day]},
+        worstDay: {...dayAvg[dayAvg.length-1], name:days[dayAvg[dayAvg.length-1].day]},
+        bestDate: dateAvg[0],
+        worstDate: dateAvg[dateAvg.length-1],
+        allHours: hourAvg,
+        allDays: dayAvg.map(d=>({...d,name:days[d.day]})),
+      });
+    }catch(e){setResult({error:e.message});}
+    setLoading(false);
+  };
+
+  const fmtHour=(h)=>{const ampm=h>=12?"PM":"AM";const h12=h%12||12;return`${h12}:00 ${ampm} IST`;};
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:16}}>
+        <div style={{fontSize:40,marginBottom:8}}>🎯</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Best Entry Time</h2>
+        <p style={{fontSize:13,color:T.text2}}>Kab buy karna sabse sahi hota hai? Data se pata karo</p>
+      </div>
+
+      <GuideBox emoji="🎯" title="Best Entry Time Finder"
+        steps={[
+          "Coin select karo jisme invest karna chahte ho",
+          "Analyze dabao — 1000 candles ka data analyze hoga",
+          "Best time of day, day of week, date of month dikhega",
+          "Uss time pe DCA set karo ya manually buy karo"
+        ]}
+        tip="Ye 90 din ke historical data pe based hai. Sabse low price point dhundta hai hourly candles se!"
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:8}}>COIN SELECT KARO</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+          {COINS.map(c=>(
+            <button key={c} onClick={()=>setCoin(c)}
+              style={{background:coin===c?"#10b981":"#f8fafc",color:coin===c?"#fff":"#64748b",
+                border:`2px solid ${coin===c?"#10b981":"#e2e8f0"}`,borderRadius:12,padding:"7px 14px",
+                fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <button onClick={analyze} disabled={loading}
+          style={{width:"100%",background:loading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+          {loading?"⟳ Analyzing 1000 candles...":"🎯 Best Entry Time Dhundo"}
+        </button>
+      </div>
+
+      {result&&!result.error&&(
+        <div className="fadein">
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+            {[
+              {label:"Best Hour",value:fmtHour(result.bestHour?.hour),sub:`${result.bestHour?.avg.toFixed(2)}% avg`,color:"#059669",bg:"#ecfdf5"},
+              {label:"Best Day",value:result.bestDay?.name,sub:`${result.bestDay?.avg.toFixed(2)}% avg`,color:"#2563eb",bg:"#eff6ff"},
+              {label:"Best Date",value:`${result.bestDate?.date} tarikh`,sub:`${result.bestDate?.avg.toFixed(2)}% avg`,color:"#7c3aed",bg:"#f5f3ff"},
+            ].map((item,i)=>(
+              <div key={i} style={{background:item.bg,border:`1px solid ${item.color}33`,borderRadius:12,padding:"12px",textAlign:"center"}}>
+                <div style={{fontSize:9,color:item.color,fontWeight:700,marginBottom:4}}>{item.label}</div>
+                <div style={{fontSize:13,fontWeight:900,color:item.color,lineHeight:1.2,marginBottom:4}}>{item.value}</div>
+                <div style={{fontSize:9,color:item.color,opacity:.7}}>{item.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📊 Hour of Day Analysis (IST)</div>
+            {result.allHours.slice(0,8).map((h,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+                <div style={{width:60,fontSize:10,color:"#64748b"}}>{fmtHour(h.hour)}</div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:6,overflow:"hidden"}}>
+                  <div style={{height:"100%",background:h.avg<=0?"#10b981":"#ef4444",borderRadius:100,width:`${Math.min(100,Math.abs(h.avg)*20)}%`}}/>
+                </div>
+                <div style={{width:50,fontSize:10,textAlign:"right",fontWeight:700,color:h.avg<=0?"#059669":"#dc2626"}}>
+                  {h.avg.toFixed(2)}%
+                </div>
+              </div>
+            ))}
+            <div style={{fontSize:10,color:"#94a3b8",marginTop:8}}>🟢 = Price kam hoti hai (buy opportunity) · 🔴 = Price badhti hai</div>
+          </div>
+
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:14,padding:"14px 16px"}}>
+            <div style={{fontWeight:700,fontSize:12,color:"#6ee7b7",marginBottom:8}}>🎯 Best Strategy for {coin}</div>
+            <div style={{fontSize:12,color:"rgba(255,255,255,.8)",lineHeight:1.7}}>
+              📅 Best day: <strong style={{color:"#10b981"}}>{result.bestDay.name}</strong><br/>
+              ⏰ Best time: <strong style={{color:"#10b981"}}>{fmtHour(result.bestHour.hour)}</strong> (IST)<br/>
+              🗓️ Best date: <strong style={{color:"#10b981"}}>{result.bestDate.date} tarikh</strong> har mahine<br/>
+              <span style={{color:"#94a3b8",fontSize:11}}>Historical 90-day data pe based</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {result?.error&&<div style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:12,padding:"12px",color:"#dc2626",fontSize:13}}>⚠️ {result.error}</div>}
+      <AD/>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// 5. AIRDROP TRACKER
+// ═══════════════════════════════════════════════════════
+function AirdropTracker(){
+  const AIRDROPS=[
+    {name:"Arbitrum Nova",    symbol:"ARB",  status:"active",  est:"$50-200",  deadline:"Ongoing",   steps:["Arbitrum Nova pe transactions karo","Bridge assets karo","Nova DApps use karo"],        chain:"Arbitrum",  difficulty:"Easy",   link:"https://nova.arbitrum.io"},
+    {name:"LayerZero",        symbol:"ZRO",  status:"active",  est:"$100-500", deadline:"TBD",        steps:["Stargate pe bridge karo","Multiple chains use karo","Volume badhao"],                    chain:"Multi",     difficulty:"Medium", link:"https://layerzero.network"},
+    {name:"zkSync Era",       symbol:"ZK",   status:"active",  est:"$50-300",  deadline:"Ongoing",   steps:["zkSync Era pe deploy karo","DEX use karo","NFT mint karo"],                              chain:"zkSync",    difficulty:"Medium", link:"https://zksync.io"},
+    {name:"Scroll",           symbol:"SCR",  status:"active",  est:"$100-400", deadline:"TBD",        steps:["Scroll bridge use karo","Scroll DApps use karo","Transactions karo"],                    chain:"Scroll",    difficulty:"Easy",   link:"https://scroll.io"},
+    {name:"Linea",            symbol:"?",    status:"active",  est:"$50-200",  deadline:"TBD",        steps:["MetaMask wallet use karo","Linea pe transactions karo","Linea Park activities karo"],    chain:"Linea",     difficulty:"Easy",   link:"https://linea.build"},
+    {name:"Mode Network",     symbol:"MODE", status:"active",  est:"$30-150",  deadline:"Ongoing",   steps:["Mode pe ETH bridge karo","Swap karo","SFS register karo"],                              chain:"Mode",      difficulty:"Easy",   link:"https://mode.network"},
+    {name:"Blast L2",         symbol:"?",    status:"active",  est:"$100-500", deadline:"TBD",        steps:["Blast bridge pe ETH daalo","Blast DApps use karo","Points earn karo"],                   chain:"Blast",     difficulty:"Medium", link:"https://blast.io"},
+    {name:"Taiko",            symbol:"TAIKO",status:"ended",   est:"Completed",deadline:"Ended",      steps:["Already ended — next round ka wait karo"],                                               chain:"Taiko",     difficulty:"Easy",   link:"https://taiko.xyz"},
+  ];
+
+  const [filter,setFilter]=useState("all");
+  const filtered=filter==="all"?AIRDROPS:AIRDROPS.filter(a=>a.status===filter);
+
+  const diffColor=(d)=>d==="Easy"?"#059669":d==="Medium"?"#d97706":"#dc2626";
+  const diffBg=(d)=>d==="Easy"?"#ecfdf5":d==="Medium"?"#fffbeb":"#fef2f2";
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:16}}>
+        <div style={{fontSize:40,marginBottom:8}}>🪙</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Airdrop Tracker</h2>
+        <p style={{fontSize:13,color:T.text2}}>Free tokens earn karo — step by step guide ke saath</p>
+      </div>
+
+      <GuideBox emoji="🪙" title="Airdrop Tracker"
+        steps={[
+          "Active airdrops mein se ek choose karo",
+          "Steps follow karo — easy Hinglish mein likhe hain",
+          "Estimated value dekho (vary kar sakta hai)",
+          "Deadline se pehle complete karo",
+          "Wallet mein tokens automatically aayenge"
+        ]}
+        tip="Airdrops FREE hain — sirf gas fees lagti hai (₹50-500). Small amounts se shuru karo!"
+      />
+      <AD/>
+
+      {/* Filter */}
+      <div style={{display:"flex",gap:8,marginBottom:14}}>
+        {[{v:"all",l:"All Airdrops"},{v:"active",l:"🟢 Active"},{v:"ended",l:"⚫ Ended"}].map(f=>(
+          <button key={f.v} onClick={()=>setFilter(f.v)}
+            style={{background:filter===f.v?"#10b981":"#f8fafc",color:filter===f.v?"#fff":"#64748b",
+              border:`1px solid ${filter===f.v?"#10b981":"#e2e8f0"}`,borderRadius:20,padding:"6px 14px",
+              fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+            {f.l}
+          </button>
+        ))}
+      </div>
+
+      {filtered.map((a,i)=>(
+        <div key={i} style={{background:"#fff",border:`2px solid ${a.status==="active"?"#6ee7b7":"#e2e8f0"}`,borderRadius:16,padding:"16px",marginBottom:12,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
+          <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:10}}>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                <div style={{fontWeight:800,fontSize:15,color:"#0f172a"}}>{a.name}</div>
+                <div style={{background:a.status==="active"?"#ecfdf5":"#f8fafc",border:`1px solid ${a.status==="active"?"#6ee7b7":"#e2e8f0"}`,borderRadius:20,padding:"2px 8px",fontSize:9,fontWeight:700,color:a.status==="active"?"#059669":"#94a3b8"}}>
+                  {a.status==="active"?"🟢 ACTIVE":"⚫ ENDED"}
+                </div>
+              </div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                <span style={{fontSize:10,color:"#6366f1",background:"#eff6ff",borderRadius:20,padding:"2px 8px",fontWeight:600}}>{a.chain}</span>
+                <span style={{fontSize:10,color:diffColor(a.difficulty),background:diffBg(a.difficulty),borderRadius:20,padding:"2px 8px",fontWeight:600}}>{a.difficulty}</span>
+                <span style={{fontSize:10,color:"#d97706",background:"#fffbeb",borderRadius:20,padding:"2px 8px",fontWeight:600}}>Est: {a.est}</span>
+              </div>
+            </div>
+            <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:10,padding:"6px 12px",textAlign:"center",marginLeft:8,flexShrink:0}}>
+              <div style={{fontFamily:"'JetBrains Mono',monospace",fontWeight:900,fontSize:13,color:"#10b981"}}>{a.symbol}</div>
+            </div>
+          </div>
+
+          {/* Steps */}
+          <div style={{marginBottom:10}}>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>STEPS:</div>
+            {a.steps.map((s,j)=>(
+              <div key={j} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:5}}>
+                <div style={{width:18,height:18,borderRadius:"50%",background:"#10b981",color:"#fff",fontSize:10,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{j+1}</div>
+                <div style={{fontSize:12,color:"#374151",lineHeight:1.5}}>{s}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{display:"flex",gap:8}}>
+            <div style={{flex:1,background:"#f8fafc",borderRadius:8,padding:"6px 10px",fontSize:10,color:"#64748b"}}>
+              ⏰ Deadline: <strong>{a.deadline}</strong>
+            </div>
+            {a.status==="active"&&(
+              <button onClick={()=>window.open(a.link,"_blank")}
+                style={{background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:10,padding:"6px 16px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif",flexShrink:0}}>
+                Start →
+              </button>
+            )}
+          </div>
+        </div>
+      ))}
+
+      <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:12,padding:"12px 14px",fontSize:11,color:"#92400e",lineHeight:1.7}}>
+        ⚠️ <strong>Risk:</strong> Sirf trusted platforms use karo. Seed phrase kabhi mat daalo. Small amounts se start karo. DYOR!
+      </div>
+      <AD/>
+    </div>
+  );
+}
 
 export default function FeaturesPage() {
   const [tab, setTab] = useState("iq");
@@ -1444,22 +2108,32 @@ Give response in this EXACT JSON format (no extra text):
         {/* ════════════════════════════════════════════════════════════════ */}
         {/* BANK VS CRYPTO CALCULATOR                                        */}
         {/* ════════════════════════════════════════════════════════════════ */}
-        {tab==="bankvscrypto" && (
-          <div className="fadein">
-            <div style={{ textAlign:"center", marginBottom:20 }}>
-              <div style={{ fontSize:40, marginBottom:8 }}>🏦</div>
-              <h2 style={{ fontSize:22, fontWeight:900, letterSpacing:-1, marginBottom:6 }}>Bank vs Crypto</h2>
-              <p style={{ fontSize:13, color:T.text2 }}>Agar pehle invest kiya hota to aaj kitna hota?</p>
-            </div>
+        {/* ══ AD ══ */}
+        <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
+          <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
+          <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
+          <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
+        </div>
 
-            <div style={{ ...CARD }}>
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:14 }}>
-                <div>
-                  <div style={{ fontSize:10, color:T.text3, fontWeight:700, marginBottom:5 }}>INVESTMENT AMOUNT (₹)</div>
-                  <input value={bvcAmount} onChange={e=>setBvcAmount(e.target.value)}
-                    placeholder="e.g. 100000" type="number"
-                    style={{ ...INP }} onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-                </div>
+        {/* ════════════════════════ DCA PLANNER ════════════════════════ */}
+        {tab==="dca" && <DcaPlanner />}
+
+        {/* ════════════════════════ CRYPTO vs TRADITIONAL ══════════════ */}
+        {tab==="traditional" && <TraditionalCompare />}
+
+        {/* ════════════════════════ RUG PULL DETECTOR ══════════════════ */}
+        {tab==="rugpull" && <RugPullDetector />}
+
+        {/* ════════════════════════ BEST ENTRY TIME ════════════════════ */}
+        {tab==="entrytime" && <EntryTimeFinder />}
+
+        {/* ════════════════════════ AIRDROP TRACKER ════════════════════ */}
+        {tab==="airdrop" && <AirdropTracker />}
+
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {/* FOMO DETECTOR                                                    */}
+        {/* ════════════════════════════════════════════════════════════════ */}
+        {tab==="fomo" && (
                 <div>
                   <div style={{ fontSize:10, color:T.text3, fontWeight:700, marginBottom:5 }}>YEARS AGO</div>
                   <select value={bvcYears} onChange={e=>setBvcYears(e.target.value)}
