@@ -41,11 +41,11 @@ const DC_P = {
 
 // ── TAB CONFIG ────────────────────────────────────────────────────────────────
 const TABS = [
-  {id:"analyze", icon:"🔍", label:"Analyze"},
-  {id:"explain", icon:"🤖", label:"Explain"},
-  {id:"scam",    icon:"🛡️", label:"Scam Check"},
-  {id:"news",    icon:"📰", label:"News Impact"},
-  {id:"whale",   icon:"🐋", label:"Whale Alert"},
+  {id:"analyze", icon:"📊", label:"Analyze",   desc:"Coin analysis"},
+  {id:"explain", icon:"🤖", label:"AI Explain", desc:"Koi bhi samjhao"},
+  {id:"scam",    icon:"🛡️", label:"Scam Check", desc:"Safe hai?"},
+  {id:"news",    icon:"📰", label:"News",        desc:"Impact analysis"},
+  {id:"whale",   icon:"🐋", label:"Whales",      desc:"Big moves"},
 ];
 
 // ── SECTION HEADER ────────────────────────────────────────────────────────────
@@ -866,8 +866,32 @@ EXACT format (Hinglish):
           </div>
 
           <p style={{fontSize:14,color:"#64748b",fontWeight:500}}>
-            👉 <strong style={{color:"#0f172a"}}>Abhi kya karna chahiye?</strong> — Real-time AI Analysis
+            India ka free crypto research tool — No signup, No fees
           </p>
+
+          {/* Start Here card — for new users */}
+          <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"2px solid #6ee7b7",borderRadius:16,padding:"14px 16px",marginTop:14,textAlign:"left"}}>
+            <div style={{fontWeight:800,fontSize:13,color:"#065f46",marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+              👋 Pehli baar aa rahe ho? Yahan se shuru karo:
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {[
+                {n:"1",t:"Coin Analyze Karo",d:"BTC, ETH, SOL likho → AI batayega BUY/SELL/HOLD",tab:"analyze",emoji:"🔍"},
+                {n:"2",t:"Expert Choice Dekho",d:"120 coins mein se aaj ke top 5 best picks",tab:"analyze",emoji:"🏆"},
+                {n:"3",t:"Market Heatmap",d:"Sab sectors green hain ya red? Ek nazar mein dekho",tab:"analyze",emoji:"🌡️"},
+              ].map((s,i)=>(
+                <button key={i} onClick={()=>setActiveTab(s.tab)}
+                  style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #d1fae5",borderRadius:12,padding:"9px 12px",cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif"}}>
+                  <div style={{width:26,height:26,borderRadius:"50%",background:"#10b981",color:"#fff",fontSize:12,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{s.n}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:700,fontSize:12,color:"#0f172a"}}>{s.emoji} {s.t}</div>
+                    <div style={{fontSize:10,color:"#64748b"}}>{s.d}</div>
+                  </div>
+                  <span style={{color:"#10b981",fontSize:14}}>→</span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* ── TAB BAR ── */}
