@@ -226,37 +226,95 @@ const GuideBox = ({emoji,title,steps,tip}) => (
 // 1. DCA PLANNER
 // ═══════════════════════════════════════════════════════
 function DcaPlanner(){
-  const [coin,setCoin]=useState("BTC");
-  const [monthly,setMonthly]=useState("1000");
-  const [months,setMonths]=useState("12");
-  const [result,setResult]=useState(null);
-  const [loading,setLoading]=useState(false);
+  const [coinInput,setCoinInput]  = useState("BTC");
+  const [monthly,setMonthly]      = useState("1000");
+  const [timeMode,setTimeMode]    = useState("months"); // "months" | "years"
+  const [monthVal,setMonthVal]    = useState("12");     // 1-12
+  const [yearVal,setYearVal]      = useState("3");      // 1-15
+  const [result,setResult]        = useState(null);
+  const [loading,setLoading]      = useState(false);
+  const [coinError,setCoinError]  = useState("");
 
-  // Historical approximate CAGR data
-  const HIST={
-    BTC:{name:"Bitcoin",  cagr:1.25, color:"#F0B90B"},
-    ETH:{name:"Ethereum", cagr:1.18, color:"#627EEA"},
-    SOL:{name:"Solana",   cagr:1.35, color:"#9945FF"},
-    BNB:{name:"BNB",      cagr:1.15, color:"#F0B90B"},
-    ADA:{name:"Cardano",  cagr:0.95, color:"#0033AD"},
-    DOGE:{name:"Dogecoin",cagr:1.10, color:"#C2A633"},
+  // Popular coins for quick select
+  const QUICK = ["BTC","ETH","SOL","BNB","APT","AVAX","DOGE","LINK","XRP","PEPE","WIF","ARB"];
+
+  // CAGR estimates based on historical data (approximate)
+  const CAGR_MAP = {
+    BTC:0.95,ETH:0.80,SOL:1.20,BNB:0.75,ADA:0.50,AVAX:0.90,
+    DOGE:0.80,LINK:0.70,DOT:0.45,MATIC:0.85,XRP:0.55,UNI:0.60,
+    APT:1.10,SUI:1.15,INJ:1.30,ARB:0.80,OP:0.75,NEAR:0.70,
+    WIF:1.50,BONK:1.40,PEPE:1.60,ORDI:1.20,
+    FTM:0.70,ATOM:0.50,LTC:0.45,TRX:0.50,
   };
 
-  const calculate=()=>{
-    const amt=parseFloat(monthly)||0;
-    const m=parseInt(months)||1;
-    const coin_data=HIST[coin]||HIST.BTC;
-    const monthlyRate=Math.pow(coin_data.cagr,1/12)-1;
-    let total=0,invested=0;
-    const points=[];
-    for(let i=1;i<=m;i++){
-      invested+=amt;
-      total=(total+amt)*(1+monthlyRate);
-      if(i%3===0||i===m)points.push({month:i,invested:Math.round(invested),value:Math.round(total)});
+  const getTotalMonths = () => {
+    if(timeMode==="months") return parseInt(monthVal)||1;
+    return (parseInt(yearVal)||1)*12;
+  };
+
+  const getDisplayTime = () => {
+    const m = getTotalMonths();
+    if(m<12) return `${m} mahine`;
+    const y = m/12;
+    return y===Math.floor(y) ? `${y} saal` : `${Math.floor(y)} saal ${m%12} mahine`;
+  };
+
+  const calculate = async () => {
+    const sym = coinInput.trim().toUpperCase();
+    if(!sym){ setCoinError("Coin name daalo"); return; }
+    setCoinError(""); setResult(null); setLoading(true);
+
+    const amt = parseFloat(monthly)||0;
+    const totalMonths = getTotalMonths();
+
+    // Try to get CAGR — use map first, then estimate from API
+    let cagr = CAGR_MAP[sym];
+    let coinName = sym;
+    let coinColor = "#10b981";
+
+    if(!cagr){
+      // Try Binance to verify coin exists, use 80% CAGR as conservative estimate for unknown coins
+      try{
+        const r = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}USDT`,{signal:AbortSignal.timeout(5000)});
+        if(r.ok){
+          const d = await r.json();
+          const ch24 = parseFloat(d.priceChangePercent)||0;
+          // Use conservative estimate for unknown coins
+          cagr = 0.65; // ~65% annual avg for mid-cap alts
+          coinName = sym;
+        } else {
+          setCoinError(`"${sym}" Binance pe nahi mila. BTC, ETH, SOL jaisa naam daalo.`);
+          setLoading(false); return;
+        }
+      }catch(e){
+        cagr = 0.65; // fallback
+      }
     }
-    const profit=total-invested;
-    const multiplier=invested>0?total/invested:1;
-    setResult({total:Math.round(total),invested:Math.round(invested),profit:Math.round(profit),multiplier,points,coinName:coin_data.name,color:coin_data.color});
+
+    const monthlyRate = Math.pow(1+cagr, 1/12) - 1;
+    let total=0, invested=0;
+    const points=[];
+    const interval = totalMonths <= 12 ? 1 : totalMonths <= 60 ? 6 : 12;
+
+    for(let i=1;i<=totalMonths;i++){
+      invested += amt;
+      total = (total + amt) * (1 + monthlyRate);
+      if(i%interval===0||i===totalMonths){
+        const label = i<12?`${i}m`:i===12?"1yr":`${(i/12).toFixed(i%12===0?0:1)}yr`;
+        points.push({month:i,label,invested:Math.round(invested),value:Math.round(total)});
+      }
+    }
+
+    const profit = total - invested;
+    const multiplier = invested>0 ? total/invested : 1;
+
+    setResult({
+      total:Math.round(total), invested:Math.round(invested),
+      profit:Math.round(profit), multiplier, points,
+      coinName, coinColor, sym, cagr,
+      totalMonths, timeDisplay:getDisplayTime(),
+    });
+    setLoading(false);
   };
 
   return(
@@ -264,108 +322,249 @@ function DcaPlanner(){
       <div style={{textAlign:"center",marginBottom:16}}>
         <div style={{fontSize:40,marginBottom:8}}>📅</div>
         <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>DCA Planner</h2>
-        <p style={{fontSize:13,color:T.text2}}>Regular investment karo — historical proof ke saath</p>
+        <p style={{fontSize:13,color:T.text2}}>Koi bhi coin · 1 mahine se 15 saal tak</p>
       </div>
 
       <GuideBox emoji="📅" title="DCA Planner"
         steps={[
-          "Coin select karo jisme invest karna chahte ho",
-          "Har mahine kitna invest karoge? ₹500, ₹1000...",
-          "Kitne mahine tak invest karoge? Select karo",
-          'Calculate dabao — historical data se actual projection dikhega'
+          "Koi bhi coin ka naam daalo — BTC, ETH, APT, SOL ya koi bhi",
+          "Quick buttons se select karo ya khud type karo",
+          "Monthly amount set karo",
+          "Time period choose karo — mahine ya saal mein",
+          "Calculate dabao — estimate milega"
         ]}
-        tip="DCA = Dollar Cost Averaging — Market high ho ya low, regular invest karo. Yeh sabse safe strategy hai!"
+        tip="DCA = Dollar Cost Averaging. Har mahine thoda thoda invest karo — price high ho ya low. Long term mein yeh strategy sabse effective hai!"
       />
 
       <AD/>
 
       <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
-        <div style={{marginBottom:12}}>
-          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>COIN SELECT KARO</div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {Object.keys(HIST).map(c=>(
-              <button key={c} onClick={()=>setCoin(c)}
-                style={{background:coin===c?"#10b981":"#f8fafc",color:coin===c?"#fff":"#64748b",
-                  border:`2px solid ${coin===c?"#10b981":"#e2e8f0"}`,borderRadius:12,padding:"8px 16px",
-                  fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+
+        {/* Coin Input */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6,letterSpacing:.5}}>COIN (koi bhi daalo)</div>
+          <div style={{display:"flex",gap:8,marginBottom:8}}>
+            <input
+              value={coinInput}
+              onChange={e=>{setCoinInput(e.target.value.toUpperCase());setCoinError("");setResult(null);}}
+              placeholder="e.g. BTC, ETH, SOL, APT..."
+              style={{flex:1,background:"#f8fafc",border:`2px solid ${coinError?"#ef4444":"#e2e8f0"}`,borderRadius:12,
+                padding:"12px 16px",fontSize:18,fontWeight:800,
+                fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",minWidth:0,boxSizing:"border-box"}}
+              onFocus={e=>e.target.style.borderColor="#10b981"}
+              onBlur={e=>e.target.style.borderColor=coinError?"#ef4444":"#e2e8f0"}/>
+          </div>
+          {coinError&&<div style={{fontSize:11,color:"#ef4444",marginBottom:6}}>⚠️ {coinError}</div>}
+
+          {/* Quick select */}
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:600,marginBottom:6}}>Quick Select:</div>
+          <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+            {QUICK.map(c=>(
+              <button key={c} onClick={()=>{setCoinInput(c);setCoinError("");setResult(null);}}
+                style={{background:coinInput===c?"#10b981":"#f8fafc",
+                  color:coinInput===c?"#fff":"#475569",
+                  border:`1.5px solid ${coinInput===c?"#10b981":"#e2e8f0"}`,
+                  borderRadius:20,padding:"5px 12px",cursor:"pointer",
+                  fontSize:11,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",
+                  transition:"all .15s"}}>
                 {c}
               </button>
             ))}
           </div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
-          <div>
-            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>MONTHLY AMOUNT (₹)</div>
-            <input value={monthly} onChange={e=>setMonthly(e.target.value)} type="number" placeholder="e.g. 1000"
-              style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px 14px",fontSize:16,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",boxSizing:"border-box"}}
-              onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-            <div style={{display:"flex",gap:4,marginTop:6,flexWrap:"wrap"}}>
-              {["500","1000","2000","5000"].map(a=>(
-                <button key={a} onClick={()=>setMonthly(a)}
-                  style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 10px",fontSize:10,color:"#059669",fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-                  ₹{a}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>MONTHS</div>
-            <select value={months} onChange={e=>setMonths(e.target.value)}
-              style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px",fontSize:13,color:"#0f172a",fontFamily:"'Inter',sans-serif"}}>
-              {[3,6,12,18,24,36,48,60].map(m=>(
-                <option key={m} value={m}>{m} mahine ({(m/12).toFixed(1)} saal)</option>
-              ))}
-            </select>
+
+        {/* Monthly Amount */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6,letterSpacing:.5}}>MONTHLY AMOUNT (₹)</div>
+          <input value={monthly} onChange={e=>setMonthly(e.target.value)} type="number"
+            placeholder="e.g. 1000"
+            style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,
+              padding:"12px 16px",fontSize:18,fontWeight:800,
+              fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",boxSizing:"border-box"}}
+            onFocus={e=>e.target.style.borderColor="#10b981"}
+            onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+          <div style={{display:"flex",gap:5,marginTop:6,flexWrap:"wrap"}}>
+            {["500","1000","2000","5000","10000"].map(a=>(
+              <button key={a} onClick={()=>setMonthly(a)}
+                style={{background:monthly===a?"#059669":"#f0fdf4",
+                  color:monthly===a?"#fff":"#059669",
+                  border:`1px solid ${monthly===a?"#059669":"#6ee7b7"}`,
+                  borderRadius:20,padding:"4px 11px",fontSize:10,
+                  fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                ₹{parseInt(a).toLocaleString("en-IN")}
+              </button>
+            ))}
           </div>
         </div>
-        <button onClick={calculate}
-          style={{width:"100%",background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:12,padding:"14px",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif",boxShadow:"0 4px 14px rgba(16,185,129,.4)"}}>
-          📊 Calculate Karo
+
+        {/* Time Period — Months OR Years toggle */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:8,letterSpacing:.5}}>TIME PERIOD</div>
+
+          {/* Toggle */}
+          <div style={{display:"flex",background:"#f8fafc",borderRadius:12,padding:4,marginBottom:10,border:"1px solid #e2e8f0"}}>
+            {[{v:"months",l:"📅 Mahine (1-12)"},
+              {v:"years", l:"📆 Saal (1-15 yrs)"}].map(m=>(
+              <button key={m.v} onClick={()=>setTimeMode(m.v)}
+                style={{flex:1,padding:"9px",borderRadius:10,cursor:"pointer",fontWeight:700,
+                  fontSize:12,fontFamily:"'Inter',sans-serif",border:"none",transition:"all .15s",
+                  background:timeMode===m.v?"#10b981":"transparent",
+                  color:timeMode===m.v?"#fff":"#64748b"}}>
+                {m.l}
+              </button>
+            ))}
+          </div>
+
+          {/* Months slider (1-12) */}
+          {timeMode==="months"&&(
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{fontSize:11,color:"#64748b"}}>Duration</span>
+                <span style={{fontSize:14,fontWeight:800,color:"#10b981"}}>
+                  {monthVal} mahine
+                </span>
+              </div>
+              <input type="range" min="1" max="12" value={monthVal}
+                onChange={e=>setMonthVal(e.target.value)}
+                style={{width:"100%",accentColor:"#10b981",height:6,cursor:"pointer"}}/>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#94a3b8",marginTop:3}}>
+                <span>1 mahina</span><span>6 mahine</span><span>12 mahine</span>
+              </div>
+              {/* Quick months */}
+              <div style={{display:"flex",gap:5,marginTop:8,flexWrap:"wrap"}}>
+                {["1","3","6","9","12"].map(m=>(
+                  <button key={m} onClick={()=>setMonthVal(m)}
+                    style={{background:monthVal===m?"#10b981":"#f8fafc",
+                      color:monthVal===m?"#fff":"#64748b",
+                      border:`1px solid ${monthVal===m?"#10b981":"#e2e8f0"}`,
+                      borderRadius:20,padding:"4px 12px",fontSize:11,
+                      fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    {m}m
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Years slider (1-15) */}
+          {timeMode==="years"&&(
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+                <span style={{fontSize:11,color:"#64748b"}}>Duration</span>
+                <span style={{fontSize:14,fontWeight:800,color:"#10b981"}}>
+                  {yearVal} saal ({parseInt(yearVal)*12} mahine)
+                </span>
+              </div>
+              <input type="range" min="1" max="15" value={yearVal}
+                onChange={e=>setYearVal(e.target.value)}
+                style={{width:"100%",accentColor:"#10b981",height:6,cursor:"pointer"}}/>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#94a3b8",marginTop:3}}>
+                <span>1 saal</span><span>5 saal</span><span>10 saal</span><span>15 saal</span>
+              </div>
+              {/* Quick years */}
+              <div style={{display:"flex",gap:5,marginTop:8,flexWrap:"wrap"}}>
+                {["1","2","3","5","7","10","15"].map(y=>(
+                  <button key={y} onClick={()=>setYearVal(y)}
+                    style={{background:yearVal===y?"#10b981":"#f8fafc",
+                      color:yearVal===y?"#fff":"#64748b",
+                      border:`1px solid ${yearVal===y?"#10b981":"#e2e8f0"}`,
+                      borderRadius:20,padding:"4px 12px",fontSize:11,
+                      fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    {y}yr
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Summary preview */}
+        {monthly&&coinInput&&(
+          <div style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:10,
+            padding:"10px 14px",marginBottom:14,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{fontSize:11,color:"#065f46"}}>
+              ₹{parseInt(monthly||0).toLocaleString("en-IN")}/month × {getDisplayTime()}
+            </div>
+            <div style={{fontSize:12,fontWeight:800,color:"#059669"}}>
+              = ₹{(parseInt(monthly||0)*getTotalMonths()).toLocaleString("en-IN")} invest
+            </div>
+          </div>
+        )}
+
+        <button onClick={calculate} disabled={loading||!coinInput.trim()}
+          style={{width:"100%",background:loading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"15px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif",
+            boxShadow:loading?"none":"0 4px 14px rgba(16,185,129,.4)"}}>
+          {loading?"⟳ Calculating...":"📊 DCA Calculate Karo"}
         </button>
       </div>
 
+      {/* Result */}
       {result&&(
         <div className="fadein">
           <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:16,padding:"20px",marginBottom:12}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-              <div style={{background:"rgba(255,255,255,.06)",borderRadius:12,padding:"12px",textAlign:"center"}}>
-                <div style={{fontSize:10,color:"#6b7280",marginBottom:4}}>Total Invested</div>
-                <div style={{fontSize:22,fontWeight:900,color:"#fff",fontFamily:"'JetBrains Mono',monospace"}}>₹{result.invested.toLocaleString("en-IN")}</div>
-              </div>
-              <div style={{background:"rgba(16,185,129,.12)",borderRadius:12,padding:"12px",textAlign:"center",border:"1px solid rgba(16,185,129,.3)"}}>
-                <div style={{fontSize:10,color:"#6b7280",marginBottom:4}}>Final Value (Est.)</div>
-                <div style={{fontSize:22,fontWeight:900,color:"#10b981",fontFamily:"'JetBrains Mono',monospace"}}>₹{result.total.toLocaleString("en-IN")}</div>
+            <div style={{textAlign:"center",marginBottom:14}}>
+              <div style={{fontSize:11,color:"#6b7280",marginBottom:4}}>
+                {result.sym} · ₹{parseInt(monthly).toLocaleString("en-IN")}/month · {result.timeDisplay}
               </div>
             </div>
-            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:"12px",textAlign:"center"}}>
-              <div style={{fontSize:13,color:"#6b7280",marginBottom:4}}>Estimated Profit</div>
-              <div style={{fontSize:30,fontWeight:900,color:"#34d399"}}>+₹{result.profit.toLocaleString("en-IN")}</div>
-              <div style={{fontSize:13,color:"#6ee7b7",marginTop:4}}>{result.multiplier.toFixed(2)}x return · {result.coinName}</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div style={{background:"rgba(255,255,255,.06)",borderRadius:12,padding:"12px",textAlign:"center"}}>
+                <div style={{fontSize:10,color:"#6b7280",marginBottom:3}}>Total Invested</div>
+                <div style={{fontSize:20,fontWeight:900,color:"#fff",fontFamily:"'JetBrains Mono',monospace"}}>
+                  ₹{result.invested.toLocaleString("en-IN")}
+                </div>
+              </div>
+              <div style={{background:"rgba(16,185,129,.12)",borderRadius:12,padding:"12px",textAlign:"center",border:"1px solid rgba(16,185,129,.3)"}}>
+                <div style={{fontSize:10,color:"#6b7280",marginBottom:3}}>Est. Final Value</div>
+                <div style={{fontSize:20,fontWeight:900,color:"#10b981",fontFamily:"'JetBrains Mono',monospace"}}>
+                  ₹{result.total.toLocaleString("en-IN")}
+                </div>
+              </div>
+            </div>
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:"14px",textAlign:"center"}}>
+              <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>Estimated Profit</div>
+              <div style={{fontSize:32,fontWeight:900,color:"#34d399"}}>
+                +₹{result.profit.toLocaleString("en-IN")}
+              </div>
+              <div style={{fontSize:12,color:"#6ee7b7",marginTop:4}}>
+                {result.multiplier.toFixed(2)}x return · {result.sym} · ~{(result.cagr*100).toFixed(0)}% annual est.
+              </div>
             </div>
           </div>
 
+          {/* Growth timeline */}
           <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
             <div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"#0f172a"}}>📈 Growth Timeline</div>
             {result.points.map((p,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:7}}>
-                <div style={{width:52,fontSize:10,color:"#94a3b8",fontWeight:600}}>Month {p.month}</div>
-                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:8,overflow:"hidden"}}>
-                  <div style={{height:"100%",background:p.value>=p.invested?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",borderRadius:100,width:`${Math.min(100,(p.value/result.total)*100)}%`}}/>
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <div style={{width:36,fontSize:9,color:"#94a3b8",fontWeight:600,flexShrink:0}}>{p.label}</div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:7,overflow:"hidden"}}>
+                  <div style={{height:"100%",
+                    background:p.value>=p.invested?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",
+                    borderRadius:100,width:`${Math.min(100,(p.value/result.total)*100)}%`}}/>
                 </div>
-                <div style={{width:80,textAlign:"right",fontFamily:"'JetBrains Mono',monospace",fontSize:11,fontWeight:700,color:p.value>=p.invested?"#059669":"#dc2626"}}>
+                <div style={{width:76,textAlign:"right",fontFamily:"'JetBrains Mono',monospace",
+                  fontSize:10,fontWeight:700,color:p.value>=p.invested?"#059669":"#dc2626"}}>
                   ₹{p.value.toLocaleString("en-IN")}
                 </div>
               </div>
             ))}
           </div>
 
-          <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(`📅 DCA Strategy Result!\n\nMaine ${months} mahine ₹${monthly}/month ${coin} mein invest kiya:\n\nInvested: ₹${result.invested.toLocaleString("en-IN")}\nValue: ₹${result.total.toLocaleString("en-IN")}\nProfit: ₹${result.profit.toLocaleString("en-IN")}\n\nCalculate karo: yesyoupro.com/features`)}`)}
-            style={{width:"100%",background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif",marginBottom:12}}>
+          <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(
+            `📅 DCA Strategy — ${result.sym}\n\n₹${parseInt(monthly).toLocaleString("en-IN")}/month × ${result.timeDisplay}\n\nInvested: ₹${result.invested.toLocaleString("en-IN")}\nEst. Value: ₹${result.total.toLocaleString("en-IN")}\nEst. Profit: ₹${result.profit.toLocaleString("en-IN")}\n${result.multiplier.toFixed(2)}x return!\n\nKhud calculate karo → yesyoupro.com/features`
+          )}`)}
+            style={{width:"100%",background:"#25D366",color:"#fff",border:"none",borderRadius:12,
+              padding:"12px",fontWeight:700,fontSize:13,cursor:"pointer",
+              fontFamily:"'Inter',sans-serif",marginBottom:10}}>
             📱 WhatsApp pe Share Karo
           </button>
 
-          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",lineHeight:1.6}}>
-            ⚠️ Historical CAGR pe based estimate hai. Future returns guaranteed nahi hain. DYOR always.
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",lineHeight:1.7}}>
+            ⚠️ Yeh estimate hai — historical CAGR pe based. Future returns guaranteed nahi hain.<br/>
+            DYOR · Not financial advice · Crypto is risky
           </div>
         </div>
       )}
