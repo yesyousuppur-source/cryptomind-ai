@@ -9,20 +9,42 @@ const T = {
   shadow:"0 4px 20px rgba(0,0,0,.05)",
 };
 
-const TABS = [
-  { id:"iq",           icon:"🧠", label:"IQ Test"        },
-  { id:"health",       icon:"🏥", label:"Health Check"   },
-  { id:"portfolio",    icon:"💼", label:"Portfolio"      },
-  { id:"streak",       icon:"🔥", label:"Streak"         },
-  { id:"tax",          icon:"🧾", label:"Tax Calc"       },
-  { id:"dca",          icon:"📅", label:"DCA Planner"    },
-  { id:"traditional",  icon:"🆚", label:"Crypto vs FD"   },
-  { id:"rugpull",      icon:"🚨", label:"Rug Pull"       },
-  { id:"entrytime",    icon:"🎯", label:"Entry Finder"   },
-  { id:"airdrop",      icon:"🪙", label:"Airdrops"       },
-  { id:"fomo",         icon:"😱", label:"FOMO"           },
-  { id:"whitepaper",   icon:"📄", label:"Whitepaper"     },
+const TAB_GROUPS = [
+  {
+    label: "🎓 Seekho",
+    tabs: [
+      { id:"iq",       icon:"🧠", label:"IQ Test"     },
+      { id:"streak",   icon:"🔥", label:"Streak"       },
+      { id:"health",   icon:"🏥", label:"Health Check" },
+    ]
+  },
+  {
+    label: "🔧 Tools",
+    tabs: [
+      { id:"tax",         icon:"🧾", label:"Tax Calc"    },
+      { id:"dca",         icon:"📅", label:"DCA Planner" },
+      { id:"traditional", icon:"🆚", label:"Crypto vs FD"},
+      { id:"portfolio",   icon:"💼", label:"Portfolio"   },
+    ]
+  },
+  {
+    label: "🛡️ Safety",
+    tabs: [
+      { id:"rugpull",  icon:"🚨", label:"Rug Pull"   },
+      { id:"fomo",     icon:"😱", label:"FOMO Check"  },
+      { id:"whitepaper",icon:"📄",label:"Whitepaper" },
+    ]
+  },
+  {
+    label: "🎯 Timing",
+    tabs: [
+      { id:"entrytime", icon:"🎯", label:"Entry Finder"},
+      { id:"airdrop",   icon:"🪙", label:"Airdrops"   },
+    ]
+  },
 ];
+
+const TABS = TAB_GROUPS.flatMap(g=>g.tabs);
 
 // ── IQ TEST QUESTIONS ─────────────────────────────────────────────────────────
 const IQ_QUESTIONS = [
@@ -1294,14 +1316,28 @@ Give response in this EXACT JSON format (no extra text):
           <p style={{ fontSize:13, color:T.text3 }}>Duniya mein pehli baar — sirf YesYouPro pe</p>
         </div>
 
-        {/* Tab Bar */}
-        <div style={{ background:"#fff", borderRadius:16, padding:"6px", marginBottom:12, boxShadow:T.shadow, border:`1px solid ${T.border}`, display:"flex", gap:2 }}>
-          {TABS.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)}
-              style={{ flex:1, border: tab===t.id?"1px solid #6ee7b7":"1px solid transparent", background: tab===t.id?"linear-gradient(135deg,#ecfdf5,#d1fae5)":"transparent", color: tab===t.id?T.greenDk:T.text3, borderRadius:12, padding:"10px 4px", cursor:"pointer", display:"flex", flexDirection:"column", alignItems:"center", gap:2, transition:"all .2s", fontFamily:"'Inter',sans-serif", fontWeight:600 }}>
-              <span style={{ fontSize:18 }}>{t.icon}</span>
-              <span style={{ fontSize:10 }}>{t.label}</span>
-            </button>
+        {/* Grouped Tab Navigation */}
+        <div style={{marginBottom:16}}>
+          {TAB_GROUPS.map((group,gi)=>(
+            <div key={gi} style={{marginBottom:8}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:1,marginBottom:5,paddingLeft:4}}>
+                {group.label}
+              </div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {group.tabs.map(t=>(
+                  <button key={t.id} onClick={()=>setTab(t.id)}
+                    style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",
+                      borderRadius:20,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:600,
+                      fontSize:12,transition:"all .15s",border:"none",
+                      background:tab===t.id?"linear-gradient(135deg,#10b981,#059669)":"#f8fafc",
+                      color:tab===t.id?"#fff":"#475569",
+                      boxShadow:tab===t.id?"0 4px 12px rgba(16,185,129,.35)":"none"}}>
+                    <span style={{fontSize:15}}>{t.icon}</span>
+                    <span>{t.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
