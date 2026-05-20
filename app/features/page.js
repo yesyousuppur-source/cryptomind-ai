@@ -226,8 +226,330 @@ const GuideBox = ({emoji,title,steps,tip}) => (
 // 1. DCA PLANNER
 // ═══════════════════════════════════════════════════════
 function DcaPlanner(){
-  const [coinInput,setCoinInput]  = useState("BTC");
-  const [monthly,setMonthly]      = useState("1000");
+  const [coinInput,setCoinInput] = useState("BTC");
+  const [monthly,setMonthly]     = useState("1000");
+  const [timeMode,setTimeMode]   = useState("months");
+  const [monthVal,setMonthVal]   = useState("12");
+  const [yearVal,setYearVal]     = useState("3");
+  const [result,setResult]       = useState(null);
+  const [loading,setLoading]     = useState(false);
+  const [err,setErr]             = useState("");
+
+  const QUICK=["BTC","ETH","SOL","BNB","APT","AVAX","DOGE","LINK","XRP","PEPE","WIF","ARB"];
+
+  const getTotalMonths=()=>timeMode==="months"?parseInt(monthVal)||1:(parseInt(yearVal)||1)*12;
+  const getTimeLabel=()=>{
+    const m=getTotalMonths();
+    if(m<12)return`${m} mahine`;
+    const y=m/12;
+    return y===Math.floor(y)?`${y} saal`:`${Math.floor(y)}yr ${m%12}m`;
+  };
+
+  const calculate=async()=>{
+    const sym=coinInput.trim().toUpperCase();
+    if(!sym){setErr("Coin name daalo");return;}
+    setErr("");setResult(null);setLoading(true);
+    try{
+      const totalMonths=getTotalMonths();
+      // Fetch real monthly candles from Binance
+      const limit=Math.min(totalMonths+2,1000);
+      const r=await fetch(
+        `https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1M&limit=${limit}`,
+        {signal:AbortSignal.timeout(10000)}
+      );
+      if(!r.ok)throw new Error(`"${sym}" Binance pe nahi mila. BTC, ETH, SOL jaisa naam try karo.`);
+      const klines=await r.json();
+      if(!klines||klines.length<2)throw new Error("Insufficient data. Ek popular coin try karo.");
+
+      // Use last N months of actual price data
+      const useMonths=Math.min(totalMonths,klines.length-1);
+      const monthlyAmt=parseFloat(monthly)||0;
+
+      let totalInvested=0, totalCoins=0;
+      const points=[];
+      const interval=useMonths<=12?1:useMonths<=36?3:useMonths<=60?6:12;
+
+      for(let i=0;i<useMonths;i++){
+        const openPrice=parseFloat(klines[i][1]); // actual open price that month
+        if(openPrice>0){
+          totalInvested+=monthlyAmt;
+          totalCoins+=monthlyAmt/openPrice; // coins bought that month at real price
+        }
+        if((i+1)%interval===0||(i+1)===useMonths){
+          const curPrice=parseFloat(klines[Math.min(i+1,klines.length-1)][4]);
+          const curValue=totalCoins*curPrice;
+          const mNum=i+1;
+          const label=mNum<12?`${mNum}m`:mNum===12?"1yr":`${(mNum/12).toFixed(mNum%12===0?0:1)}yr`;
+          points.push({label,invested:Math.round(totalInvested),value:Math.round(curValue)});
+        }
+      }
+
+      const lastPrice=parseFloat(klines[klines.length-1][4]);
+      const currentValue=totalCoins*lastPrice;
+      const profit=currentValue-totalInvested;
+      const multiplier=totalInvested>0?currentValue/totalInvested:1;
+      const avgBuyPrice=totalInvested/totalCoins;
+
+      // Real start vs current
+      const startPrice=parseFloat(klines[0][1]);
+      const priceChange=((lastPrice-startPrice)/startPrice*100);
+
+      setResult({
+        total:Math.round(currentValue),
+        invested:Math.round(totalInvested),
+        profit:Math.round(profit),
+        multiplier,points,
+        sym,totalMonths:useMonths,
+        timeLabel:getTimeLabel(),
+        lastPrice,avgBuyPrice,
+        startPrice,priceChange,
+        totalCoins:totalCoins.toFixed(6),
+        monthsAvailable:useMonths,
+        isRealData:true,
+      });
+    }catch(e){setErr(e.message);}
+    setLoading(false);
+  };
+
+  const green=result&&result.profit>=0;
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:6}}>📅</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>DCA Planner</h2>
+        <p style={{fontSize:13,color:T.text2}}>Real Binance prices se actual return calculate karo</p>
+        <div style={{display:"inline-block",background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 12px",fontSize:10,color:"#059669",fontWeight:700,marginTop:6}}>
+          ✅ Real Historical Data — Binance API
+        </div>
+      </div>
+
+      <GuideBox emoji="📅" title="DCA Planner — Real Data"
+        steps={[
+          "Coin daalo — BTC, ETH, SOL ya koi bhi Binance coin",
+          "Monthly investment amount set karo",
+          "Time period choose karo (1 mahine se 15 saal)",
+          "Calculate — Binance se real monthly prices fetch honge",
+          "Actual result dikhega: agar us time se invest kiya hota toh aaj kitna hota"
+        ]}
+        tip="Yeh REAL data hai! Binance ke actual historical monthly prices use kiye jaate hain — estimate nahi!"
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        {/* Coin input */}
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6,letterSpacing:.5}}>COIN</div>
+          <input value={coinInput} onChange={e=>{setCoinInput(e.target.value.toUpperCase());setErr("");setResult(null);}}
+            placeholder="BTC, ETH, SOL, APT..."
+            style={{width:"100%",background:"#f8fafc",border:`2px solid ${err?"#ef4444":"#e2e8f0"}`,borderRadius:12,
+              padding:"13px 16px",fontSize:20,fontWeight:900,fontFamily:"'JetBrains Mono',monospace",
+              color:"#0f172a",boxSizing:"border-box",marginBottom:6}}
+            onFocus={e=>e.target.style.borderColor="#10b981"}
+            onBlur={e=>e.target.style.borderColor=err?"#ef4444":"#e2e8f0"}/>
+          {err&&<div style={{fontSize:11,color:"#ef4444",marginBottom:6}}>⚠️ {err}</div>}
+          <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+            {QUICK.map(c=>(
+              <button key={c} onClick={()=>{setCoinInput(c);setErr("");setResult(null);}}
+                style={{background:coinInput===c?"#10b981":"#f8fafc",color:coinInput===c?"#fff":"#64748b",
+                  border:`1.5px solid ${coinInput===c?"#10b981":"#e2e8f0"}`,borderRadius:20,padding:"4px 11px",
+                  fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Monthly amount */}
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6,letterSpacing:.5}}>MONTHLY AMOUNT (₹)</div>
+          <input value={monthly} onChange={e=>setMonthly(e.target.value)} type="number" placeholder="1000"
+            style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,
+              padding:"13px 16px",fontSize:20,fontWeight:900,fontFamily:"'JetBrains Mono',monospace",
+              color:"#0f172a",boxSizing:"border-box"}}
+            onFocus={e=>e.target.style.borderColor="#10b981"}
+            onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+          <div style={{display:"flex",gap:5,marginTop:6,flexWrap:"wrap"}}>
+            {["500","1000","2000","5000","10000"].map(a=>(
+              <button key={a} onClick={()=>setMonthly(a)}
+                style={{background:monthly===a?"#059669":"#f0fdf4",color:monthly===a?"#fff":"#059669",
+                  border:`1px solid ${monthly===a?"#059669":"#6ee7b7"}`,borderRadius:20,padding:"4px 11px",
+                  fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                ₹{parseInt(a).toLocaleString("en-IN")}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Time Period */}
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:8,letterSpacing:.5}}>TIME PERIOD</div>
+          <div style={{display:"flex",background:"#f8fafc",borderRadius:12,padding:3,marginBottom:10,border:"1px solid #e2e8f0"}}>
+            {[{v:"months",l:"📅 Mahine (1-12)"},{v:"years",l:"📆 Saal (1-15)"}].map(m=>(
+              <button key={m.v} onClick={()=>setTimeMode(m.v)}
+                style={{flex:1,padding:"9px",borderRadius:10,cursor:"pointer",fontWeight:700,fontSize:12,
+                  fontFamily:"'Inter',sans-serif",border:"none",
+                  background:timeMode===m.v?"#10b981":"transparent",
+                  color:timeMode===m.v?"#fff":"#64748b"}}>
+                {m.l}
+              </button>
+            ))}
+          </div>
+          {timeMode==="months"&&(
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                <span style={{fontSize:11,color:"#64748b"}}>Duration</span>
+                <span style={{fontSize:14,fontWeight:900,color:"#10b981"}}>{monthVal} mahine</span>
+              </div>
+              <input type="range" min="1" max="12" value={monthVal}
+                onChange={e=>setMonthVal(e.target.value)}
+                style={{width:"100%",accentColor:"#10b981",cursor:"pointer",marginBottom:5}}/>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                {["1","3","6","9","12"].map(m=>(
+                  <button key={m} onClick={()=>setMonthVal(m)}
+                    style={{background:monthVal===m?"#10b981":"#f8fafc",color:monthVal===m?"#fff":"#64748b",
+                      border:`1px solid ${monthVal===m?"#10b981":"#e2e8f0"}`,borderRadius:20,
+                      padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    {m}m
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {timeMode==="years"&&(
+            <div>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}>
+                <span style={{fontSize:11,color:"#64748b"}}>Duration</span>
+                <span style={{fontSize:14,fontWeight:900,color:"#10b981"}}>{yearVal} saal</span>
+              </div>
+              <input type="range" min="1" max="15" value={yearVal}
+                onChange={e=>setYearVal(e.target.value)}
+                style={{width:"100%",accentColor:"#10b981",cursor:"pointer",marginBottom:5}}/>
+              <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+                {["1","2","3","5","7","10","15"].map(y=>(
+                  <button key={y} onClick={()=>setYearVal(y)}
+                    style={{background:yearVal===y?"#10b981":"#f8fafc",color:yearVal===y?"#fff":"#64748b",
+                      border:`1px solid ${yearVal===y?"#10b981":"#e2e8f0"}`,borderRadius:20,
+                      padding:"4px 12px",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                    {y}yr
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {monthly&&coinInput&&(
+          <div style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+            <span style={{fontSize:11,color:"#065f46",fontWeight:700}}>
+              ₹{parseInt(monthly||0).toLocaleString("en-IN")}/month × {getTimeLabel()} = ₹{(parseInt(monthly||0)*getTotalMonths()).toLocaleString("en-IN")} invest hoga
+            </span>
+          </div>
+        )}
+
+        <button onClick={calculate} disabled={loading||!coinInput.trim()}
+          style={{width:"100%",background:loading||!coinInput.trim()?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:loading||!coinInput.trim()?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"15px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif",
+            boxShadow:loading?"none":"0 4px 14px rgba(16,185,129,.4)"}}>
+          {loading?"⟳ Binance se data fetch ho raha hai...":"📊 Real Data Se Calculate Karo"}
+        </button>
+      </div>
+
+      {/* Results */}
+      {result&&(
+        <div className="fadein">
+          {/* Real data badge */}
+          <div style={{background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:10,padding:"8px 14px",
+            marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:11,color:"#059669",fontWeight:700}}>
+              ✅ Real Binance Data · {result.monthsAvailable} mahine ka actual history
+            </span>
+            <span style={{fontSize:10,color:"#94a3b8"}}>USDT prices</span>
+          </div>
+
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:16,padding:"20px",marginBottom:12}}>
+            <div style={{textAlign:"center",marginBottom:14}}>
+              <div style={{fontSize:12,color:"#6b7280"}}>
+                {result.sym} · ₹{parseInt(monthly).toLocaleString("en-IN")}/month · {result.timeLabel}
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div style={{background:"rgba(255,255,255,.06)",borderRadius:12,padding:"14px",textAlign:"center"}}>
+                <div style={{fontSize:10,color:"#6b7280",marginBottom:4}}>Total Invested</div>
+                <div style={{fontSize:20,fontWeight:900,color:"#fff",fontFamily:"'JetBrains Mono',monospace"}}>
+                  ₹{result.invested.toLocaleString("en-IN")}
+                </div>
+              </div>
+              <div style={{background:green?"rgba(16,185,129,.12)":"rgba(239,68,68,.12)",borderRadius:12,
+                padding:"14px",textAlign:"center",border:`1px solid ${green?"rgba(16,185,129,.3)":"rgba(239,68,68,.3)"}`}}>
+                <div style={{fontSize:10,color:"#6b7280",marginBottom:4}}>Current Value</div>
+                <div style={{fontSize:20,fontWeight:900,color:green?"#10b981":"#ef4444",fontFamily:"'JetBrains Mono',monospace"}}>
+                  ₹{result.total.toLocaleString("en-IN")}
+                </div>
+              </div>
+            </div>
+            <div style={{background:"rgba(255,255,255,.04)",borderRadius:12,padding:"14px",textAlign:"center",marginBottom:10}}>
+              <div style={{fontSize:12,color:"#6b7280",marginBottom:4}}>
+                {green?"Profit 🎉":"Loss 📉"} (Real)
+              </div>
+              <div style={{fontSize:32,fontWeight:900,color:green?"#34d399":"#f87171"}}>
+                {green?"+":"-"}₹{Math.abs(result.profit).toLocaleString("en-IN")}
+              </div>
+              <div style={{fontSize:12,color:green?"#6ee7b7":"#fca5a5",marginTop:4}}>
+                {result.multiplier.toFixed(3)}x return · {result.sym}
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+              {[
+                {l:"Coins Kharida",v:`${result.totalCoins} ${result.sym}`},
+                {l:"Avg. Buy Price",v:`$${result.avgBuyPrice.toFixed(4)}`},
+                {l:"Current Price",v:`$${result.lastPrice.toFixed(4)}`},
+              ].map((s,i)=>(
+                <div key={i} style={{background:"rgba(255,255,255,.04)",borderRadius:8,padding:"8px",textAlign:"center"}}>
+                  <div style={{fontSize:8,color:"#6b7280",marginBottom:2}}>{s.l}</div>
+                  <div style={{fontSize:10,fontWeight:700,color:"#94a3b8",fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📈 Growth Timeline (Real Prices)</div>
+            {result.points.map((p,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <div style={{width:36,fontSize:9,color:"#94a3b8",fontWeight:700,flexShrink:0}}>{p.label}</div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:7,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:100,
+                    background:p.value>=p.invested?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",
+                    width:`${Math.min(100,(p.value/Math.max(result.total,result.invested))*100)}%`}}/>
+                </div>
+                <div style={{fontSize:10,fontWeight:700,width:72,textAlign:"right",
+                  fontFamily:"'JetBrains Mono',monospace",
+                  color:p.value>=p.invested?"#059669":"#dc2626"}}>
+                  ₹{p.value.toLocaleString("en-IN")}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={()=>window.open(`https://wa.me/?text=${encodeURIComponent(
+            `📅 DCA Result — ${result.sym} (Real Data!)\n\n₹${parseInt(monthly).toLocaleString("en-IN")}/month × ${result.timeLabel}\n\nInvested: ₹${result.invested.toLocaleString("en-IN")}\nValue: ₹${result.total.toLocaleString("en-IN")}\n${green?"Profit":"Loss"}: ₹${Math.abs(result.profit).toLocaleString("en-IN")}\n${result.multiplier.toFixed(2)}x return!\n\nKhud calculate karo: yesyoupro.com/features`
+          )}`)}
+            style={{width:"100%",background:"#25D366",color:"#fff",border:"none",borderRadius:12,
+              padding:"12px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif",marginBottom:10}}>
+            📱 WhatsApp pe Share Karo
+          </button>
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",lineHeight:1.6}}>
+            Real Binance historical data · Past performance ≠ future guarantee · DYOR
+          </div>
+        </div>
+      )}
+      <AD/>
+    </div>
+  );
+}
   const [timeMode,setTimeMode]    = useState("months"); // "months" | "years"
   const [monthVal,setMonthVal]    = useState("12");     // 1-12
   const [yearVal,setYearVal]      = useState("3");      // 1-15
@@ -693,9 +1015,209 @@ function TraditionalCompare(){
 // 3. RUG PULL DETECTOR
 // ═══════════════════════════════════════════════════════
 function RugPullDetector(){
-  const [coinName,setCoinName]=useState("");
-  const [result,setResult]=useState(null);
+  const [coinInput,setCoinInput]=useState("");
+  const [data,setData]=useState(null);
   const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState("");
+
+  const getRiskScore=(d)=>{
+    let score=0,flags=[];
+    // Liquidity check
+    if(d.liquidity<50000){score+=30;flags.push("Very low liquidity (<$50K) — rug pull easy hai");}
+    else if(d.liquidity<200000){score+=15;flags.push("Low liquidity ($50K-$200K) — risky");}
+    // Volume/Market cap ratio
+    if(d.mcap>0){
+      const ratio=d.vol24h/d.mcap;
+      if(ratio<0.01){score+=15;flags.push("Very low volume — no real interest");}
+      if(ratio>5){score+=20;flags.push("Suspicious volume — wash trading possible");}
+    }
+    // Price change
+    if(d.ch24>200){score+=25;flags.push("200%+ pump in 24h — classic pump & dump");}
+    else if(d.ch24>100){score+=15;flags.push("100%+ pump — high dump risk");}
+    if(d.ch24<-50){score+=20;flags.push("50%+ drop in 24h — possible rug already happened");}
+    // Market cap
+    if(d.mcap>0&&d.mcap<100000){score+=20;flags.push("Micro cap (<$100K) — extremely risky");}
+    else if(d.mcap<1000000){score+=10;flags.push("Small cap (<$1M) — high risk");}
+    // CEX listed = safer
+    if(d.isCEX){score=Math.max(0,score-25);flags.push("✅ Major CEX listed — more credible");}
+    return{score:Math.min(100,score),flags};
+  };
+
+  const analyze=async()=>{
+    const sym=coinInput.trim().toUpperCase();
+    if(!sym){setErr("Coin name daalo");return;}
+    setErr("");setData(null);setLoading(true);
+    try{
+      let coinData={sym,isCEX:false,liquidity:0,vol24h:0,mcap:0,price:0,ch24:0,ch7d:0,source:"",name:sym};
+
+      // Try Binance first (CEX = safer)
+      const binR=await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}USDT`,{signal:AbortSignal.timeout(6000)});
+      if(binR.ok){
+        const b=await binR.json();
+        coinData.isCEX=true;
+        coinData.price=parseFloat(b.lastPrice);
+        coinData.ch24=parseFloat(b.priceChangePercent);
+        coinData.vol24h=parseFloat(b.quoteVolume);
+        coinData.mcap=coinData.vol24h*3; // approximate
+        coinData.source="Binance";
+        coinData.name=sym;
+        coinData.liquidity=coinData.vol24h*0.1; // CEX has high liquidity
+      } else {
+        // Try DexScreener for DEX tokens
+        const dexR=await fetch(`https://api.dexscreener.com/latest/dex/search?q=${sym}`,{signal:AbortSignal.timeout(8000)});
+        if(dexR.ok){
+          const dex=await dexR.json();
+          const pair=dex.pairs?.find(p=>p.baseToken?.symbol?.toUpperCase()===sym||p.quoteToken?.symbol?.toUpperCase()===sym);
+          if(pair){
+            coinData.price=parseFloat(pair.priceUsd||0);
+            coinData.ch24=parseFloat(pair.priceChange?.h24||0);
+            coinData.vol24h=parseFloat(pair.volume?.h24||0);
+            coinData.liquidity=parseFloat(pair.liquidity?.usd||0);
+            coinData.mcap=parseFloat(pair.fdv||pair.marketCap||0);
+            coinData.source=`DEX: ${pair.dexId||"Unknown"}`;
+            coinData.name=pair.baseToken?.name||sym;
+            coinData.pairName=`${pair.baseToken?.symbol}/${pair.quoteToken?.symbol}`;
+          }else{
+            throw new Error(`"${sym}" nahi mila. Symbol exact daalo ya popular coins try karo.`);
+          }
+        }else{
+          throw new Error("Data fetch failed. Thodi der baad try karo.");
+        }
+      }
+
+      const{score,flags}=getRiskScore(coinData);
+      setData({...coinData,riskScore:score,flags});
+    }catch(e){setErr(e.message);}
+    setLoading(false);
+  };
+
+  const riskLevel=data?.riskScore>=70?"🔴 HIGH RISK":data?.riskScore>=40?"🟡 MEDIUM RISK":"🟢 LOW RISK";
+  const riskColor=data?.riskScore>=70?"#dc2626":data?.riskScore>=40?"#d97706":"#059669";
+  const riskBg=data?.riskScore>=70?"#fef2f2":data?.riskScore>=40?"#fffbeb":"#ecfdf5";
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:6}}>🚨</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Rug Pull Detector</h2>
+        <p style={{fontSize:13,color:T.text2}}>Real market data se risk analyze karo</p>
+        <div style={{display:"inline-block",background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 12px",fontSize:10,color:"#059669",fontWeight:700,marginTop:6}}>
+          ✅ Binance + DexScreener Real Data
+        </div>
+      </div>
+
+      <GuideBox emoji="🚨" title="Rug Pull Detector"
+        steps={[
+          "Coin symbol daalo (e.g. BTC, PEPE, SAFEMOON)",
+          "Analyze dabao — real market data fetch hoga",
+          "Risk score 0-100 dikhega (100 = maximum danger)",
+          "Liquidity, volume, price change sab check hoga",
+          "Red flags list dekho — invest karne se pehle!"
+        ]}
+        tip="CEX listed coins (Binance, OKX) safer hoti hain. DEX-only coins mein rug pull ka risk zyada hota hai!"
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6,letterSpacing:.5}}>COIN SYMBOL</div>
+        <div style={{display:"flex",gap:8,marginBottom:8}}>
+          <input value={coinInput} onChange={e=>{setCoinInput(e.target.value.toUpperCase());setErr("");setData(null);}}
+            placeholder="e.g. PEPE, SHIB, BTC, LUNA..."
+            onKeyDown={e=>e.key==="Enter"&&analyze()}
+            style={{flex:1,background:"#f8fafc",border:`2px solid ${err?"#ef4444":"#e2e8f0"}`,borderRadius:12,
+              padding:"13px 16px",fontSize:18,fontWeight:800,fontFamily:"'JetBrains Mono',monospace",
+              color:"#0f172a",boxSizing:"border-box",minWidth:0}}
+            onFocus={e=>e.target.style.borderColor="#ef4444"}
+            onBlur={e=>e.target.style.borderColor=err?"#ef4444":"#e2e8f0"}/>
+          <button onClick={analyze} disabled={loading||!coinInput.trim()}
+            style={{background:loading?"#e2e8f0":"linear-gradient(135deg,#ef4444,#dc2626)",
+              color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"13px 20px",
+              fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif",flexShrink:0}}>
+            {loading?"⟳":"🔍 Analyze"}
+          </button>
+        </div>
+        {err&&<div style={{fontSize:11,color:"#ef4444",marginBottom:8}}>⚠️ {err}</div>}
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          {["PEPE","SHIB","FLOKI","LUNC","WIF","BTC","SOL","ARB"].map(c=>(
+            <button key={c} onClick={()=>{setCoinInput(c);setErr("");setData(null);}}
+              style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:20,padding:"4px 12px",
+                fontSize:11,color:"#64748b",fontWeight:600,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {loading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"28px",textAlign:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:600,fontSize:13,marginBottom:4}}>Real data fetch ho raha hai...</div>
+          <div style={{fontSize:11,color:"#94a3b8"}}>Binance + DexScreener check kar raha hai</div>
+        </div>
+      )}
+
+      {data&&!loading&&(
+        <div className="fadein">
+          {/* Risk Score */}
+          <div style={{background:riskBg,border:`2px solid ${riskColor}`,borderRadius:16,padding:"20px",marginBottom:12,textAlign:"center"}}>
+            <div style={{fontSize:12,color:riskColor,fontWeight:700,marginBottom:8}}>{data.name} — {data.source}</div>
+            <div style={{fontSize:72,fontWeight:900,color:riskColor,lineHeight:1,marginBottom:6,fontFamily:"'JetBrains Mono',monospace"}}>
+              {data.riskScore}
+            </div>
+            <div style={{fontSize:14,fontWeight:700,color:riskColor,marginBottom:4}}>/ 100 Risk Score</div>
+            <div style={{fontSize:18,fontWeight:800,color:riskColor}}>{riskLevel}</div>
+            {data.isCEX&&(
+              <div style={{marginTop:10,fontSize:11,color:"#059669",background:"rgba(16,185,129,.1)",borderRadius:8,padding:"6px 12px",display:"inline-block"}}>
+                ✅ Binance CEX Listed — More Credible
+              </div>
+            )}
+          </div>
+
+          {/* Market Data */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📊 Real Market Data</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              {[
+                {l:"Price (USD)",      v:`$${data.price.toFixed(data.price<0.01?8:4)}`,c:"#0f172a"},
+                {l:"24h Change",       v:`${data.ch24>=0?"+":""}${data.ch24.toFixed(2)}%`,c:data.ch24>=0?"#059669":"#dc2626"},
+                {l:"24h Volume",       v:data.vol24h>1e6?`$${(data.vol24h/1e6).toFixed(1)}M`:data.vol24h>1000?`$${(data.vol24h/1000).toFixed(0)}K`:`$${data.vol24h.toFixed(0)}`,c:"#6366f1"},
+                {l:"Liquidity/MCap",   v:data.liquidity>1e6?`$${(data.liquidity/1e6).toFixed(1)}M`:data.liquidity>1000?`$${(data.liquidity/1000).toFixed(0)}K`:`$${data.liquidity.toFixed(0)}`,c:data.liquidity>200000?"#059669":data.liquidity>50000?"#d97706":"#dc2626"},
+              ].map((s,i)=>(
+                <div key={i} style={{background:"#f8fafc",borderRadius:10,padding:"10px 12px"}}>
+                  <div style={{fontSize:9,color:"#94a3b8",marginBottom:3}}>{s.l}</div>
+                  <div style={{fontSize:14,fontWeight:800,color:s.c,fontFamily:"'JetBrains Mono',monospace"}}>{s.v}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Red Flags */}
+          {data.flags.length>0&&(
+            <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+              <div style={{fontWeight:700,fontSize:12,marginBottom:10,color:"#dc2626"}}>🚩 Risk Factors Found</div>
+              {data.flags.map((f,i)=>(
+                <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:7,
+                  padding:"8px 10px",borderRadius:8,
+                  background:f.startsWith("✅")?"#ecfdf5":"#fef2f2",
+                  border:`1px solid ${f.startsWith("✅")?"#6ee7b7":"#fca5a5"}`}}>
+                  <span style={{fontSize:14,flexShrink:0}}>{f.startsWith("✅")?"✅":"⚠️"}</span>
+                  <span style={{fontSize:12,color:f.startsWith("✅")?"#065f46":"#dc2626",lineHeight:1.5}}>{f.replace("✅ ","")}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:10,padding:"10px 14px",fontSize:11,color:"#92400e",lineHeight:1.7}}>
+            ⚠️ Yeh automated analysis hai. Risk score market data pe based hai. Hamesha aur research karo. DYOR!
+          </div>
+        </div>
+      )}
+      <AD/>
+    </div>
+  );
+}
 
   const analyze=async()=>{
     if(!coinName.trim())return;
@@ -808,6 +1330,249 @@ function RugPullDetector(){
 // ═══════════════════════════════════════════════════════
 function EntryTimeFinder(){
   const [coin,setCoin]=useState("BTC");
+  const [result,setResult]=useState(null);
+  const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState("");
+
+  const COINS=["BTC","ETH","SOL","APT","AVAX","BNB","LINK","DOGE","PEPE","ARB","XRP","WIF"];
+  const DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const DAYS_HI=["Ravivar","Somvar","Mangalvar","Budhvar","Guruvar","Shukravar","Shanivar"];
+
+  const analyze=async()=>{
+    setLoading(true);setResult(null);setErr("");
+    try{
+      // Fetch 1000 hourly candles (~41 days of data)
+      const r=await fetch(
+        `https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1h&limit=1000`,
+        {signal:AbortSignal.timeout(12000)}
+      );
+      if(!r.ok)throw new Error("Data fetch failed");
+      const klines=await r.json();
+      if(klines.length<100)throw new Error("Insufficient data");
+
+      // Analyze by hour (IST = UTC+5:30), day, and date
+      const hourData={}; const dayData={}; const dateData={};
+
+      for(const k of klines){
+        const open=parseFloat(k[1]);const close=parseFloat(k[4]);
+        const high=parseFloat(k[2]);const low=parseFloat(k[3]);
+        const vol=parseFloat(k[5]);
+        const change=(close-open)/open*100;
+        const ts=parseInt(k[0]);
+        const d=new Date(ts);
+        // Convert to IST (UTC+5:30)
+        const istMs=ts+5.5*3600000;
+        const istD=new Date(istMs);
+        const hourIST=istD.getUTCHours();
+        const dayOfWeek=istD.getUTCDay();
+        const dateOfMonth=istD.getUTCDate();
+
+        if(!hourData[hourIST])hourData[hourIST]={sum:0,count:0,vol:0,negCount:0};
+        hourData[hourIST].sum+=change;
+        hourData[hourIST].count++;
+        hourData[hourIST].vol+=vol;
+        if(change<0)hourData[hourIST].negCount++;
+
+        if(!dayData[dayOfWeek])dayData[dayOfWeek]={sum:0,count:0,vol:0};
+        dayData[dayOfWeek].sum+=change;
+        dayData[dayOfWeek].count++;
+        dayData[dayOfWeek].vol+=vol;
+
+        if(!dateData[dateOfMonth])dateData[dateOfMonth]={sum:0,count:0};
+        dateData[dateOfMonth].sum+=change;
+        dateData[dateOfMonth].count++;
+      }
+
+      const hourArr=Object.entries(hourData)
+        .map(([h,v])=>({
+          hour:+h,
+          avg:v.sum/v.count,
+          vol:v.vol/v.count,
+          greenRate:((v.count-v.negCount)/v.count*100),
+          count:v.count,
+        }))
+        .sort((a,b)=>a.avg-b.avg); // lowest avg = best buy
+
+      const dayArr=Object.entries(dayData)
+        .map(([d,v])=>({day:+d,avg:v.sum/v.count,vol:v.vol/v.count,name:DAYS[+d],nameHi:DAYS_HI[+d]}))
+        .sort((a,b)=>a.avg-b.avg);
+
+      const dateArr=Object.entries(dateData)
+        .map(([d,v])=>({date:+d,avg:v.sum/v.count}))
+        .sort((a,b)=>a.avg-b.avg);
+
+      // Current price
+      const curPrice=parseFloat(klines[klines.length-1][4]);
+
+      setResult({
+        hourArr,dayArr,dateArr,
+        bestHour:hourArr[0],worstHour:hourArr[hourArr.length-1],
+        bestDay:dayArr[0],worstDay:dayArr[dayArr.length-1],
+        bestDate:dateArr[0],worstDate:dateArr[dateArr.length-1],
+        curPrice,coin,
+        candleCount:klines.length,
+        daysAnalyzed:Math.round(klines.length/24),
+      });
+    }catch(e){setErr(e.message);}
+    setLoading(false);
+  };
+
+  const fmtH=(h)=>{const a=h>=12?"PM":"AM";const h12=h%12||12;return`${h12}:00 ${a}`;};
+  const pctColor=(v)=>v<=0?"#059669":"#dc2626"; // negative avg = price fell = buy dip
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:6}}>🎯</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Best Entry Time</h2>
+        <p style={{fontSize:13,color:T.text2}}>Real hourly data se best buy time dhundo</p>
+        <div style={{display:"inline-block",background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 12px",fontSize:10,color:"#059669",fontWeight:700,marginTop:6}}>
+          ✅ 1000 Real Candles — Binance Hourly Data
+        </div>
+      </div>
+
+      <GuideBox emoji="🎯" title="Best Entry Time Finder"
+        steps={[
+          "Coin select karo — popular coins mein zyada data milta hai",
+          "Analyze dabao — 1000 hourly candles fetch honge (~41 days)",
+          "IST time zones mein best buy hours dikhenge",
+          "Best day of week aur best date of month bhi milega",
+          "Is schedule ke hisab se DCA set karo"
+        ]}
+        tip="Green = price us time sabse zyada girti hai = best buy opportunity! Red = price badhti hai = expensive entry."
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:8,letterSpacing:.5}}>COIN SELECT KARO</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+          {COINS.map(c=>(
+            <button key={c} onClick={()=>{setCoin(c);setResult(null);setErr("");}}
+              style={{background:coin===c?"#10b981":"#f8fafc",color:coin===c?"#fff":"#475569",
+                border:`1.5px solid ${coin===c?"#10b981":"#e2e8f0"}`,borderRadius:20,padding:"6px 14px",
+                fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <button onClick={analyze} disabled={loading}
+          style={{width:"100%",background:loading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif",
+            boxShadow:loading?"none":"0 4px 14px rgba(16,185,129,.4)"}}>
+          {loading?"⟳ 1000 candles analyze ho rahe hain (IST)...":"🎯 Real Data Se Best Time Dhundo"}
+        </button>
+        {err&&<div style={{fontSize:11,color:"#ef4444",marginTop:8}}>⚠️ {err}</div>}
+      </div>
+
+      {result&&!loading&&(
+        <div className="fadein">
+          {/* Data info */}
+          <div style={{background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:10,padding:"8px 14px",
+            marginBottom:12,display:"flex",justifyContent:"space-between"}}>
+            <span style={{fontSize:11,color:"#059669",fontWeight:700}}>
+              ✅ {result.candleCount} real candles analyzed
+            </span>
+            <span style={{fontSize:11,color:"#64748b"}}>
+              ~{result.daysAnalyzed} days · Current: ${result.curPrice.toFixed(4)}
+            </span>
+          </div>
+
+          {/* Top 3 summary cards */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
+            {[
+              {label:"Best Hour (IST)",value:fmtH(result.bestHour.hour),
+               sub:`Avg ${result.bestHour.avg.toFixed(2)}% · ${result.bestHour.greenRate.toFixed(0)}% green`,
+               color:"#059669",bg:"#ecfdf5",border:"#6ee7b7"},
+              {label:"Best Day",value:result.bestDay.name,
+               sub:`${result.bestDay.nameHi} · Avg ${result.bestDay.avg.toFixed(2)}%`,
+               color:"#2563eb",bg:"#eff6ff",border:"#93c5fd"},
+              {label:"Best Date",value:`${result.bestDate.date} tarikh`,
+               sub:`Avg ${result.bestDate.avg.toFixed(2)}% change`,
+               color:"#7c3aed",bg:"#f5f3ff",border:"#c4b5fd"},
+            ].map((s,i)=>(
+              <div key={i} style={{background:s.bg,border:`1px solid ${s.border}`,borderRadius:12,padding:"12px 10px",textAlign:"center"}}>
+                <div style={{fontSize:9,color:s.color,fontWeight:700,marginBottom:4}}>{s.label}</div>
+                <div style={{fontSize:13,fontWeight:900,color:s.color,lineHeight:1.2,marginBottom:4}}>{s.value}</div>
+                <div style={{fontSize:8,color:s.color,opacity:.7,lineHeight:1.3}}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Hourly chart */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:4}}>⏰ Hour of Day (IST) — Best Buy Times</div>
+            <div style={{fontSize:10,color:"#94a3b8",marginBottom:10}}>
+              🟢 Negative avg = price giri = cheap entry · 🔴 Positive = expensive
+            </div>
+            {result.hourArr.slice(0,12).map((h,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
+                <div style={{width:52,fontSize:10,color:"#64748b",fontWeight:600,flexShrink:0}}>{fmtH(h.hour)}</div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:7,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:100,
+                    background:h.avg<=0?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",
+                    width:`${Math.min(100,Math.abs(h.avg)*15)}%`}}/>
+                </div>
+                <div style={{width:44,fontSize:10,textAlign:"right",fontWeight:700,
+                  color:h.avg<=0?"#059669":"#dc2626"}}>
+                  {h.avg.toFixed(2)}%
+                </div>
+                {i<3&&<span style={{fontSize:9,background:"#ecfdf5",color:"#059669",borderRadius:20,padding:"1px 6px",fontWeight:700,flexShrink:0}}>BEST</span>}
+              </div>
+            ))}
+          </div>
+
+          {/* Day of week */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📅 Day of Week Analysis</div>
+            {result.dayArr.map((d,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,
+                padding:"8px 10px",borderRadius:8,
+                background:i===0?"#ecfdf5":i===result.dayArr.length-1?"#fef2f2":"transparent",
+                border:`1px solid ${i===0?"#6ee7b7":i===result.dayArr.length-1?"#fca5a5":"#f1f5f9"}`}}>
+                <div style={{fontWeight:700,fontSize:12,width:80,flexShrink:0,
+                  color:i===0?"#059669":i===result.dayArr.length-1?"#dc2626":"#0f172a"}}>
+                  {d.name}
+                  {i===0&&" 🏆"}
+                </div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:6,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:100,
+                    background:d.avg<=0?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",
+                    width:`${Math.min(100,Math.abs(d.avg)*10+10)}%`}}/>
+                </div>
+                <div style={{width:52,fontSize:11,fontWeight:700,textAlign:"right",
+                  color:d.avg<=0?"#059669":"#dc2626"}}>
+                  {d.avg>=0?"+":""}{d.avg.toFixed(2)}%
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Strategy box */}
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:14,padding:"16px 18px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:13,color:"#6ee7b7",marginBottom:10}}>
+              🎯 {result.coin} ke liye Best Strategy
+            </div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,.85)",lineHeight:1.8}}>
+              ⏰ Best time: <strong style={{color:"#10b981"}}>{fmtH(result.bestHour.hour)} IST</strong><br/>
+              📅 Best day: <strong style={{color:"#10b981"}}>{result.bestDay.name} ({result.bestDay.nameHi})</strong><br/>
+              🗓️ Best date: <strong style={{color:"#10b981"}}>{result.bestDate.date} tarikh</strong> har mahine<br/>
+              ❌ Avoid: <span style={{color:"#fca5a5"}}>{fmtH(result.worstHour.hour)} IST on {result.worstDay.name}</span>
+            </div>
+            <div style={{marginTop:10,fontSize:10,color:"rgba(255,255,255,.4)"}}>
+              Based on {result.candleCount} real hourly candles from Binance · ~{result.daysAnalyzed} days
+            </div>
+          </div>
+
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",lineHeight:1.7}}>
+            ⚠️ Historical patterns future guarantee nahi karte · DYOR always
+          </div>
+        </div>
+      )}
+      <AD/>
+    </div>
+  );
+}
   const [result,setResult]=useState(null);
   const [loading,setLoading]=useState(false);
 
