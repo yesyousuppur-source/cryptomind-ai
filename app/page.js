@@ -876,19 +876,30 @@ EXACT format (Hinglish):
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {[
-                {n:"1",t:"Coin Analyze Karo",d:"BTC, ETH, SOL likho → AI batayega BUY/SELL/HOLD",tab:"analyze",emoji:"🔍"},
-                {n:"2",t:"Expert Choice Dekho",d:"120 coins mein se aaj ke top 5 best picks",tab:"analyze",emoji:"🏆"},
-                {n:"3",t:"Market Heatmap",d:"Sab sectors green hain ya red? Ek nazar mein dekho",tab:"analyze",emoji:"🌡️"},
+                {n:"1",t:"Coin Analyze Karo",d:"BTC, ETH, SOL likho → AI batayega BUY/SELL/HOLD",tab:"analyze",emoji:"🔍",blog:"/blog?article=6"},
+                {n:"2",t:"Expert Choice Dekho",d:"120 coins mein se aaj ke top 5 best picks",tab:"analyze",emoji:"🏆",blog:"/blog?article=7"},
+                {n:"3",t:"Market Heatmap",d:"Sab sectors green hain ya red? Ek nazar mein dekho",tab:"analyze",emoji:"🌡️",blog:"/blog?article=8"},
               ].map((s,i)=>(
-                <button key={i} onClick={()=>setActiveTab(s.tab)}
-                  style={{display:"flex",alignItems:"center",gap:10,background:"#fff",border:"1px solid #d1fae5",borderRadius:12,padding:"9px 12px",cursor:"pointer",textAlign:"left",fontFamily:"'Inter',sans-serif"}}>
-                  <div style={{width:26,height:26,borderRadius:"50%",background:"#10b981",color:"#fff",fontSize:12,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{s.n}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontWeight:700,fontSize:12,color:"#0f172a"}}>{s.emoji} {s.t}</div>
-                    <div style={{fontSize:10,color:"#64748b"}}>{s.d}</div>
+                <div key={i} style={{display:"flex",alignItems:"center",gap:10,background:"#fff",
+                  border:"1px solid #d1fae5",borderRadius:12,padding:"9px 12px",cursor:"pointer",
+                  textAlign:"left"}}>
+                  <div onClick={()=>setActiveTab(s.tab)} style={{display:"flex",alignItems:"center",gap:10,flex:1,cursor:"pointer"}}>
+                    <div style={{width:26,height:26,borderRadius:"50%",background:"#10b981",color:"#fff",
+                      fontSize:12,fontWeight:900,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                      {s.n}
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:700,fontSize:12,color:"#0f172a"}}>{s.emoji} {s.t}</div>
+                      <div style={{fontSize:10,color:"#64748b"}}>{s.d}</div>
+                    </div>
                   </div>
-                  <span style={{color:"#10b981",fontSize:14}}>→</span>
-                </button>
+                  <Link href={s.blog}
+                    style={{fontSize:9,color:"#059669",fontWeight:700,background:"#ecfdf5",
+                      border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 8px",
+                      textDecoration:"none",flexShrink:0,whiteSpace:"nowrap"}}>
+                    Guide →
+                  </Link>
+                </div>
               ))}
             </div>
           </div>
