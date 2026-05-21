@@ -470,11 +470,352 @@ Har 4 saal mein Bitcoin Halving hota hai — jisme miners ko milne wale naye BTC
 Yes You Pro pe Fear & Greed Index daily dikhta hai. Jab market Extreme Fear mein ho (0-25) — historically yeh buying opportunity raha hai. Jab Extreme Greed ho (75-100) — caution signal.
 
 Market timing perfectly karna impossible hai. Lekin cycles samajhna aur sentiment indicators dekh kar informed decisions le sakte ho. Long-term perspective ke saath invest karo — market cycles tumhare favor mein kaam karenge.`
+  },
+  {
+    id: 7,
+    slug: "coin-analysis-guide",
+    title: "Crypto Coin Analysis Kaise Kare? Complete Guide — BUY SELL HOLD Signals Samjho",
+    category: "Tools Guide",
+    emoji: "📊",
+    color: "#10b981",
+    time: "6 min read",
+    keywords: "crypto coin analysis, bitcoin analysis india, crypto buy sell hold, RSI indicator hindi, crypto signals india, yes you pro analyze",
+    content: `Crypto mein sabse bada sawaal hota hai — **kab buy karein, kab sell karein, aur kab wait karein?** Yeh guide tumhe batayegi ki Yes You Pro ke Coin Analyze tool ka use karke real data-based decisions kaise lein.
+
+## Yes You Pro Coin Analyzer Kya Hai?
+
+Yes You Pro ka Coin Analyze feature ek free AI-powered tool hai jo kisi bhi cryptocurrency ka deep analysis karta hai aur tumhe clear BUY / SELL / HOLD / WAIT signal deta hai. Yeh sirf price nahi dekh ta — multiple technical indicators combine karta hai.
+
+**Koi signup nahi. Koi fees nahi. 100% free.**
+
+## Coin Analyzer Kaise Use Karein?
+
+### Step 1: Coin ka naam type karo
+yesyoupro.com pe jaao aur search box mein coin ka naam ya symbol likhо:
+- BTC (Bitcoin ke liye)
+- ETH (Ethereum ke liye)
+- SOL (Solana ke liye)
+- APT, AVAX, LINK — koi bhi coin
+
+### Step 2: Analyze Button Dabaо
+Click karte hi tool ye sab automatically calculate karta hai:
+
+**RSI (Relative Strength Index):**
+RSI 0 se 100 ke beech hota hai. 30 se neeche = oversold = potential buy. 70 se upar = overbought = caution. Isko market ka "temperature" samjho.
+
+**MACD (Moving Average Convergence Divergence):**
+Yeh trend aur momentum dono batata hai. Jab MACD bullish crossover karta hai — upward trend ka signal hai.
+
+**Moving Averages (MA50 aur MA200):**
+Price MA50 ke upar hai = short-term bullish. Price MA200 ke upar hai = long-term bull market. Dono ke upar = strong buy zone.
+
+**Bollinger Bands:**
+Coin lower band ke paas hai = cheap relative to recent prices = buy zone. Upper band ke paas = expensive = careful.
+
+### Step 3: AI Signal Dekho
+Sab indicators combine hokar ek final signal deta hai:
+
+✅ **STRONG BUY** — Multiple indicators bullish hain. Good entry opportunity.
+📈 **BUY** — Positive setup. Consider buying.
+⏳ **WAIT** — Mixed signals. Thoda wait karo.
+🛑 **CAUTION** — Indicators bearish. Risk high hai.
+
+## Target Prices (TP) aur Stop Loss (SL) Kya Hote Hain?
+
+### Target Prices:
+- **TP1** — Conservative target. Safe exit.
+- **TP2** — Medium target. Good profit.
+- **TP3** — Ambitious target. Maximum upside.
+
+### Stop Loss:
+Ek price level jahan tum loss cut karte ho. Agar price is level ke neeche aaye toh — sell karo. Isse badi loss se bachte hain.
+
+**Golden Rule: Kabhi bhi stop loss ke bina invest mat karo.**
+
+## Risk-Reward Ratio Kya Hai?
+
+R:R 1:2 ka matlab = ₹1 risk pe ₹2 profit potential. Always aim karo 1:2 ya upar ke liye.
+
+## Coin Analyzer Ke Fayde
+
+1. **Emotional decisions kam hote hain** — Data decide karta hai, feelings nahi
+2. **Multiple indicators ek saath** — Sirf RSI ya sirf price nahi, sab kuch
+3. **Entry aur exit plan** — TP aur SL pehle se set
+4. **120+ coins support** — BTC se leke altcoins tak
+
+## Common Mistakes Jo Avoid Karo
+
+❌ Sirf price dekh ke buy karna — yeh gambling hai, investment nahi
+❌ News pe react karna bina analysis ke — news lagging hoti hai
+❌ Stop loss na lagana — ek badi loss poora portfolio destroy kar sakti hai
+✅ Hamesha data-based decision lo
+✅ Risk ka pehle se plan banao
+✅ Position size small rakho
+
+## Yes You Pro Analyze Tool Try Karo
+
+Abhi yesyoupro.com pe jaao, koi bhi coin ka symbol type karo aur dekho:
+- Real-time price aur 24h change
+- RSI, MACD, Moving Averages — sab ek jagah
+- Clear BUY/SELL/HOLD signal
+- Entry price, 3 targets, stop loss
+
+**Bilkul free — koi account banaane ki zaroorat nahi.**
+
+Crypto mein success ke liye patience aur data dono zaroori hain. Is tool se tum dono handle kar sakte ho.`
+  },
+  {
+    id: 8,
+    slug: "expert-choice-guide",
+    title: "Expert Choice Feature Kya Hai? 120 Coins Scan Karke Top 5 Picks Kaise Milti Hain",
+    category: "Tools Guide",
+    emoji: "🏆",
+    color: "#059669",
+    time: "5 min read",
+    keywords: "expert choice crypto, top crypto picks india, best crypto buy today, crypto scanner india, 120 coins analysis, yes you pro expert",
+    content: `Harek roz 1000+ cryptocurrencies mein se best opportunity dhundna — yeh kaam manually karna almost impossible hai. Yes You Pro ka **Expert Choice** feature yeh kaam automatically karta hai. Sirf ek click mein 120 coins scan hote hain aur top 5 best opportunities tumhare saamne hoti hain.
+
+## Expert Choice Kya Hai?
+
+Expert Choice ek AI-powered coin scanner hai jo:
+- **120+ coins** simultaneously scan karta hai
+- **6 technical indicators** background mein calculate karta hai
+- **Score 0-100** deta hai har coin ko
+- **Top 5 highest scoring coins** dikhata hai
+
+Sab kuch automatically — koi manually work nahi.
+
+## 6 Indicators Jo Background Mein Kaam Karte Hain
+
+### 1. RSI (Relative Strength Index)
+Coin oversold hai ya overbought? RSI 30 se neeche = potential bounce. Expert Choice low RSI coins prefer karta hai.
+
+### 2. MACD (Momentum Indicator)
+Bullish momentum build ho raha hai? MACD positive crossover = upward movement ki possibility.
+
+### 3. Bollinger Bands
+Coin lower band ke paas hai = historically cheap level. Upper band ke paas = expensive.
+
+### 4. ATR (Average True Range)
+Market kitna volatile hai? Low ATR = stable entry. High ATR = risky.
+
+### 5. Support & Resistance Levels
+Coin support ke paas hai? Iska matlab price yahan se bounce kar sakti hai.
+
+### 6. Volume Analysis
+Normal se zyada volume = real interest. Low volume = fake move ho sakta hai.
+
+## Scoring System Kaise Kaam Karta Hai?
+
+Expert Choice ek proprietary scoring algorithm use karta hai:
+
+| Score | Signal | Matlab |
+|-------|--------|--------|
+| 100/100 | VERY STRONG 🔥🔥 | Sab 6 indicators align |
+| 75-90 | STRONG BUY ✅ | 4-5 indicators bullish |
+| 60-74 | WATCH 👀 | Setup forming |
+| Below 50 | CAUTION ⚠️ | Avoid karo |
+
+## Expert Choice Pe Dikhne Wali Information
+
+Har coin ke liye yeh sab dikhta hai:
+
+**Signal Badge:** VERY STRONG / STRONG BUY / WATCH
+**Score:** X/100
+**Hold Time:** Kitne din ke liye suitable hai
+**Description:** Kyu yeh coin recommend hua — simple language mein
+**TP1, TP2, TP3:** Teen target prices with percentage
+**Stop Loss:** Exact price level with percentage
+**R:R Ratio:** Risk-Reward ratio
+
+## Expert Choice Kab Use Karein?
+
+✅ **Subah market open hone pe** — Fresh analysis milti hai
+✅ **Koi idea nahi kya buy karein** — Scanner sab kuch dhundta hai
+✅ **Market sideways hai** — Best opportunities highlight hoti hain
+✅ **Multiple coins compare karna ho** — Ek nazar mein top 5 dikh jaate hain
+
+## Expert Choice Use Karne Ka Sahi Tarika
+
+### Step 1: yesyoupro.com kholо
+Page load hote hi Expert Choice automatically scan shuru kar deta hai.
+
+### Step 2: Results Dekho
+Top 5 coins score ke saath dikhenge. Sabse upar wala sabse strong opportunity hai.
+
+### Step 3: Coin Ko Analyze Karo
+Kisi bhi coin pe click karke full detailed analysis karo — RSI values, chart patterns, sab kuch.
+
+### Step 4: Apna Research Karo
+Expert Choice starting point hai, final decision tumhara hona chahiye. DYOR (Do Your Own Research) always.
+
+## Expert Choice vs Manual Research
+
+| | Manual Research | Expert Choice |
+|--|--|--|
+| Time | 2-3 ghante | 10 seconds |
+| Coins Covered | 5-10 | 120+ |
+| Indicators | 1-2 (usually) | 6 simultaneously |
+| Emotion | Bias ho sakta hai | Pure data-based |
+| Cost | Free (time lagta hai) | 100% Free |
+
+## Important Disclaimer
+
+Expert Choice ek research tool hai — yeh financial advice nahi hai. Crypto investments mein risk hota hai. Hamesha apna research karo aur sirf utna invest karo jo tum afford kar sako kho ne ke liye.
+
+**Abhi Try Karo: yesyoupro.com → Expert Choice section → Auto-scan results dekho**`
+  },
+  {
+    id: 9,
+    slug: "market-heatmap-guide",
+    title: "Crypto Market Heatmap Kya Hota Hai? Sector-Wise Analysis Kaise Kare India Mein",
+    category: "Tools Guide",
+    emoji: "🌡️",
+    color: "#6366f1",
+    time: "5 min read",
+    keywords: "crypto market heatmap, crypto sectors india, DeFi Layer1 Layer2 coins, market sentiment analysis, crypto market overview india, yes you pro heatmap",
+    content: `Ek nazar mein poora crypto market samajhna — yahi kaam karta hai Market Heatmap. Yes You Pro ka Market Heatmap feature tumhe **8 different sectors** ka live performance dikhata hai, taaki tum instantly samajh sako kaunsa sector hot hai aur kaunsa dead.
+
+## Market Heatmap Kya Hota Hai?
+
+Market Heatmap ek visual tool hai jahan:
+- **Har coin ek colored box** se represent hota hai
+- **Green = Price badh rahi hai** (positive 24h change)
+- **Red = Price gir rahi hai** (negative 24h change)
+- **Darker green = Zyada badha** (+5% se upar)
+- **Darker red = Zyada gira** (-5% se neeche)
+
+Ek nazar mein samajh aata hai — market bull mein hai ya bear mein.
+
+## Yes You Pro Mein 8 Crypto Sectors
+
+### 1. ⛓️ Layer 1 — Foundation Blockchains
+**Kya hain:** Main blockchain networks — internet ka backbone
+**Top coins:** BTC, ETH, SOL, BNB, ADA, AVAX, APT, SUI, NEAR, TON
+
+Layer 1 coins sabse important hain. Agar L1 green hai toh overall market bullish hota hai.
+
+### 2. ⚡ Layer 2 — Scaling Solutions
+**Kya hain:** Ethereum ke upar fast aur cheap transactions ke liye
+**Top coins:** ARB, OP, MATIC, IMX, STX, INJ
+
+L2 coins tab rally karte hain jab Ethereum use badhe.
+
+### 3. 🏦 DeFi — Decentralized Finance
+**Kya hain:** Bank jaise services bina bank ke — lending, borrowing, trading
+**Top coins:** UNI, AAVE, RUNE, GRT, CRV, CAKE
+
+DeFi sector tab active hota hai jab users on-chain activity badhate hain.
+
+### 4. 🤖 AI & Data
+**Kya hain:** Artificial intelligence aur data on blockchain
+**Top coins:** OCEAN, BAND, THETA, FET, ANKR
+
+2024-25 mein fastest growing sector. AI hype se directly linked.
+
+### 5. 🎮 Gaming & Metaverse
+**Kya hain:** Blockchain games aur virtual worlds
+**Top coins:** GALA, SAND, MANA, AXS, ENJ, CHZ
+
+Gaming coins usually bull market mein late rally karte hain.
+
+### 6. 🐕 Meme Coins
+**Kya hain:** Community-driven coins — hype aur social media se chalta hai
+**Top coins:** DOGE, PEPE, WIF, BONK, FLOKI
+
+Highest risk, highest potential reward. Kabhi bhi 10x ho sakte hain, kabhi bhi 90% gir sakte hain.
+
+### 7. 🏗️ Infrastructure
+**Kya hain:** Blockchain ki supporting technology — storage, compute, oracles
+**Top coins:** LINK, FIL, VET, XLM, HBAR, DENT
+
+Infrastructure coins relatively stable hote hain.
+
+### 8. 🪙 Ordinals & Bitcoin Ecosystem
+**Kya hain:** Bitcoin blockchain pe tokens aur NFTs
+**Top coins:** ORDI, XRP, LTC, TRX, ATOM
+
+## Heatmap Kaise Padhein — Step by Step
+
+### Step 1: Overall Color Check
+Pehle poori heatmap ek nazar mein dekho:
+- **Mostly green** = Bull market momentum — positive sentiment
+- **Mostly red** = Bear market — caution
+- **Mixed** = Sideways market — sector rotation ho raha hai
+
+### Step 2: Sector Average Dekho
+Har sector ke saath **"Avg +X%"** dikhta hai. Yeh us sector ka average performance hai.
+
+**Example:**
+- AI Sector: Avg +8.3% 🟢 → AI coins mein interest hai
+- Gaming: Avg -3.2% 🔴 → Gaming sector weak hai
+
+### Step 3: Individual Coins Check Karo
+Agar ek sector overall green hai lekin koi coin red hai — woh coin underperforming hai.
+
+### Step 4: Coin Pe Click Karo
+Heatmap mein kisi bhi coin pe click karo → directly Analyze tab mein jaoge → full analysis milegi.
+
+## Heatmap Se Trading Strategy Kaise Banayein?
+
+### Sector Rotation Strategy
+Jab ek sector hot hota hai, smart money us sector mein move karta hai:
+1. Dekho kaunsa sector consistently green hai (3-5 din se)
+2. Us sector ke top coins analyze karo
+3. Best R:R ratio wala coin choose karo
+
+### Lagging Sector Strategy
+Agar L1 aur L2 rally kar rahe hain lekin DeFi red hai:
+- DeFi catch-up rally ka wait karo
+- Strong DeFi coins mein entry ka moka ho sakta hai
+
+### Meme Coin Caution
+Meme sector green hai toh excitement mein:
+- Late entry se bachо
+- Already pumped coins avoid karo
+- FOMO se protect karo khud ko
+
+## Live Data — Binance Se Real Time
+
+Yes You Pro ka heatmap Binance API se **live data** fetch karta hai:
+- Har 30 second mein auto-refresh
+- Real 24h price change percentage
+- Actual market cap weighted data
+
+**Fake ya delayed data nahi — sab Binance ka real-time feed.**
+
+## Mobile Pe Heatmap Use Karne ke Tips
+
+- Mobile mein scroll karo sectors ke beech
+- Kisi bhi coin pe tap karo → analyze karo
+- Subah 9-10 AM IST mein check karo — US market close ke baad fresh data hota hai
+- Sham 8-9 PM IST — US market open hone pe movement hoti hai
+
+## Heatmap Aur Expert Choice Saath Use Karo
+
+Best strategy:
+1. **Heatmap** → Kaunsa sector strong hai identify karo
+2. **Expert Choice** → Us sector ke best scoring coin dhundo
+3. **Coin Analyze** → Full technical analysis karo
+4. **Decision** → Data-based entry lo
+
+**Abhi dekho: yesyoupro.com → Market Heatmap section → Live 8 sectors ka performance**`
   }
 ];
 
+
 export default function BlogPage() {
   const [selected, setSelected] = useState(null);
+
+  // Auto-open article from URL param (?article=6)
+  if(typeof window!=="undefined"&&selected===null){
+    const p=new URLSearchParams(window.location.search);
+    const a=p.get("article");
+    if(a){
+      const idx=ARTICLES.findIndex(x=>x.id===parseInt(a));
+      if(idx>=0){setTimeout(()=>setSelected(idx),0);}
+    }
+  }
 
   if (selected !== null) {
     const article = ARTICLES[selected];
@@ -602,14 +943,45 @@ export default function BlogPage() {
           <p style={{fontSize:13,color:"#475569",lineHeight:1.8}}>
             Yahan aapko milega cryptocurrency ke baare mein sab kuch — bilkul simple Hinglish mein.
             Beginner ho ya experienced trader, yahan har level ke liye helpful guides hain.
-            Bitcoin kya hai, kaise trade karein, tax kaise bharen — sab kuch cover kiya gaya hai.
           </p>
         </div>
 
-        {/* Articles */}
-        {ARTICLES.map((art,i)=>(
+        {/* Tools Guide — Featured section */}
+        <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"2px solid #6ee7b7",
+          borderRadius:16,padding:"14px 16px",marginBottom:14}}>
+          <div style={{fontWeight:800,fontSize:13,color:"#065f46",marginBottom:10}}>
+            🛠️ Tool Guides — Yahan se shuru karo
+          </div>
+          {ARTICLES.filter(a=>a.category==="Tools Guide").map((art,i)=>{
+            const idx=ARTICLES.indexOf(art);
+            return(
+              <div key={art.id} onClick={()=>setSelected(idx)}
+                style={{background:"#fff",borderRadius:12,padding:"12px 14px",marginBottom:8,
+                  cursor:"pointer",border:"1px solid #d1fae5",display:"flex",gap:10,alignItems:"center"}}
+                onMouseEnter={e=>e.currentTarget.style.background="#f0fdf4"}
+                onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
+                <div style={{width:36,height:36,borderRadius:10,background:art.color,
+                  display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>
+                  {art.emoji}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:800,color:"#0f172a",lineHeight:1.3,marginBottom:2}}>
+                    {art.title}
+                  </div>
+                  <div style={{fontSize:10,color:"#64748b"}}>⏱️ {art.time}</div>
+                </div>
+                <span style={{color:"#10b981",fontWeight:700,fontSize:14,flexShrink:0}}>→</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* All Articles */}
+        {ARTICLES.filter(a=>a.category!=="Tools Guide").map((art,i)=>{
+          const idx=ARTICLES.indexOf(art);
+          return(
           <div key={art.id}>
-            <div onClick={()=>setSelected(i)}
+            <div onClick={()=>setSelected(idx)}
             style={{background:"#fff",borderRadius:16,padding:"16px",marginBottom:12,
               cursor:"pointer",boxShadow:"0 2px 12px rgba(0,0,0,.06)",
               border:"1px solid #e2e8f0",transition:"all .2s"}}
@@ -656,7 +1028,8 @@ export default function BlogPage() {
             </div>
           )}
           </div>
-        ))}
+        );
+        })}
 
         <div style={{textAlign:"center",padding:"20px",background:"#fff",borderRadius:16,
           border:"1px solid #e2e8f0"}}>
