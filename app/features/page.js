@@ -551,13 +551,7 @@ function DcaPlanner(){
   );
 }
 
-// ═══════════════════════════════════════════════════════
-// 2. CRYPTO vs TRADITIONAL
-// ═══════════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════════
-// 2. CRYPTO vs TRADITIONAL
-// ═══════════════════════════════════════════════════════
 function TraditionalCompare(){
   const [amount,setAmount]=useState("100000");
   const [years,setYears]=useState("5");
@@ -671,9 +665,7 @@ function TraditionalCompare(){
   );
 }
 
-// ═══════════════════════════════════════════════════════
-// 3. RUG PULL DETECTOR
-// ═══════════════════════════════════════════════════════
+
 function RugPullDetector(){
   const [coinInput,setCoinInput]=useState("");
   const [data,setData]=useState(null);
@@ -879,115 +871,7 @@ function RugPullDetector(){
   );
 }
 
-  const analyze=async()=>{
-    if(!coinName.trim())return;
-    setLoading(true);setResult(null);
-    try{
-      const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({mode:"scam_ai",name:coinName,symbol:coinName.toUpperCase(),
-          ch24:0,ch7d:0,rsi:50,
-          scamFlags:[`User submitted coin: ${coinName} for rug pull analysis`]})});
-      const j=await r.json();
-      setResult(j.text||"Analysis complete.");
-    }catch(e){setResult("Error: "+e.message);}
-    setLoading(false);
-  };
 
-  const CHECKLIST=[
-    {q:"Kya team anonymous hai?",          risk:"High",   desc:"Anonymous team = accountability zero"},
-    {q:"Whitepaper hai ya nahi?",           risk:"High",   desc:"Bina whitepaper = no roadmap, no plan"},
-    {q:"Liquidity locked hai?",             risk:"High",   desc:"Unlocked liquidity = rug pull possible"},
-    {q:"Top 10 wallets mein >50%?",         risk:"High",   desc:"Whale concentration = price manipulation"},
-    {q:"Audit report milti hai?",           risk:"Medium", desc:"Unaudited contracts = hidden bugs"},
-    {q:"Kya exchange listing real hai?",    risk:"Medium", desc:"Fake listings = scam signal"},
-    {q:"Community active hai Telegram/X?", risk:"Low",    desc:"Dead community = abandoned project"},
-  ];
-
-  return(
-    <div className="fadein">
-      <div style={{textAlign:"center",marginBottom:16}}>
-        <div style={{fontSize:40,marginBottom:8}}>🚨</div>
-        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Rug Pull Detector</h2>
-        <p style={{fontSize:13,color:T.text2}}>Invest karne se pehle coin ka risk check karo</p>
-      </div>
-
-      <GuideBox emoji="🚨" title="Rug Pull Detector"
-        steps={[
-          "Coin ka naam ya symbol daalo jisme invest sochte ho",
-          "AI analysis button dabao",
-          "Rug pull risk score dekhо",
-          "Neeche manual checklist bhi check karo",
-          "High risk dikh raha hai to AVOID karo"
-        ]}
-        tip="Meme coins aur new projects mein rug pull risk bahut zyada hota hai. Hamesha research pehle!"
-      />
-      <AD/>
-
-      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
-        <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6}}>COIN NAME / SYMBOL</div>
-        <div style={{display:"flex",gap:8}}>
-          <input value={coinName} onChange={e=>setCoinName(e.target.value)}
-            placeholder="e.g. SAFEMOON, SQUID, LUNA..."
-            style={{flex:1,background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"13px 16px",fontSize:15,fontWeight:600,color:"#0f172a",boxSizing:"border-box",minWidth:0}}
-            onFocus={e=>e.target.style.borderColor="#ef4444"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}
-            onKeyDown={e=>e.key==="Enter"&&analyze()}/>
-          <button onClick={analyze} disabled={loading||!coinName.trim()}
-            style={{background:loading?"#e2e8f0":"linear-gradient(135deg,#ef4444,#dc2626)",color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"13px 20px",fontWeight:800,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif",flexShrink:0}}>
-            {loading?"⟳":"🔍 Analyze"}
-          </button>
-        </div>
-
-        <div style={{marginTop:10,display:"flex",gap:6,flexWrap:"wrap"}}>
-          {["SAFEMOON","SQUID","LUNA","SHIB","PEOPLE"].map(c=>(
-            <button key={c} onClick={()=>setCoinName(c)}
-              style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#dc2626",fontWeight:600,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {loading&&(
-        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"24px",textAlign:"center",boxShadow:"0 2px 8px rgba(0,0,0,.04)",marginBottom:14}}>
-          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:10}}>
-            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
-          </div>
-          <div style={{fontWeight:600,fontSize:13}}>Risk analysis ho raha hai...</div>
-        </div>
-      )}
-
-      {result&&!loading&&(
-        <div className="fadein">
-          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"16px",marginBottom:14,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-            <div style={{fontWeight:700,fontSize:13,marginBottom:10,color:"#dc2626"}}>🤖 AI Risk Analysis — {coinName.toUpperCase()}</div>
-            <div style={{fontSize:13,color:"#374151",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{result}</div>
-          </div>
-        </div>
-      )}
-
-      {/* Manual checklist */}
-      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"16px",marginBottom:14,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-        <div style={{fontWeight:700,fontSize:13,marginBottom:12}}>✅ Manual Checklist — Khud Check Karo</div>
-        {CHECKLIST.map((item,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"8px 0",borderBottom:i<CHECKLIST.length-1?"1px solid #f8fafc":"none"}}>
-            <div style={{fontSize:10,fontWeight:700,color:item.risk==="High"?"#dc2626":item.risk==="Medium"?"#d97706":"#059669",background:item.risk==="High"?"#fef2f2":item.risk==="Medium"?"#fffbeb":"#f0fdf4",border:`1px solid ${item.risk==="High"?"#fca5a5":item.risk==="Medium"?"#fde68a":"#6ee7b7"}`,borderRadius:20,padding:"2px 8px",flexShrink:0,marginTop:2}}>
-              {item.risk}
-            </div>
-            <div>
-              <div style={{fontSize:12,fontWeight:600,color:"#0f172a",marginBottom:2}}>{item.q}</div>
-              <div style={{fontSize:11,color:"#94a3b8"}}>{item.desc}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <AD/>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════
-// 4. BEST ENTRY TIME FINDER
-// ═══════════════════════════════════════════════════════
 function EntryTimeFinder(){
   const [coin,setCoin]=useState("BTC");
   const [result,setResult]=useState(null);
@@ -1233,154 +1117,6 @@ function EntryTimeFinder(){
     </div>
   );
 }
-  const [result,setResult]=useState(null);
-  const [loading,setLoading]=useState(false);
-
-  const COINS=["BTC","ETH","SOL","APT","AVAX","BNB","LINK","DOGE","PEPE","ARB"];
-
-  const analyze=async()=>{
-    setLoading(true);setResult(null);
-    try{
-      // Fetch hourly klines for 90 days
-      const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin}USDT&interval=1h&limit=1000`,{signal:AbortSignal.timeout(10000)});
-      if(!r.ok) throw new Error("API error");
-      const klines=await r.json();
-
-      // Analyze by hour of day (IST = UTC+5:30)
-      const hourData={};
-      const dayData={};
-      const dateData={};
-      for(const k of klines){
-        const ts=parseInt(k[0]);
-        const open=parseFloat(k[1]);
-        const close=parseFloat(k[4]);
-        const change=(close-open)/open*100;
-        const d=new Date(ts);
-        const hourIST=(d.getUTCHours()+5)%24;
-        const dayOfWeek=d.getUTCDay();
-        const dateOfMonth=d.getUTCDate();
-
-        if(!hourData[hourIST])hourData[hourIST]={sum:0,count:0};
-        hourData[hourIST].sum+=change;hourData[hourIST].count++;
-
-        if(!dayData[dayOfWeek])dayData[dayOfWeek]={sum:0,count:0};
-        dayData[dayOfWeek].sum+=change;dayData[dayOfWeek].count++;
-
-        if(!dateData[dateOfMonth])dateData[dateOfMonth]={sum:0,count:0};
-        dateData[dateOfMonth].sum+=change;dateData[dateOfMonth].count++;
-      }
-
-      // Find best/worst
-      const hourAvg=Object.entries(hourData).map(([h,v])=>({hour:+h,avg:v.sum/v.count})).sort((a,b)=>a.avg-b.avg);
-      const dayAvg=Object.entries(dayData).map(([d,v])=>({day:+d,avg:v.sum/v.count})).sort((a,b)=>a.avg-b.avg);
-      const dateAvg=Object.entries(dateData).map(([d,v])=>({date:+d,avg:v.sum/v.count})).sort((a,b)=>a.avg-b.avg);
-
-      const days=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-      setResult({
-        bestHour: hourAvg[0],
-        worstHour: hourAvg[hourAvg.length-1],
-        bestDay: {...dayAvg[0], name:days[dayAvg[0].day]},
-        worstDay: {...dayAvg[dayAvg.length-1], name:days[dayAvg[dayAvg.length-1].day]},
-        bestDate: dateAvg[0],
-        worstDate: dateAvg[dateAvg.length-1],
-        allHours: hourAvg,
-        allDays: dayAvg.map(d=>({...d,name:days[d.day]})),
-      });
-    }catch(e){setResult({error:e.message});}
-    setLoading(false);
-  };
-
-  const fmtHour=(h)=>{const ampm=h>=12?"PM":"AM";const h12=h%12||12;return`${h12}:00 ${ampm} IST`;};
-
-  return(
-    <div className="fadein">
-      <div style={{textAlign:"center",marginBottom:16}}>
-        <div style={{fontSize:40,marginBottom:8}}>🎯</div>
-        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Best Entry Time</h2>
-        <p style={{fontSize:13,color:T.text2}}>Kab buy karna sabse sahi hota hai? Data se pata karo</p>
-      </div>
-
-      <GuideBox emoji="🎯" title="Best Entry Time Finder"
-        steps={[
-          "Coin select karo jisme invest karna chahte ho",
-          "Analyze dabao — 1000 candles ka data analyze hoga",
-          "Best time of day, day of week, date of month dikhega",
-          "Uss time pe DCA set karo ya manually buy karo"
-        ]}
-        tip="Ye 90 din ke historical data pe based hai. Sabse low price point dhundta hai hourly candles se!"
-      />
-      <AD/>
-
-      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
-        <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:8}}>COIN SELECT KARO</div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
-          {COINS.map(c=>(
-            <button key={c} onClick={()=>setCoin(c)}
-              style={{background:coin===c?"#10b981":"#f8fafc",color:coin===c?"#fff":"#64748b",
-                border:`2px solid ${coin===c?"#10b981":"#e2e8f0"}`,borderRadius:12,padding:"7px 14px",
-                fontWeight:700,fontSize:12,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
-              {c}
-            </button>
-          ))}
-        </div>
-        <button onClick={analyze} disabled={loading}
-          style={{width:"100%",background:loading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",fontWeight:800,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-          {loading?"⟳ Analyzing 1000 candles...":"🎯 Best Entry Time Dhundo"}
-        </button>
-      </div>
-
-      {result&&!result.error&&(
-        <div className="fadein">
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:12}}>
-            {[
-              {label:"Best Hour",value:fmtHour(result.bestHour?.hour),sub:`${result.bestHour?.avg.toFixed(2)}% avg`,color:"#059669",bg:"#ecfdf5"},
-              {label:"Best Day",value:result.bestDay?.name,sub:`${result.bestDay?.avg.toFixed(2)}% avg`,color:"#2563eb",bg:"#eff6ff"},
-              {label:"Best Date",value:`${result.bestDate?.date} tarikh`,sub:`${result.bestDate?.avg.toFixed(2)}% avg`,color:"#7c3aed",bg:"#f5f3ff"},
-            ].map((item,i)=>(
-              <div key={i} style={{background:item.bg,border:`1px solid ${item.color}33`,borderRadius:12,padding:"12px",textAlign:"center"}}>
-                <div style={{fontSize:9,color:item.color,fontWeight:700,marginBottom:4}}>{item.label}</div>
-                <div style={{fontSize:13,fontWeight:900,color:item.color,lineHeight:1.2,marginBottom:4}}>{item.value}</div>
-                <div style={{fontSize:9,color:item.color,opacity:.7}}>{item.sub}</div>
-              </div>
-            ))}
-          </div>
-
-          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}}>
-            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📊 Hour of Day Analysis (IST)</div>
-            {result.allHours.slice(0,8).map((h,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5}}>
-                <div style={{width:60,fontSize:10,color:"#64748b"}}>{fmtHour(h.hour)}</div>
-                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:6,overflow:"hidden"}}>
-                  <div style={{height:"100%",background:h.avg<=0?"#10b981":"#ef4444",borderRadius:100,width:`${Math.min(100,Math.abs(h.avg)*20)}%`}}/>
-                </div>
-                <div style={{width:50,fontSize:10,textAlign:"right",fontWeight:700,color:h.avg<=0?"#059669":"#dc2626"}}>
-                  {h.avg.toFixed(2)}%
-                </div>
-              </div>
-            ))}
-            <div style={{fontSize:10,color:"#94a3b8",marginTop:8}}>🟢 = Price kam hoti hai (buy opportunity) · 🔴 = Price badhti hai</div>
-          </div>
-
-          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:14,padding:"14px 16px"}}>
-            <div style={{fontWeight:700,fontSize:12,color:"#6ee7b7",marginBottom:8}}>🎯 Best Strategy for {coin}</div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,.8)",lineHeight:1.7}}>
-              📅 Best day: <strong style={{color:"#10b981"}}>{result.bestDay.name}</strong><br/>
-              ⏰ Best time: <strong style={{color:"#10b981"}}>{fmtHour(result.bestHour.hour)}</strong> (IST)<br/>
-              🗓️ Best date: <strong style={{color:"#10b981"}}>{result.bestDate.date} tarikh</strong> har mahine<br/>
-              <span style={{color:"#94a3b8",fontSize:11}}>Historical 90-day data pe based</span>
-            </div>
-          </div>
-        </div>
-      )}
-      {result?.error&&<div style={{background:"#fef2f2",border:"1px solid #fca5a5",borderRadius:12,padding:"12px",color:"#dc2626",fontSize:13}}>⚠️ {result.error}</div>}
-      <AD/>
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════════════════
-// 5. AIRDROP TRACKER
-// ═══════════════════════════════════════════════════════
 function AirdropTracker(){
   const AIRDROPS=[
     {name:"Arbitrum Nova",    symbol:"ARB",  status:"active",  est:"$50-200",  deadline:"Ongoing",   steps:["Arbitrum Nova pe transactions karo","Bridge assets karo","Nova DApps use karo"],        chain:"Arbitrum",  difficulty:"Easy",   link:"https://nova.arbitrum.io"},
