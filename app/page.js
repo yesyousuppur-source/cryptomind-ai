@@ -1767,46 +1767,6 @@ EXACT format (Hinglish):
               )}
             </div>
 
-            {/* Content Card — Platform Info */}
-            <div style={{background:"#fff",borderRadius:16,padding:"18px",
-              boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
-              <h3 style={{fontSize:15,fontWeight:900,color:"#0f172a",marginBottom:10,letterSpacing:-.3}}>
-                🚀 YES YOU PRO — Sab Ek Jagah Free
-              </h3>
-              <p style={{fontSize:13,color:"#475569",lineHeight:1.85,marginBottom:10}}>
-                India ka pehla free AI-powered crypto platform. Koi subscription nahi,
-                koi signup nahi — bas open karo aur use karo. Bitcoin se lekar latest
-                altcoins tak — 120+ coins ka real-time analysis milta hai.
-              </p>
-              <p style={{fontSize:13,color:"#475569",lineHeight:1.85,marginBottom:10}}>
-                <strong style={{color:"#059669"}}>Expert Choice</strong> feature daily
-                best 5 coins dhundhta hai — entry price, stop loss aur 3 targets ke saath.
-                <strong style={{color:"#6366f1"}}> Pump Radar</strong> se pump hone se
-                pehle alert milta hai. <strong style={{color:"#d97706"}}> Tax Calculator
-                </strong> se instant tax calculation hoti hai.
-              </p>
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                <Link href="/blog" style={{display:"inline-flex",alignItems:"center",gap:5,
-                  background:"#f0fdf4",border:"1px solid #6ee7b7",color:"#059669",
-                  borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
-                  textDecoration:"none"}}>
-                  📚 Crypto Sikho Blog →
-                </Link>
-                <Link href="/features" style={{display:"inline-flex",alignItems:"center",gap:5,
-                  background:"#f5f3ff",border:"1px solid #c4b5fd",color:"#6366f1",
-                  borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
-                  textDecoration:"none"}}>
-                  ✨ All Features →
-                </Link>
-                <Link href="/trade" style={{display:"inline-flex",alignItems:"center",gap:5,
-                  background:"#f0fdf4",border:"1px solid #10b981",color:"#10b981",
-                  borderRadius:20,padding:"6px 14px",fontSize:11,fontWeight:700,
-                  textDecoration:"none"}}>
-                  📈 Trade Manager →
-                </Link>
-              </div>
-            </div>
-
             {/* Ad — end of analyze tab */}
             <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
               <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
@@ -2254,6 +2214,47 @@ EXACT format (Hinglish):
 
         {/* FOOTER */}
         <div style={{marginTop:20}}>
+
+          {/* Platform Info Card — moved from analyze tab */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,
+            padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.06)"}}>
+            <h3 style={{fontSize:15,fontWeight:900,color:"#0f172a",marginBottom:10,letterSpacing:-.3}}>
+              🚀 YES YOU PRO — Sab Ek Jagah Free
+            </h3>
+            <p style={{fontSize:13,color:"#475569",lineHeight:1.85,marginBottom:10}}>
+              India ka free AI-powered crypto platform. Koi subscription nahi,
+              koi signup nahi — bas open karo aur use karo. Bitcoin se lekar latest
+              altcoins tak — 120+ coins ka real-time analysis milta hai.
+            </p>
+            <p style={{fontSize:13,color:"#475569",lineHeight:1.85,marginBottom:14}}>
+              <strong style={{color:"#059669"}}>Expert Choice</strong> feature daily
+              best 5 coins dhundhta hai — entry price, stop loss aur 3 targets ke saath.{" "}
+              <strong style={{color:"#6366f1"}}>DCA Planner</strong> se real historical
+              data se investment calculate karo.{" "}
+              <strong style={{color:"#d97706"}}>Tax Calculator</strong> se instant
+              Indian crypto tax calculation hoti hai.
+            </p>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <Link href="/features" style={{display:"inline-flex",alignItems:"center",gap:5,
+                background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",
+                borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,
+                textDecoration:"none",boxShadow:"0 4px 12px rgba(16,185,129,.3)"}}>
+                ✨ All Features Dekho →
+              </Link>
+              <Link href="/blog" style={{display:"inline-flex",alignItems:"center",gap:5,
+                background:"#f0fdf4",border:"1px solid #6ee7b7",color:"#059669",
+                borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,
+                textDecoration:"none"}}>
+                📚 Blog →
+              </Link>
+              <Link href="/chat" style={{display:"inline-flex",alignItems:"center",gap:5,
+                background:"#f0fdf4",border:"1px solid #10b981",color:"#10b981",
+                borderRadius:20,padding:"8px 18px",fontSize:12,fontWeight:700,
+                textDecoration:"none"}}>
+                🤖 AI Chat →
+              </Link>
+            </div>
+          </div>
           <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:14,padding:"14px 18px",textAlign:"center",marginBottom:12}}>
             <div style={{fontSize:11,color:"#059669",fontWeight:700,marginBottom:4}}>⚠️ Disclaimer</div>
             <div className="mono" style={{fontSize:10,color:"#64748b",lineHeight:1.7}}>
