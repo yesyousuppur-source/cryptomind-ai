@@ -800,6 +800,186 @@ Best strategy:
 4. **Decision** → Data-based entry lo
 
 **Abhi dekho: yesyoupro.com → Market Heatmap section → Live 8 sectors ka performance**`
+  },
+  {
+    id:10, slug:"bitcoin-kya-hai-guide",
+    title:"Bitcoin Kya Hai? Complete Beginner Guide 2025 — Hindi Mein",
+    category:"Beginner Guide", emoji:"₿", color:"#F0B90B", time:"8 min read",
+    keywords:"bitcoin kya hai hindi, crypto beginner guide, bitcoin india 2025",
+    content:`Bitcoin aaj har Indian investor ki zubaan pe hai. Koi "digital gold" kehta hai, koi "future of money" — lekin asli sawaal hai ki Bitcoin actually kya hai aur kaise kaam karta hai?
+
+## Bitcoin Ka Janam
+
+Saal 2008, global financial crisis. Banks ne logon ke paison ke saath galat khel kiya. Isi waqt "Satoshi Nakamoto" naam ke anonymous creator ne ek paper publish kiya — Bitcoin: A Peer-to-Peer Electronic Cash System.
+
+Unka vision tha: ek currency jisme koi bank, koi government, koi middleman na ho. Log directly ek doosre ko paisa bhej sakein. January 2009 mein Bitcoin network launch hua — ek nayi financial revolution ka aagaz.
+
+## Bitcoin Kaise Kaam Karta Hai?
+
+### Blockchain Technology
+Bitcoin ki asli power Blockchain hai. Ek public register jo duniya ke hazaron computers pe simultaneously exist karta hai. Har transaction permanently record hota hai — kabhi delete ya modify nahi ho sakta.
+
+Jab tum Bitcoin bhejte ho, network ke hazaron nodes transaction verify karte hain. Verified transaction ek "block" mein add hota hai jo previous blocks ki chain se jud jaata hai — isliye "blockchain."
+
+### Mining
+Powerful computers complex math puzzles solve karte hain. Jo pehle solve kare use block reward milta hai — abhi 3.125 BTC per block (2024 halving ke baad). Yeh Proof of Work hai.
+
+### 21 Million Supply
+Bitcoin ki maximum supply sirf 21 million hai — code mein hardcoded. Koi bhi isse change nahi kar sakta. Abhi ~19.7 million mine ho chuke hain.
+
+Dollar ki printing unlimited → Inflation → Value girti hai.
+Bitcoin ki supply fixed → Scarcity → Potentially value badhti hai.
+
+## India Mein Bitcoin — Complete Guide
+
+### Legal Status
+Bitcoin India mein legal hai. Supreme Court ne 2020 mein RBI ke ban ko overturn kiya. Lekin:
+- Legal tender nahi hai
+- KYC mandatory hai exchanges pe
+- 30% flat tax profits pe
+- 1% TDS har transaction pe
+
+### Kahan Khareedein?
+CoinDCX, WazirX, ZebPay — popular Indian exchanges. Binance international option hai.
+
+### Kitna Invest Karein?
+Portfolio ka max 5-10% crypto mein. DCA karo — ek saath poora amount nahi. Emergency fund pehle banao.
+
+### Storage — Wallet
+Hot Wallet (exchange) = convenient but risky.
+Cold Wallet (hardware) = most secure for long-term.
+
+Long term hold ke liye hardware wallet le lo — Ledger ya Trezor.
+
+## Bitcoin vs Gold vs FD
+
+Bitcoin historically highest returns deta hai lekin highest risk bhi. Gold stable hedge hai. FD guaranteed lekin inflation se zyada nahi badha historically. Diversification best approach hai.
+
+## Bitcoin Ka Future
+
+Bitcoin ETF 2024 mein approve hua — institutional money aa raha hai. Lightning Network fast payments enable kar raha hai. El Salvador ne legal tender banaya. Risks mein regulation, quantum computing (very long term), aur market manipulation hain.
+
+Yes You Pro pe Bitcoin ka free live analysis milta hai — RSI, MACD, entry points — bilkul free. Research karo, informed decision lo.
+
+*Yeh financial advice nahi. DYOR. Crypto mein significant risk hai.*`
+  },
+  {
+    id:11, slug:"crypto-tax-india-2025",
+    title:"Crypto Tax India 2025 — 30% Tax, TDS, ITR Complete Guide Hindi Mein",
+    category:"Tax Guide", emoji:"🧾", color:"#059669", time:"7 min read",
+    keywords:"crypto tax india 2025, bitcoin tax india, 30 percent crypto tax, TDS crypto india, ITR crypto filing",
+    content:`2022 Budget ne India ke crypto investors ke liye sab badal diya. 30% flat tax, 1% TDS, aur no loss setoff — in teen rules ne puri community ko shock kiya. Lekin sahi samajh se aap correctly tax file kar sakte ho.
+
+## Teen Main Tax Rules
+
+### Rule 1: 30% Flat Tax
+Har crypto profit pe 30% tax — koi slab nahi, koi exemption nahi.
+Plus 4% Health & Education Cess = Effective 31.2%+
+
+### Rule 2: 1% TDS
+Har crypto transaction pe 1% TDS deduct hoga.
+Indian exchanges automatically deduct karte hain.
+
+### Rule 3: No Loss Setoff
+Crypto losses ko dusre gains ya income se offset NAHI kar sakte.
+Carry forward bhi NAHI kar sakte.
+
+Iska matlab: BTC mein ₹50K loss + ETH mein ₹60K profit = ₹60K pe tax lagega.
+
+## Practical Examples
+
+**Simple Trade:**
+₹1 lakh mein BTC kharida → ₹1.8 lakh mein becha
+Profit: ₹80,000 → Tax: ₹24,000 + cess
+
+**Crypto-to-Crypto (Taxable!):**
+BTC se ETH exchange karna bhi taxable hai — chahe INR mein convert na karo.
+
+## Tax Kab Lagta Hai?
+
+Taxable events: Crypto sell karna, crypto-to-crypto exchange, crypto se kuch khareedna, mining/staking rewards, airdrops, gifting.
+
+Non-taxable: Crypto khareedna (tax baad mein), same person ke wallets ke beech transfer.
+
+## ITR Filing
+
+ITR-2 ya ITR-3 use karo (ITR-1 mein crypto nahi).
+Schedule VDA fill karo — har transaction ki details.
+
+## Tax Saving Strategies (Legal)
+
+1. Proper record keeping — har transaction ka record
+2. FIFO method use karo cost basis ke liye
+3. Timing matters — year-end planning
+4. Professional CA se help lo for complex cases
+
+## Common Mistakes
+
+Unreported income — IT department PAN-linked data dekh sakta hai.
+Wrong ITR form — ITR-1 invalid hai crypto income ke liye.
+Crypto-to-crypto ignore karna — yeh bhi taxable hai.
+
+Yes You Pro ka free Tax Calculator: yesyoupro.com/features
+
+*General information hai. Tax laws change hote hain. CA se consult karo.*`
+  },
+  {
+    id:12, slug:"rsi-indicator-guide-hindi",
+    title:"RSI Indicator Kya Hai? Technical Analysis Complete Guide — Crypto Hindi",
+    category:"Technical Analysis", emoji:"📈", color:"#6366f1", time:"6 min read",
+    keywords:"RSI indicator hindi, relative strength index crypto, technical analysis hindi, oversold overbought crypto, RSI trading strategy",
+    content:`RSI (Relative Strength Index) professional traders ka sabse favourite indicator hai. Ek simple number 0-100 jo batata hai koi asset oversold hai ya overbought — aur kab buy/sell consider karna chahiye.
+
+## RSI Kya Hai?
+
+RSI momentum measure karta hai — recent price changes kitne fast aur bade hain.
+
+| RSI | Matlab | Signal |
+|-----|--------|--------|
+| 0-30 | Oversold | Potential Buy |
+| 30-70 | Normal | Wait |
+| 70-100 | Overbought | Potential Sell |
+
+## RSI Kaise Use Karein?
+
+### Strategy 1: Classic Levels
+RSI 30 se neeche aaye → Sellers exhausted → Potential bounce → Consider buying.
+RSI 70 se upar jaaye → Buyers peak pe → Potential pullback → Consider selling/waiting.
+
+### Strategy 2: RSI Divergence (Most Powerful)
+**Bullish Divergence:** Price naya low banaye lekin RSI higher low banaye → Sellers ka momentum kam ho raha hai → Reversal possible.
+
+**Bearish Divergence:** Price naya high banaye lekin RSI lower high banaye → Buyers ka momentum kam ho raha hai → Reversal possible.
+
+### Strategy 3: RSI + Moving Average
+RSI 30 se neeche + Price MA200 ke upar = Strong buy signal (oversold in uptrend).
+
+## Common Mistakes
+
+1. Sirf RSI dekh ke trade karna — combine karo other indicators ke saath
+2. Overbought = immediate sell — bull market mein RSI 70+ pe weeks reh sakta hai
+3. Oversold = immediate buy — bear market mein aur neeche ja sakta hai
+4. Wrong timeframe — scalping ke liye 1hr, swing trading ke liye daily chart
+
+## RSI Timeframes
+
+Day traders: 1-4 hour charts.
+Swing traders: Daily chart.
+Long-term investors: Weekly chart.
+Default period 14 sabse widely used hai.
+
+## Yes You Pro Mein RSI
+
+yesyoupro.com pe kisi bhi coin ka RSI automatically calculate hota hai:
+1. Coin name type karo
+2. Analyze karo
+3. RSI value + interpretation dikhegi
+
+Green (oversold), Yellow (normal), Red (overbought) — visual mein clear ho jaata hai.
+
+RSI sirf ek tool hai — magic nahi. Multiple indicators, proper risk management, aur DYOR se hi successful investing hoti hai.
+
+*Educational content. Financial advice nahi. Always DYOR.*`
   }
 ];
 
