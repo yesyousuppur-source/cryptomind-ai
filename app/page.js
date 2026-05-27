@@ -2269,7 +2269,7 @@ EXACT format (Hinglish):
               <span style={{fontSize:11,color:"#94a3b8"}}>by YesYouPro</span>
             </div>
             <div style={{display:"flex",justifyContent:"center",gap:6,flexWrap:"wrap",marginBottom:12}}>
-              {[{label:"🏠 Home",href:"/"},{label:"👋 About",href:"/about"},{label:"📚 Blog",href:"/blog"},{label:"✨ Features",href:"/features"},{label:"🏟️ Arena",href:"/arena"},{label:"🔒 Privacy",href:"/privacy"},{label:"💬 Contact",href:"/contact"}].map((l,i)=>(
+              {[{label:"🏠 Home",href:"/"},{label:"👋 About",href:"/about"},{label:"📚 Blog",href:"/blog"},{label:"✨ Features",href:"/features"},{label:"🤖 AI Chat",href:"/chat"},{label:"🔒 Privacy",href:"/privacy"},{label:"📋 Terms",href:"/terms"},{label:"💬 Contact",href:"/contact"}].map((l,i)=>(
                 <Link key={i} href={l.href} style={{background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:20,padding:"5px 14px",fontSize:12,color:"#475569",fontWeight:600,textDecoration:"none"}}>
                   {l.label}
                 </Link>
