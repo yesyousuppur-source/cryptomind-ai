@@ -2415,7 +2415,7 @@ Keep it practical and honest. Hinglish mein likho.`})
 }
 
 export default function FeaturesPage() {
-  const [tab, setTab] = useState("iq");
+  const [tab, setTab] = useState("position");
 
   // IQ Test state
   const [iqScreen, setIqScreen]     = useState("intro"); // intro | quiz | result
