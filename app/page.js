@@ -41,11 +41,11 @@ const DC_P = {
 
 // ── TAB CONFIG ────────────────────────────────────────────────────────────────
 const TABS = [
-  {id:"analyze", icon:"📊", label:"Analyze",   desc:"Coin analysis"},
-  {id:"explain", icon:"🤖", label:"AI Explain", desc:"Koi bhi samjhao"},
-  {id:"scam",    icon:"🛡️", label:"Scam Check", desc:"Safe hai?"},
-  {id:"news",    icon:"📰", label:"News",        desc:"Impact analysis"},
-  {id:"whale",   icon:"🐋", label:"Whales",      desc:"Big moves"},
+  {id:"analyze", icon:"🔍", label:"Analyze",    desc:"Coin analysis"},
+  {id:"explain", icon:"🤖", label:"AI Explain",  desc:"Simple mein samjho"},
+  {id:"scam",    icon:"🛡️", label:"Safe Check",  desc:"Scam hai?"},
+  {id:"news",    icon:"📰", label:"News",         desc:"Market news"},
+  {id:"whale",   icon:"🐋", label:"Big Moves",    desc:"Whale activity"},
 ];
 
 // ── SECTION HEADER ────────────────────────────────────────────────────────────
@@ -868,9 +868,17 @@ EXACT format (Hinglish):
           <p style={{fontSize:14,color:"#64748b",fontWeight:500}}>
             🇮🇳 India ka free crypto research tool — No signup, No fees
           </p>
+
+          {/* Value props — 3 simple benefits */}
           <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap",justifyContent:"center"}}>
-            {[{icon:"⚡",text:"Real-time data"},{icon:"🤖",text:"AI analysis"},{icon:"₹",text:"India ke liye"}].map((v,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:4,background:"rgba(16,185,129,.08)",borderRadius:20,padding:"4px 10px",fontSize:11,color:"#059669",fontWeight:700}}>
+            {[
+              {icon:"⚡",text:"Real-time data"},
+              {icon:"🤖",text:"AI analysis"},
+              {icon:"₹",text:"India ke liye"},
+            ].map((v,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:4,
+                background:"rgba(16,185,129,.08)",borderRadius:20,padding:"4px 10px",
+                fontSize:11,color:"#059669",fontWeight:700}}>
                 <span>{v.icon}</span><span>{v.text}</span>
               </div>
             ))}
@@ -925,20 +933,26 @@ EXACT format (Hinglish):
 
 
 
-        {/* Quick Links */}
-        <div style={{display:"flex",gap:8,marginBottom:14,overflowX:"auto",scrollbarWidth:"none"}}>
+        {/* ── QUICK LINKS STRIP ── */}
+        <div style={{display:"flex",gap:8,marginBottom:14,overflowX:"auto",paddingBottom:2,scrollbarWidth:"none"}}>
           {[
             {icon:"✨",label:"Features",href:"/features",color:"#6366f1",bg:"#eff6ff",border:"#c7d2fe"},
             {icon:"🤖",label:"AI Chat",href:"/chat",color:"#10b981",bg:"#f0fdf4",border:"#6ee7b7"},
             {icon:"📈",label:"Trade",href:"/trade",color:"#059669",bg:"#ecfdf5",border:"#6ee7b7"},
-            {icon:"📚",label:"Blog",href:"/blog",color:"#d97706",bg:"#fffbeb",border:"#fde68a"},
+            {icon:"📚",label:"Sikho",href:"/blog",color:"#d97706",bg:"#fffbeb",border:"#fde68a"},
           ].map((l,i)=>(
-            <Link key={i} href={l.href} style={{display:"flex",alignItems:"center",gap:5,flexShrink:0,background:l.bg,border:`1px solid ${l.border}`,borderRadius:20,padding:"7px 14px",fontSize:12,fontWeight:700,color:l.color,textDecoration:"none"}}>
+            <Link key={i} href={l.href} style={{
+              display:"flex",alignItems:"center",gap:5,flexShrink:0,
+              background:l.bg,border:`1px solid ${l.border}`,
+              borderRadius:20,padding:"7px 14px",
+              fontSize:12,fontWeight:700,color:l.color,textDecoration:"none",
+            }}>
               {l.icon} {l.label}
             </Link>
           ))}
         </div>
 
+        {/* ══ ANALYZE TAB ══ */}
         {activeTab==="analyze" && (
           <div className="fadein">
 
@@ -1431,10 +1445,6 @@ EXACT format (Hinglish):
 
           </div>
         )}
-
-        {/* ══════════════════════════════════════════════════════════════════ */}
-
-        {/* TAB: EXPLAIN COIN                                                  */}
         {/* ══════════════════════════════════════════════════════════════════ */}
         {activeTab==="explain" && (
           <div className="fadein">
