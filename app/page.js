@@ -1420,6 +1420,8 @@ EXACT format (Hinglish):
                   </button>
                 </div>
               )}
+            </div>
+
             {/* Ad — end of analyze tab */}
             <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
               <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
