@@ -866,8 +866,15 @@ EXACT format (Hinglish):
           </div>
 
           <p style={{fontSize:14,color:"#64748b",fontWeight:500}}>
-            India ka free crypto research tool — No signup, No fees
+            🇮🇳 India ka free crypto research tool — No signup, No fees
           </p>
+          <div style={{display:"flex",gap:6,marginTop:10,flexWrap:"wrap",justifyContent:"center"}}>
+            {[{icon:"⚡",text:"Real-time data"},{icon:"🤖",text:"AI analysis"},{icon:"₹",text:"India ke liye"}].map((v,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:4,background:"rgba(16,185,129,.08)",borderRadius:20,padding:"4px 10px",fontSize:11,color:"#059669",fontWeight:700}}>
+                <span>{v.icon}</span><span>{v.text}</span>
+              </div>
+            ))}
+          </div>
 
           {/* Start Here card — for new users */}
           <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"2px solid #6ee7b7",borderRadius:16,padding:"14px 16px",marginTop:14,textAlign:"left"}}>
@@ -918,63 +925,20 @@ EXACT format (Hinglish):
 
 
 
-        {/* ✨ EXCLUSIVE FEATURES BANNER — always visible below tabs */}
-        <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:20,padding:"16px 18px",marginBottom:16,position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:-20,right:-20,width:100,height:100,borderRadius:"50%",background:"radial-gradient(circle,rgba(16,185,129,.15),transparent)"}}/>
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
-            <span style={{background:"linear-gradient(135deg,#10b981,#059669)",borderRadius:6,padding:"2px 8px",fontWeight:800,fontSize:10,color:"#fff"}}>NEW</span>
-            <span style={{fontSize:11,color:"#6ee7b7",fontWeight:700,letterSpacing:1}}>EXCLUSIVE FEATURES</span>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:12}}>
-            {[
-              {icon:"🧠",label:"IQ Test"},
-              {icon:"🏥",label:"Health Check"},
-              {icon:"🤝",label:"Buddy System"},
-              {icon:"🌍",label:"Desi Network"},
-            ].map((f,i)=>(
-              <div key={i} style={{background:"rgba(255,255,255,.06)",borderRadius:10,padding:"8px 4px",textAlign:"center",border:"1px solid rgba(16,185,129,.2)"}}>
-                <div style={{fontSize:18,marginBottom:3}}>{f.icon}</div>
-                <div style={{fontWeight:600,fontSize:9,color:"#e2e8f0",lineHeight:1.3}}>{f.label}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{display:"flex",gap:8,marginBottom:8}}>
-            <Link href="/features" style={{flex:1,background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",boxShadow:"0 4px 14px rgba(16,185,129,.4)"}}>
-              ✨ Open Features
+        {/* Quick Links */}
+        <div style={{display:"flex",gap:8,marginBottom:14,overflowX:"auto",scrollbarWidth:"none"}}>
+          {[
+            {icon:"✨",label:"Features",href:"/features",color:"#6366f1",bg:"#eff6ff",border:"#c7d2fe"},
+            {icon:"🤖",label:"AI Chat",href:"/chat",color:"#10b981",bg:"#f0fdf4",border:"#6ee7b7"},
+            {icon:"📈",label:"Trade",href:"/trade",color:"#059669",bg:"#ecfdf5",border:"#6ee7b7"},
+            {icon:"📚",label:"Blog",href:"/blog",color:"#d97706",bg:"#fffbeb",border:"#fde68a"},
+          ].map((l,i)=>(
+            <Link key={i} href={l.href} style={{display:"flex",alignItems:"center",gap:5,flexShrink:0,background:l.bg,border:`1px solid ${l.border}`,borderRadius:20,padding:"7px 14px",fontSize:12,fontWeight:700,color:l.color,textDecoration:"none"}}>
+              {l.icon} {l.label}
             </Link>
-            <Link href="/arena" style={{flex:1,background:"rgba(255,255,255,.08)",color:"#e2e8f0",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(255,255,255,.15)"}}>
-              🏟️ Trading Arena
-            </Link>
-          </div>
-          <div style={{display:"flex",gap:8}}>
-            <Link href="/sikho" style={{flex:1,background:"rgba(99,102,241,.2)",color:"#a5b4fc",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(99,102,241,.3)"}}>
-              📚 Crypto Sikho
-            </Link>
-            <Link href="/market" style={{flex:1,background:"rgba(245,158,11,.15)",color:"#fbbf24",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(245,158,11,.3)"}}>
-              📊 Live Market
-            </Link>
-          </div>
-          <div style={{display:"flex",gap:8,marginTop:8}}>
-            <Link href="/radar" style={{flex:1,background:"rgba(239,68,68,.15)",color:"#fca5a5",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(239,68,68,.3)"}}>
-              🚨 Pump Radar
-            </Link>
-            <Link href="/trade" style={{flex:1,background:"rgba(16,185,129,.15)",color:"#6ee7b7",textDecoration:"none",borderRadius:12,padding:"10px",fontWeight:700,fontSize:12,textAlign:"center",border:"1px solid rgba(16,185,129,.3)"}}>
-              📈 Trade Manager
-            </Link>
-          </div>
-          {/* Whitepaper teaser */}
-          <Link href="/features?tab=whitepaper" style={{display:"block",textDecoration:"none",marginTop:8,background:"linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05))",border:"1px solid rgba(16,185,129,.3)",borderRadius:12,padding:"10px 14px"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:20}}>⏱️</span>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:12,color:"#10b981"}}>Whitepaper AI — 2-3 Ghante Bachao!</div>
-                <div style={{fontSize:10,color:"#64748b",marginTop:2}}>50-100 page whitepaper → 2 min summary → Smart decision</div>
-              </div>
-              <span style={{color:"#10b981",fontSize:14}}>→</span>
-            </div>
-          </Link>
+          ))}
         </div>
-        {/* ══════════════════════════════════════════════════════════════════ */}
+
         {activeTab==="analyze" && (
           <div className="fadein">
 
@@ -1458,316 +1422,7 @@ EXACT format (Hinglish):
               )}
             </div>
 
-                        {/* TOOLS divider */}
-            <div style={{position:"relative",margin:"8px 0 16px"}}>
-              <div style={{borderTop:"2px dashed #6ee7b7"}}/>
-              <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",background:"#f0fdf8",padding:"0 14px"}}>
-                <span style={{background:"linear-gradient(135deg,#10b981,#059669)",WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent",fontWeight:900,fontSize:13}}>✦ TOOLS ✦</span>
-              </div>
-            </div>
-
-
-            {/* What-If */}
-            {result&&(
-              <div className="hov" style={{...CARD}}>
-                <SH icon="💡" title="What-If Simulator" subtitle="Profit & loss scenarios" bg="linear-gradient(135deg,#eef2ff,#e0e7ff)" br="#c7d2fe"/>
-                <input value={investAmt} onChange={e=>setInvestAmt(e.target.value)} placeholder="Investment in $ (e.g. 500)" type="number"
-                  style={{...INP,marginBottom:10}} onFocus={e=>e.target.style.borderColor="#6366f1"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
-                {whatIf&&(
-                  <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:6}}>
-                    {whatIf.map((r,i)=>(
-                      <div key={i} style={{background:r.c2,border:`1px solid ${r.c3}`,borderRadius:10,padding:"10px 4px",textAlign:"center"}}>
-                        <div className="mono" style={{fontSize:11,color:r.c1,fontWeight:800}}>{r.label}</div>
-                        <div className="mono" style={{fontSize:11,color:"#0f172a",marginTop:3,fontWeight:700}}>${r.val}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-
-              </div>
-            {/* ── COMPARE COINS TOOL ── */}
-            <div className="hov" style={{...CARD}}>
-              <SH icon="⚔️" title="Coin vs Coin Compare" subtitle="2-4 coins compare karo — winner AI batayega" bg="linear-gradient(135deg,#f5f3ff,#ede9fe)" br="#c4b5fd"/>
-
-              {/* Coin inputs */}
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-                {compareList.map((coin,i)=>(
-                  <div key={i} style={{position:"relative"}}>
-                    <input
-                      value={coin}
-                      onChange={e=>{const n=[...compareList];n[i]=e.target.value.toUpperCase();setCompareList(n);}}
-                      placeholder={i<2?`Coin ${i+1} *`:`Coin ${i+1} (optional)`}
-                      style={{width:"100%",background:"#f8fafc",border:`2px solid ${coin?"#6366f1":"#e2e8f0"}`,borderRadius:12,padding:"10px 12px",fontSize:13,color:"#0f172a",boxSizing:"border-box"}}
-                      onFocus={e=>e.target.style.borderColor="#6366f1"} onBlur={e=>e.target.style.borderColor=coin?"#6366f1":"#e2e8f0"}/>
-                    {coin&&<div style={{position:"absolute",top:"50%",right:10,transform:"translateY(-50%)",fontSize:10,fontWeight:700,color:"#6366f1"}}>{coin}</div>}
-                  </div>
-                ))}
-              </div>
-
-              {/* Quick presets */}
-              <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
-                <div style={{fontSize:10,color:"#94a3b8",fontWeight:600,width:"100%",marginBottom:2}}>Quick Compare:</div>
-                {[["BTC","ETH"],["ETH","SOL"],["BTC","ETH","SOL"],["SOL","APT","INJ","SUI"]].map((preset,i)=>(
-                  <button key={i} onClick={()=>setCompareList([...preset,...Array(4-preset.length).fill("")])}
-                    style={{background:"#f5f3ff",border:"1px solid #c4b5fd",borderRadius:20,padding:"4px 10px",fontSize:10,color:"#6366f1",fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-                    {preset.join(" vs ")}
-                  </button>
-                ))}
-              </div>
-
-              <button className="btn" onClick={compareCoins}
-                disabled={compareLoad||compareList.filter(Boolean).length<2}
-                style={{width:"100%",padding:"12px",borderRadius:12,fontSize:13,
-                  background:compareLoad?"#64748b":"linear-gradient(135deg,#7c3aed,#6366f1)",
-                  boxShadow:"0 4px 14px rgba(99,102,241,.4)"}}>
-                {compareLoad?"⟳ Data Fetch Ho Raha Hai...":"⚔️ Compare Karo"}
-              </button>
-
-              {/* Loading skeleton */}
-              {compareLoad&&(
-                <div className="fadein" style={{marginTop:14}}>
-                  <div style={{background:"#f5f3ff",borderRadius:14,padding:"16px",marginBottom:10}}>
-                    <div style={{fontWeight:700,fontSize:12,color:"#6366f1",marginBottom:10}}>⏳ Analyzing...</div>
-                    {compareList.filter(Boolean).map((coin,i)=>(
-                      <div key={i} style={{marginBottom:10}}>
-                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                          <span style={{fontWeight:700,fontSize:12,color:"#4f46e5"}}>{coin}</span>
-                          <span style={{fontSize:10,color:"#94a3b8"}}>fetching...</span>
-                        </div>
-                        <div style={{display:"flex",gap:8}}>
-                          {["Price","Volume","Market Cap","Score"].map(l=>(
-                            <div key={l} style={{flex:1,background:"linear-gradient(90deg,#e2e8f0,#f1f5f9,#e2e8f0)",backgroundSize:"200% 100%",animation:"shimmer 1.5s infinite",borderRadius:8,height:36,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                              <span style={{fontSize:9,color:"#94a3b8"}}>{l}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                    <div style={{marginTop:8,fontSize:11,color:"#6366f1",textAlign:"center",fontWeight:600}}>
-                      {["🔍 Binance se price fetch...","📊 RSI calculate kar raha hai...","📅 Historical data...","🤖 AI verdict bana raha hai..."][Math.floor(Date.now()/1000)%4]}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Results */}
-              {compareData&&(
-                <div className="fadein" style={{marginTop:14}}>
-
-                  {/* 0. PRICE / VOLUME / MARKET CAP */}
-                  <div style={{overflowX:"auto",marginBottom:10}}>
-                    <div style={{display:"grid",gridTemplateColumns:`repeat(${compareData.results.length},1fr)`,gap:8,minWidth:compareData.results.length*140}}>
-                      {compareData.results.map((r,i)=>(
-                        <div key={r.coin} style={{background:i===0?"linear-gradient(135deg,#f5f3ff,#ede9fe)":"#fff",
-                          border:`2px solid ${i===0?"#6366f1":"#e2e8f0"}`,borderRadius:16,padding:"12px 10px",textAlign:"center"}}>
-                          {i===0&&<div style={{fontSize:9,color:"#6366f1",fontWeight:800,marginBottom:4}}>🏆 BEST SCORE</div>}
-                          <div className="mono" style={{fontSize:16,fontWeight:900,color:i===0?"#4f46e5":"#0f172a",marginBottom:6}}>{r.coin}</div>
-                          {/* Current Price */}
-                          <div style={{background:"#f8fafc",borderRadius:10,padding:"6px 4px",marginBottom:6}}>
-                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>💰 PRICE</div>
-                            <div className="mono" style={{fontSize:12,fontWeight:800,color:"#0f172a"}}>
-                              ${r.price>=1?r.price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}):r.price.toPrecision(4)}
-                            </div>
-                            <div style={{fontSize:10,fontWeight:700,color:parseFloat(r.ch24)>=0?"#059669":"#dc2626"}}>
-                              {parseFloat(r.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(r.ch24)).toFixed(1)}% 24h
-                            </div>
-                          </div>
-                          {/* Volume */}
-                          <div style={{background:"#f8fafc",borderRadius:10,padding:"6px 4px",marginBottom:6}}>
-                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>📊 VOLUME 24h</div>
-                            <div className="mono" style={{fontSize:11,fontWeight:700,color:"#2563eb"}}>
-                              ${r.vol>=1e9?(r.vol/1e9).toFixed(2)+"B":r.vol>=1e6?(r.vol/1e6).toFixed(1)+"M":(r.vol/1e3).toFixed(0)+"K"}
-                            </div>
-                          </div>
-                          {/* Market Cap */}
-                          <div style={{background:"#f8fafc",borderRadius:10,padding:"6px 4px",marginBottom:6}}>
-                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>🏦 MARKET CAP</div>
-                            <div className="mono" style={{fontSize:11,fontWeight:700,color:"#7c3aed"}}>
-                              {r.marketCap?`$${r.marketCap>=1e9?(r.marketCap/1e9).toFixed(1)+"B":(r.marketCap/1e6).toFixed(0)+"M"}`:"N/A"}
-                            </div>
-                            {r.mcapRank&&<div style={{fontSize:9,color:"#94a3b8"}}>Rank #{r.mcapRank}</div>}
-                          </div>
-                          {/* Score */}
-                          <div style={{background:i===0?"rgba(99,102,241,.15)":"#f8fafc",borderRadius:10,padding:"6px 4px"}}>
-                            <div style={{fontSize:9,color:"#94a3b8",fontWeight:600,marginBottom:2}}>🎯 SCORE</div>
-                            <div style={{fontSize:20,fontWeight:900,color:r.score>=65?"#059669":r.score>=50?"#d97706":"#dc2626"}}>{r.score}</div>
-                            <div style={{fontSize:9,color:"#94a3b8"}}>/100</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 1. VISUAL BAR CHART */}
-                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10}}>
-                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>📊 Score Comparison</div>
-                    {compareData.results.map((r,i)=>(
-                      <div key={r.coin} style={{marginBottom:8}}>
-                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                          <span style={{fontWeight:700,fontSize:12,color:i===0?"#4f46e5":"#0f172a"}}>{i===0?"🏆 ":""}{r.coin}</span>
-                          <span style={{fontWeight:800,fontSize:12,color:r.score>=65?"#059669":r.score>=50?"#d97706":"#dc2626"}}>{r.score}/100</span>
-                        </div>
-                        <div style={{background:"#f1f5f9",borderRadius:100,height:10,overflow:"hidden"}}>
-                          <div style={{height:"100%",borderRadius:100,
-                            width:`${r.score}%`,
-                            background:i===0?"linear-gradient(90deg,#6366f1,#4f46e5)":
-                              r.score>=65?"linear-gradient(90deg,#10b981,#059669)":
-                              r.score>=50?"linear-gradient(90deg,#f59e0b,#d97706)":"linear-gradient(90deg,#ef4444,#dc2626)",
-                            transition:"width 1s ease"}}/>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 2. CATEGORY STARS */}
-                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10,overflowX:"auto"}}>
-                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>⭐ Category Comparison</div>
-                    <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-                      <thead>
-                        <tr style={{borderBottom:"2px solid #f1f5f9"}}>
-                          <td style={{padding:"4px 6px",color:"#94a3b8",fontWeight:600}}>Category</td>
-                          {compareData.results.map(r=><td key={r.coin} style={{padding:"4px 6px",textAlign:"center",fontWeight:800,color:"#4f46e5"}}>{r.coin}</td>)}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[
-                          {label:"🛡️ Safety",key:"safetyScore"},
-                          {label:"🚀 Potential",key:"potentialScore"},
-                          {label:"💧 Liquidity",key:"liquidityScore"},
-                          {label:"📈 Trend",key:"trendScore"},
-                        ].map(cat=>(
-                          <tr key={cat.key} style={{borderBottom:"1px solid #f8fafc"}}>
-                            <td style={{padding:"6px 6px",color:"#475569",fontWeight:600}}>{cat.label}</td>
-                            {compareData.results.map(r=>(
-                              <td key={r.coin} style={{padding:"6px 6px",textAlign:"center"}}>
-                                {"⭐".repeat(r[cat.key])}{"☆".repeat(5-r[cat.key])}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* 3. RISK LEVEL METER */}
-                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10}}>
-                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>⚠️ Risk Level</div>
-                    {compareData.results.map(r=>{
-                      const riskColors=["","#10b981","#f59e0b","#ef4444","#dc2626"];
-                      const riskLabels=["","LOW RISK","MEDIUM","HIGH","VERY HIGH"];
-                      const riskEmoji=["","🟢","🟡","🟠","🔴"];
-                      return(
-                        <div key={r.coin} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
-                          <div style={{width:40,fontWeight:700,fontSize:11}}>{r.coin}</div>
-                          <div style={{flex:1,display:"flex",gap:3}}>
-                            {[1,2,3,4].map(n=>(
-                              <div key={n} style={{flex:1,height:8,borderRadius:4,
-                                background:n<=r.riskLevel?riskColors[r.riskLevel]:"#f1f5f9"}}/>
-                            ))}
-                          </div>
-                          <div style={{fontSize:10,fontWeight:700,color:riskColors[r.riskLevel],width:70,textAlign:"right"}}>
-                            {riskEmoji[r.riskLevel]} {riskLabels[r.riskLevel]}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* 4. ₹10,000 SIMULATOR */}
-                  <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:16,padding:"14px",marginBottom:10}}>
-                    <div style={{fontWeight:700,fontSize:12,color:"#059669",marginBottom:4}}>💰 ₹10,000 Aaj Invest Karo</div>
-                    <div style={{fontSize:10,color:"#94a3b8",marginBottom:10}}>30 din ke momentum ke basis pe estimate</div>
-                    {compareData.results.map((r,i)=>(
-                      <div key={r.coin} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-                        background:i===0?"rgba(16,185,129,.1)":"transparent",
-                        borderRadius:8,padding:"6px 8px",marginBottom:4}}>
-                        <div style={{fontWeight:700,fontSize:12}}>{i===0?"🏆 ":""}{r.coin}</div>
-                        <div style={{textAlign:"right"}}>
-                          <div style={{fontWeight:800,fontSize:13,
-                            color:r.projected10k>=10000?"#059669":"#dc2626"}}>
-                            ₹{r.projected10k.toLocaleString("en-IN")}
-                          </div>
-                          <div style={{fontSize:9,color:r.projected10k>=10000?"#10b981":"#ef4444"}}>
-                            {r.projected10k>=10000?"+":""}{((r.projected10k-10000)/100).toFixed(0)}%
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    <div style={{fontSize:9,color:"#94a3b8",marginTop:6}}>⚠️ Estimate only — not financial advice</div>
-                  </div>
-
-                  {/* 5. HISTORICAL COMPARISON */}
-                  <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"14px",marginBottom:10}}>
-                    <div style={{fontWeight:700,fontSize:12,color:"#4f46e5",marginBottom:10}}>📅 ₹10,000 Pehle Lagaya Hota To</div>
-                    {compareData.results.map((r,i)=>(
-                      <div key={r.coin} style={{marginBottom:8,padding:"8px",background:i===0?"#f5f3ff":"#f8fafc",borderRadius:10}}>
-                        <div style={{fontWeight:700,fontSize:12,marginBottom:4}}>{i===0?"🏆 ":""}{r.coin}</div>
-                        <div style={{display:"flex",gap:8}}>
-                          {r.hist90d&&(
-                            <div style={{flex:1,textAlign:"center",background:"#fff",borderRadius:8,padding:"5px"}}>
-                              <div style={{fontSize:9,color:"#94a3b8"}}>90 din pehle</div>
-                              <div style={{fontWeight:800,fontSize:12,color:r.hist90d>=10000?"#059669":"#dc2626"}}>
-                                ₹{r.hist90d.toLocaleString("en-IN")}
-                              </div>
-                            </div>
-                          )}
-                          {r.hist1y&&(
-                            <div style={{flex:1,textAlign:"center",background:"#fff",borderRadius:8,padding:"5px"}}>
-                              <div style={{fontSize:9,color:"#94a3b8"}}>1 saal pehle</div>
-                              <div style={{fontWeight:800,fontSize:12,color:r.hist1y>=10000?"#059669":"#dc2626"}}>
-                                ₹{r.hist1y.toLocaleString("en-IN")}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* 6. AI VERDICT + KAUNSA KHAREEDON */}
-                  {compareData.verdict&&(
-                    <div style={{background:"linear-gradient(135deg,#f5f3ff,#ede9fe)",border:"2px solid #6366f1",borderRadius:16,padding:"16px",marginBottom:10}}>
-                      <div style={{fontWeight:800,fontSize:14,color:"#4f46e5",marginBottom:12,display:"flex",alignItems:"center",gap:6}}>
-                        🤖 AI Verdict — <span style={{fontSize:11,fontWeight:400,color:"#7c3aed"}}>Poora Analysis</span>
-                      </div>
-                      {compareData.verdict.split("\n").filter(Boolean).map((line,i)=>{
-                        const isImportant = line.startsWith("🏆")||line.startsWith("🎯")||line.startsWith("🚀")||line.startsWith("💪");
-                        return(
-                          <div key={i} style={{
-                            fontSize:isImportant?13:12,
-                            color:"#1e1b4b",
-                            lineHeight:1.8,
-                            marginBottom:isImportant?8:4,
-                            fontWeight:isImportant?700:400,
-                            background:isImportant?"rgba(99,102,241,.08)":"transparent",
-                            borderRadius:isImportant?8:0,
-                            padding:isImportant?"6px 10px":"0 2px",
-                            borderLeft:isImportant?"3px solid #6366f1":"none",
-                          }}>
-                            {line}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Share */}
-                  <button onClick={()=>{
-                    const winner=compareData.results[0];
-                    const coins=compareData.results.map(r=>`${r.coin}(${r.score}/100)`).join(" vs ");
-                    const msg=`⚔️ Crypto Battle — YES YOU PRO\n\n${coins}\n\n🏆 Winner: ${winner.coin}\n\n${compareData.verdict.slice(0,250)}\n\nyesyoupro.com`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
-                  }} style={{width:"100%",background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
-                    📱 Dosto Ko Battle Share Karo
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Ad — end of analyze tab */}
+                                    {/* Ad — end of analyze tab */}
             <div style={{borderRadius:12,overflow:"hidden",textAlign:"center",background:"#fff",border:"1px solid #e2e8f0",padding:"4px",margin:"12px 0"}}>
               <div style={{fontSize:9,color:"#94a3b8",letterSpacing:1,marginBottom:2}}>ADVERTISEMENT</div>
               <ins className="adsbygoogle" style={{display:"block"}} data-ad-client="ca-pub-9884021055437527" data-ad-slot="AUTO" data-ad-format="auto" data-full-width-responsive="true"/>
