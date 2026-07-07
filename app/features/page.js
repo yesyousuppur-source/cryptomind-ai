@@ -12,6 +12,8 @@ const T = {
 const TAB_GROUPS = [
   {
     label: "🎓 Seekho",
+    level: "Beginner",
+    levelColor: "#059669",
     tabs: [
       { id:"iq",       icon:"🧠", label:"IQ Test"     },
       { id:"streak",   icon:"🔥", label:"Streak"       },
@@ -20,6 +22,8 @@ const TAB_GROUPS = [
   },
   {
     label: "🔧 Tools",
+    level: "Easy",
+    levelColor: "#059669",
     tabs: [
       { id:"tax",         icon:"🧾", label:"Tax Calc"    },
       { id:"dca",         icon:"📅", label:"DCA Planner" },
@@ -28,15 +32,27 @@ const TAB_GROUPS = [
     ]
   },
   {
-    label: "💹 Trader Tools",
+    label: "🛡️ Safety",
+    level: "Easy",
+    levelColor: "#059669",
     tabs: [
-      { id:"position",    icon:"🎯", label:"Position Size"  },
-      { id:"onchain",     icon:"🔍", label:"TX Explainer"   },
-      { id:"chartai",     icon:"📈", label:"Chart AI"       },
-      { id:"contract",    icon:"🔒", label:"Contract Scan"  },
+      { id:"rugpull",  icon:"🚨", label:"Rug Pull"   },
+      { id:"fomo",     icon:"😱", label:"FOMO Check"  },
     ]
   },
   {
+    label: "🎯 Timing",
+    level: "Medium",
+    levelColor: "#d97706",
+    tabs: [
+      { id:"entrytime", icon:"🎯", label:"Entry Finder"},
+      { id:"airdrop",   icon:"🪙", label:"Airdrops"   },
+    ]
+  },
+  {
+    label: "⚡ Time Savers",
+    level: "Medium",
+    levelColor: "#d97706",
     tabs: [
       { id:"quickresearch", icon:"🔬", label:"2-Min Research" },
       { id:"summarizer",    icon:"📝", label:"Summarizer"     },
@@ -45,22 +61,22 @@ const TAB_GROUPS = [
     ]
   },
   {
-    label: "🛡️ Safety",
+    label: "💹 Trader Tools",
+    level: "Advanced",
+    levelColor: "#dc2626",
     tabs: [
-      { id:"rugpull",  icon:"🚨", label:"Rug Pull"   },
-      { id:"fomo",     icon:"😱", label:"FOMO Check"  },
-    ]
-  },
-  {
-    label: "🎯 Timing",
-    tabs: [
-      { id:"entrytime", icon:"🎯", label:"Entry Finder"},
-      { id:"airdrop",   icon:"🪙", label:"Airdrops"   },
+      { id:"position",    icon:"🎯", label:"Position Size"  },
+      { id:"onchain",     icon:"🔍", label:"TX Explainer"   },
+      { id:"chartai",     icon:"📈", label:"Chart AI"       },
+      { id:"contract",    icon:"🔒", label:"Contract Scan"  },
     ]
   },
 ];
 
 const TABS = TAB_GROUPS.flatMap(g=>g.tabs);
+
+// Recommended tools for first-time users
+const RECOMMENDED = ["iq","tax","dca","rugpull"];
 
 // ── IQ TEST QUESTIONS ─────────────────────────────────────────────────────────
 const IQ_QUESTIONS = [
@@ -2416,6 +2432,8 @@ Keep it practical and honest. Hinglish mein likho.`})
 
 export default function FeaturesPage() {
   const [tab, setTab] = useState("iq");
+  const [openGroups, setOpenGroups] = useState({"🎓 Seekho": true});
+  const toggleGroup = (label) => setOpenGroups(prev => ({...prev, [label]: !prev[label]}));
 
   // IQ Test state
   const [iqScreen, setIqScreen]     = useState("intro"); // intro | quiz | result
@@ -2861,37 +2879,86 @@ Give response in this EXACT JSON format (no extra text):
         <div style={{ textAlign:"center", marginBottom:24 }}>
           <div style={{ display:"inline-flex", alignItems:"center", gap:8, background:"linear-gradient(135deg,#ecfdf5,#d1fae5)", border:"1px solid #6ee7b7", borderRadius:40, padding:"5px 16px", marginBottom:14 }}>
             <span style={{ fontSize:14 }}>✨</span>
-            <span className="mono" style={{ fontSize:10, color:T.greenDk, fontWeight:600, letterSpacing:2 }}>EXCLUSIVE FEATURES</span>
+            <span className="mono" style={{ fontSize:10, color:T.greenDk, fontWeight:600, letterSpacing:2 }}>ALL TOOLS</span>
           </div>
           <h1 style={{ fontSize:30, fontWeight:900, letterSpacing:-1.5, marginBottom:6, background:"linear-gradient(135deg,#0f172a,#10b981)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>
-            YYP Special Tools
+            YYP Features
           </h1>
-          <p style={{ fontSize:13, color:T.text3 }}>Duniya mein pehli baar — sirf YesYouPro pe</p>
+          <p style={{ fontSize:13, color:T.text3 }}>18 free tools — research se leke trading tak</p>
         </div>
 
-        {/* Grouped Tab Navigation */}
+        {/* 👋 NAYE HO? — Recommended box */}
+        <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"2px solid #6ee7b7",
+          borderRadius:16,padding:"14px 16px",marginBottom:16}}>
+          <div style={{fontWeight:800,fontSize:13,color:"#065f46",marginBottom:10}}>
+            👋 Naye ho? Yahan se shuru karo:
+          </div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {RECOMMENDED.map(id=>{
+              const t = TABS.find(x=>x.id===id);
+              if(!t) return null;
+              const parentGroup = TAB_GROUPS.find(g=>g.tabs.some(x=>x.id===id));
+              return(
+                <button key={id} onClick={()=>{setTab(id);if(parentGroup)setOpenGroups(p=>({...p,[parentGroup.label]:true}));}}
+                  style={{display:"flex",alignItems:"center",gap:6,padding:"9px 14px",
+                    borderRadius:20,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:700,
+                    fontSize:12,border:tab===id?"none":"1.5px solid #6ee7b7",
+                    background:tab===id?"linear-gradient(135deg,#10b981,#059669)":"#fff",
+                    color:tab===id?"#fff":"#059669",
+                    boxShadow:tab===id?"0 4px 12px rgba(16,185,129,.35)":"none"}}>
+                  <span style={{fontSize:15}}>{t.icon}</span>
+                  <span>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Grouped Tab Navigation — Collapsible with skill badges */}
         <div style={{marginBottom:16}}>
-          {TAB_GROUPS.map((group,gi)=>(
-            <div key={gi} style={{marginBottom:8}}>
-              <div style={{fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:1,marginBottom:5,paddingLeft:4}}>
-                {group.label}
+          <div style={{fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:1,marginBottom:8,paddingLeft:4}}>
+            YA SAB TOOLS DEKHO (category pe tap karo)
+          </div>
+          {TAB_GROUPS.map((group,gi)=>{
+            const isOpen = openGroups[group.label] ?? false;
+            const isActiveGroup = group.tabs.some(t=>t.id===tab);
+            return(
+              <div key={gi} style={{marginBottom:8,background:"#fff",borderRadius:14,
+                border:"1px solid #e2e8f0",overflow:"hidden"}}>
+                <button onClick={()=>toggleGroup(group.label)}
+                  style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",
+                    padding:"12px 14px",background:isActiveGroup?"#f0fdf4":"#fff",border:"none",
+                    cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{fontSize:13,fontWeight:800,color:"#0f172a"}}>{group.label}</span>
+                    <span style={{fontSize:9,fontWeight:700,color:group.levelColor,
+                      background:`${group.levelColor}15`,border:`1px solid ${group.levelColor}33`,
+                      borderRadius:20,padding:"2px 8px"}}>
+                      {group.level}
+                    </span>
+                  </div>
+                  <span style={{color:"#94a3b8",fontSize:14,transform:isOpen?"rotate(180deg)":"rotate(0deg)",
+                    transition:"transform .2s"}}>▼</span>
+                </button>
+                {isOpen&&(
+                  <div style={{display:"flex",gap:6,flexWrap:"wrap",padding:"0 14px 14px"}}>
+                    {group.tabs.map(t=>(
+                      <button key={t.id} onClick={()=>setTab(t.id)}
+                        style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",
+                          borderRadius:20,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:600,
+                          fontSize:12,transition:"all .15s",border:"none",
+                          background:tab===t.id?"linear-gradient(135deg,#10b981,#059669)":"#f8fafc",
+                          color:tab===t.id?"#fff":"#475569",
+                          boxShadow:tab===t.id?"0 4px 12px rgba(16,185,129,.35)":"none"}}>
+                        <span style={{fontSize:15}}>{t.icon}</span>
+                        <span>{t.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {group.tabs.map(t=>(
-                  <button key={t.id} onClick={()=>setTab(t.id)}
-                    style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",
-                      borderRadius:20,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:600,
-                      fontSize:12,transition:"all .15s",border:"none",
-                      background:tab===t.id?"linear-gradient(135deg,#10b981,#059669)":"#f8fafc",
-                      color:tab===t.id?"#fff":"#475569",
-                      boxShadow:tab===t.id?"0 4px 12px rgba(16,185,129,.35)":"none"}}>
-                    <span style={{fontSize:15}}>{t.icon}</span>
-                    <span>{t.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* AD — BELOW TAB BAR */}
