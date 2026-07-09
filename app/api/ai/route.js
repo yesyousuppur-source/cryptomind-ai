@@ -224,11 +224,24 @@ Format EXACTLY:
 Max 200 words. Keep it insightful and specific.` }];
     }
 
+    // ── NEW: CUSTOM PROMPT (used by Time Saver + Trader tools) ────────────────
+    else if (mode === "custom") {
+      const { prompt } = body;
+      if (!prompt || !prompt.trim()) {
+        return NextResponse.json({ text: "⚠️ Prompt khaali hai. Kuch likho pehle." });
+      }
+      messages = [{ role:"user", content: prompt }];
+    }
+
+    if (messages.length === 0) {
+      return NextResponse.json({ text: "📊 Analysis could not be completed.\n⚠️ Invalid request — mode not recognized." });
+    }
+
     const maxTokens = {
       screenshot: 600, explain: 500, explain_desi: 500,
       news_impact: 500, scam_ai: 450,
       iq_test: 600, health_checkup: 600, desi_network: 400,
-      compare: 800, fomo_detector: 600,
+      compare: 800, fomo_detector: 600, custom: 900,
     }[mode] || 500;
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -239,18 +252,22 @@ Max 200 words. Keep it insightful and specific.` }];
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5-20250929",
         max_tokens: maxTokens,
         messages,
       }),
     });
 
-    if (!response.ok) throw new Error("API failed");
+    if (!response.ok) {
+      const errBody = await response.text().catch(()=>"");
+      console.error("Anthropic API error:", response.status, errBody);
+      throw new Error(`API failed: ${response.status}`);
+    }
     const data = await response.json();
-    return NextResponse.json({ text: data.content?.[0]?.text || "Analysis complete." });
+    return NextResponse.json({ text: data.content?.[0]?.text || "Analysis complete.", reply: data.content?.[0]?.text || "Analysis complete." });
 
   } catch (err) {
-    console.error(err);
+    console.error("Route error:", err);
     return NextResponse.json({ text: "📊 Analysis could not be completed.\n⚠️ Please try again in a moment." });
   }
 }
