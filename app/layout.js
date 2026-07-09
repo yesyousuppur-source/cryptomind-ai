@@ -4,6 +4,14 @@ const GA_ID = "G-H7HXYRXTM7";
 const SITE_URL = "https://yesyoupro.com";
 const LOGO_URL = `${SITE_URL}/yyp_logo.gif`;
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0f172a",
+};
+
 export const metadata = {
   title: "YES YOU PRO — India Ka Free Crypto AI Tool",
   description: "AI-powered crypto analysis platform for Indian investors. Real-time BUY / SELL / HOLD signals. RSI, MACD, Bollinger Bands. 120+ coins. Bilkul free — koi signup nahi.",
@@ -98,6 +106,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
+        {/* Viewport — CRITICAL for mobile responsiveness */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"/>
+        <meta name="theme-color" content="#0f172a"/>
+        <meta name="mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-capable" content="yes"/>
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
         {/* Favicon — multiple formats */}
         <link rel="icon" href="/yyp_logo.gif" type="image/gif"/>
         <link rel="icon" href="/favicon.ico" sizes="any"/>
@@ -139,24 +154,71 @@ export default function RootLayout({ children }) {
         />
 
         <style>{`
-          body { margin: 0; padding-bottom: 68px; }
-          .yyp-bottom-nav {
-            position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
-            background: #ffffff; border-top: 1px solid #e2e8f0;
-            display: flex; align-items: stretch;
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.08); height: 60px;
+          * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+
+          html {
+            height: 100%;
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
           }
+
+          body {
+            margin: 0;
+            min-height: 100%;
+            /* Reserve space for fixed bottom nav + iOS safe area */
+            padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+            overscroll-behavior-y: none;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          /* Stable fixed nav — anchored to visual viewport bottom, handles iOS address-bar collapse without jumping */
+          .yyp-bottom-nav {
+            position: fixed;
+            left: 0; right: 0; bottom: 0;
+            z-index: 999;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            align-items: stretch;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+            height: 60px;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+            /* Prevents the nav from being pushed/squashed by mobile keyboard or browser chrome resize */
+            transform: translateZ(0);
+            will-change: transform;
+          }
+
           .yyp-nav-item {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            gap: 3px; text-decoration: none;
-            color: #94a3b8; font-family: 'Inter', sans-serif;
-            font-size: 9px; font-weight: 600;
-            border: none; background: transparent; cursor: pointer;
-            transition: color 0.15s; padding: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            text-decoration: none;
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            font-size: 9px;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            transition: color 0.15s;
+            padding: 0;
+            -webkit-user-select: none;
+            user-select: none;
           }
           .yyp-nav-item .nav-icon { font-size: 20px; line-height: 1; }
           .yyp-nav-item:active { opacity: 0.7; }
+
+          /* Prevent horizontal overflow / accidental zoom on any page */
+          img, svg { max-width: 100%; height: auto; }
+          input, textarea, select, button { font-size: 16px; } /* prevents iOS auto-zoom on focus */
+
+          @media (max-width: 380px) {
+            .yyp-nav-item { font-size: 8px; }
+            .yyp-nav-item .nav-icon { font-size: 18px; }
+          }
         `}</style>
       </head>
       <body>
