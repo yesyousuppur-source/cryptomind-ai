@@ -46,6 +46,7 @@ const TAB_GROUPS = [
     level: "Medium",
     levelColor: "#d97706",
     tabs: [
+      { id:"season",    icon:"🔄", label:"Coin Season" },
       { id:"entrytime", icon:"🎯", label:"Entry Finder"},
       { id:"airdrop",   icon:"🪙", label:"Airdrops"   },
     ]
@@ -1070,6 +1071,605 @@ function RugPullDetector(){
   );
 }
 
+
+// ═══════════════════════════════════════════════════════
+// 🔄 COIN SEASON / ROTATION PATTERN — Which coin follows which
+// ═══════════════════════════════════════════════════════
+function CoinSeason(){
+  const [subTab,setSubTab] = useState("rotation"); // rotation | altseason | pair | monthly
+  const [loading,setLoading] = useState(false);
+  const [data,setData] = useState(null);
+  const [err,setErr] = useState("");
+
+  // Sectors with typical rotation order (BTC leads, then majors, then alts, then meme)
+  const SECTOR_COINS = {
+    "Bitcoin":["BTC"],
+    "Large Cap":["ETH","BNB","SOL","XRP"],
+    "Layer 1/2":["AVAX","ARB","OP","APT","SUI","INJ"],
+    "DeFi":["UNI","AAVE","RUNE","CAKE"],
+    "Meme":["DOGE","PEPE","WIF","BONK"],
+  };
+
+  const analyze = async () => {
+    setLoading(true); setErr(""); setData(null);
+    try {
+      const allCoins = Object.values(SECTOR_COINS).flat();
+      const syms = JSON.stringify(allCoins.map(c=>c+"USDT"));
+      const r = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbols=${syms}`,{signal:AbortSignal.timeout(10000)});
+      if(!r.ok) throw new Error("Data fetch fail hua");
+      const tickers = await r.json();
+      const tMap = {};
+      tickers.forEach(t=>{ tMap[t.symbol.replace("USDT","")] = {
+        ch24: parseFloat(t.priceChangePercent),
+        vol: parseFloat(t.quoteVolume),
+        price: parseFloat(t.lastPrice),
+      };});
+
+      // Fetch 7-day klines for each coin to compute lag correlation vs BTC
+      const klineResults = await Promise.allSettled(
+        allCoins.map(c => fetch(`https://api.binance.com/api/v3/klines?symbol=${c}USDT&interval=4h&limit=42`,{signal:AbortSignal.timeout(8000)}).then(r=>r.ok?r.json():[]))
+      );
+      const closesMap = {};
+      allCoins.forEach((c,i)=>{
+        const kl = klineResults[i]?.status==="fulfilled" ? klineResults[i].value : [];
+        closesMap[c] = Array.isArray(kl) ? kl.map(k=>parseFloat(k[4])) : [];
+      });
+
+      // Compute % change series for each coin
+      const pctSeries = {};
+      allCoins.forEach(c=>{
+        const cl = closesMap[c];
+        if(cl.length<10){ pctSeries[c]=[]; return; }
+        const series=[];
+        for(let i=1;i<cl.length;i++) series.push((cl[i]-cl[i-1])/cl[i-1]*100);
+        pctSeries[c]=series;
+      });
+
+      // Find best lag (0-3 periods = 0-12h) where coin's move correlates with BTC's PAST move
+      const btcSeries = pctSeries["BTC"]||[];
+      const lagResults = allCoins.filter(c=>c!=="BTC").map(c=>{
+        const s = pctSeries[c]||[];
+        if(s.length<10||btcSeries.length<10) return {coin:c,bestLag:0,corr:0,followsBTC:false};
+        let bestLag=0, bestCorr=-2;
+        for(let lag=0; lag<=4; lag++){
+          // correlate btc[t-lag] with coin[t]
+          let sum=0,cnt=0;
+          for(let t=lag; t<Math.min(s.length,btcSeries.length); t++){
+            sum += Math.sign(btcSeries[t-lag]) === Math.sign(s[t]) ? 1 : -1;
+            cnt++;
+          }
+          const corr = cnt>0 ? sum/cnt : 0;
+          if(corr>bestCorr){bestCorr=corr;bestLag=lag;}
+        }
+        return {coin:c, bestLag, corr:bestCorr, followsBTC: bestCorr>0.3};
+      });
+
+      // Sector momentum: which sector is hottest right now (avg 24h change)
+      const sectorMomentum = Object.entries(SECTOR_COINS).map(([sector,coins])=>{
+        const vals = coins.map(c=>tMap[c]?.ch24).filter(v=>v!==undefined);
+        const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+        return {sector, avg, coins};
+      }).sort((a,b)=>b.avg-a.avg);
+
+      // Rotation prediction: coins that historically lag BTC by 1-2 periods (4-8h) and haven't moved yet
+      const btcCh24 = tMap["BTC"]?.ch24 || 0;
+      const rotationCandidates = lagResults
+        .filter(r=>r.followsBTC && r.bestLag>=1 && r.bestLag<=3)
+        .map(r=>({...r, ch24: tMap[r.coin]?.ch24||0, price: tMap[r.coin]?.price||0}))
+        .sort((a,b)=>b.corr-a.corr)
+        .slice(0,5);
+
+      setData({
+        btcCh24,
+        sectorMomentum,
+        rotationCandidates,
+        lagResults: lagResults.sort((a,b)=>b.corr-a.corr),
+        updatedAt: new Date().toISOString(),
+      });
+    } catch(e){ setErr(e.message||"Kuch error aaya"); }
+    setLoading(false);
+  };
+
+  useEffect(()=>{ if(subTab==="rotation") analyze(); },[]);
+
+  // ═══ ALT SEASON INDEX ═══
+  const [altData,setAltData] = useState(null);
+  const [altLoading,setAltLoading] = useState(false);
+  const fetchAltSeason = async () => {
+    setAltLoading(true); setErr("");
+    try{
+      const r = await fetch("https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&price_change_percentage=90d&sparkline=false",{signal:AbortSignal.timeout(12000)});
+      if(!r.ok) throw new Error("CoinGecko data fetch fail hua");
+      const coins = await r.json();
+      const btc = coins.find(c=>c.symbol==="btc");
+      const btcPerf = btc?.price_change_percentage_90d_in_currency || 0;
+      const others = coins.filter(c=>c.symbol!=="btc" && !["usdt","usdc","dai","busd","steth","wbtc"].includes(c.symbol));
+      const outperformed = others.filter(c => (c.price_change_percentage_90d_in_currency||-999) > btcPerf);
+      const pct = others.length ? (outperformed.length/others.length*100) : 0;
+
+      let season, seasonColor, seasonDesc;
+      if(pct>=75){season="🚀 ALTCOIN SEASON";seasonColor="#059669";seasonDesc="Alts BTC se better perform kar rahe hain — paisa altcoins mein rotate ho raha hai";}
+      else if(pct>=50){season="⚖️ MIXED — Alt Leaning";seasonColor="#10b981";seasonDesc="Alts thoda better perform kar rahe hain, lekin clear season nahi";}
+      else if(pct>=25){season="⚖️ MIXED — BTC Leaning";seasonColor="#d97706";seasonDesc="BTC zyada strong hai, alts struggle kar rahe hain";}
+      else{season="₿ BITCOIN SEASON";seasonColor="#dc2626";seasonDesc="BTC dominance high hai — alts underperform kar rahe hain";}
+
+      setAltData({pct:pct.toFixed(0), btcPerf:btcPerf.toFixed(1), season, seasonColor, seasonDesc,
+        topPerformers: [...others].sort((a,b)=>(b.price_change_percentage_90d_in_currency||0)-(a.price_change_percentage_90d_in_currency||0)).slice(0,5),
+        updatedAt: new Date().toISOString()});
+    }catch(e){ setErr(e.message||"Error aaya"); }
+    setAltLoading(false);
+  };
+
+  // ═══ CUSTOM PAIR LAG ═══
+  const [coinA,setCoinA] = useState("BTC");
+  const [coinB,setCoinB] = useState("SOL");
+  const [pairData,setPairData] = useState(null);
+  const [pairLoading,setPairLoading] = useState(false);
+  const fetchPairLag = async () => {
+    const a = coinA.trim().toUpperCase(), b = coinB.trim().toUpperCase();
+    if(!a||!b||a===b){ setErr("2 alag coins daalo"); return; }
+    setPairLoading(true); setErr(""); setPairData(null);
+    try{
+      const [ra,rb] = await Promise.all([
+        fetch(`https://api.binance.com/api/v3/klines?symbol=${a}USDT&interval=4h&limit=60`,{signal:AbortSignal.timeout(8000)}),
+        fetch(`https://api.binance.com/api/v3/klines?symbol=${b}USDT&interval=4h&limit=60`,{signal:AbortSignal.timeout(8000)}),
+      ]);
+      if(!ra.ok||!rb.ok) throw new Error(`"${!ra.ok?a:b}" Binance pe nahi mila`);
+      const klA = await ra.json(), klB = await rb.json();
+      const closesA = klA.map(k=>parseFloat(k[4])), closesB = klB.map(k=>parseFloat(k[4]));
+      const pctA=[],pctB=[];
+      for(let i=1;i<closesA.length;i++) pctA.push((closesA[i]-closesA[i-1])/closesA[i-1]*100);
+      for(let i=1;i<closesB.length;i++) pctB.push((closesB[i]-closesB[i-1])/closesB[i-1]*100);
+
+      const testLag = (leader,follower,maxLag=4) => {
+        let bestLag=0,bestCorr=-2;
+        for(let lag=0;lag<=maxLag;lag++){
+          let sum=0,cnt=0;
+          for(let t=lag;t<Math.min(leader.length,follower.length);t++){
+            sum += Math.sign(leader[t-lag])===Math.sign(follower[t]) ? 1 : -1;
+            cnt++;
+          }
+          const corr = cnt>0?sum/cnt:0;
+          if(corr>bestCorr){bestCorr=corr;bestLag=lag;}
+        }
+        return {bestLag,corr:bestCorr};
+      };
+
+      const aLeadsB = testLag(pctA,pctB);
+      const bLeadsA = testLag(pctB,pctA);
+      const winner = aLeadsB.corr > bLeadsA.corr ? {leader:a,follower:b,...aLeadsB} : {leader:b,follower:a,...bLeadsA};
+
+      setPairData({a,b,aLeadsB,bLeadsA,winner,updatedAt:new Date().toISOString()});
+    }catch(e){ setErr(e.message||"Error aaya"); }
+    setPairLoading(false);
+  };
+
+  // ═══ MONTHLY SEASONALITY ═══
+  const [seasonCoin,setSeasonCoin] = useState("BTC");
+  const [monthlyData,setMonthlyData] = useState(null);
+  const [monthlyLoading,setMonthlyLoading] = useState(false);
+  const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const fetchMonthlySeasonality = async () => {
+    const sym = seasonCoin.trim().toUpperCase();
+    if(!sym){ setErr("Coin naam daalo"); return; }
+    setMonthlyLoading(true); setErr(""); setMonthlyData(null);
+    try{
+      const r = await fetch(`https://api.binance.com/api/v3/klines?symbol=${sym}USDT&interval=1M&limit=48`,{signal:AbortSignal.timeout(10000)});
+      if(!r.ok) throw new Error(`"${sym}" Binance pe nahi mila`);
+      const kl = await r.json();
+      if(kl.length<12) throw new Error("Kaafi data nahi hai is coin ka");
+
+      const monthBuckets = {};
+      kl.forEach(k=>{
+        const open=parseFloat(k[1]), close=parseFloat(k[4]);
+        const change = (close-open)/open*100;
+        const monthIdx = new Date(parseInt(k[0])).getUTCMonth();
+        if(!monthBuckets[monthIdx]) monthBuckets[monthIdx]={sum:0,count:0};
+        monthBuckets[monthIdx].sum+=change;
+        monthBuckets[monthIdx].count++;
+      });
+
+      const monthStats = Object.entries(monthBuckets).map(([idx,v])=>({
+        month: MONTH_NAMES[parseInt(idx)],
+        avg: v.sum/v.count,
+        count: v.count,
+      })).sort((a,b)=>b.avg-a.avg);
+
+      setMonthlyData({monthStats, sym, yearsOfData: (kl.length/12).toFixed(1), updatedAt:new Date().toISOString()});
+    }catch(e){ setErr(e.message||"Error aaya"); }
+    setMonthlyLoading(false);
+  };
+
+  const SUB_TABS = [
+    {id:"rotation",  icon:"🔄", label:"Rotation"},
+    {id:"altseason", icon:"🌊", label:"Alt Season"},
+    {id:"pair",      icon:"⚔️", label:"Pair Lag"},
+    {id:"monthly",   icon:"📅", label:"Monthly"},
+  ];
+
+  const lagLabel = (lag) => lag===0 ? "Same time" : `~${lag*4}h baad`;
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:6}}>🔄</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Coin Season / Rotation</h2>
+        <p style={{fontSize:13,color:T.text2}}>BTC pump ke baad kaunsa coin follow karta hai — real data se</p>
+        <div style={{display:"inline-block",background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 12px",fontSize:10,color:"#059669",fontWeight:700,marginTop:6}}>
+          ✅ Real Binance 4h candles — Pattern Analysis
+        </div>
+      </div>
+
+      <GuideBox emoji="🔄" title="Coin Season / Rotation"
+        steps={[
+          "4 alag analysis modes hain — upar se choose karo",
+          "Rotation: BTC ke baad kaunsa coin follow karta hai",
+          "Alt Season: Abhi altcoins season hai ya Bitcoin season",
+          "Pair Lag: Koi bhi 2 coins ka relationship check karo",
+          "Monthly: Coin ka har mahine ka historical pattern"
+        ]}
+        tip="Yeh 'money rotation' pattern hai — bade investors pehle BTC mein paisa lagate hain, phir profit ETH/L1 mein rotate karte hain, fir Alts, fir Meme coins."
+      />
+      <AD/>
+
+      {/* Sub-tab navigation */}
+      <div style={{display:"flex",gap:6,marginBottom:14,overflowX:"auto",scrollbarWidth:"none"}}>
+        {SUB_TABS.map(st=>(
+          <button key={st.id} onClick={()=>{setSubTab(st.id);setErr("");}}
+            style={{display:"flex",alignItems:"center",gap:5,padding:"9px 14px",flexShrink:0,
+              borderRadius:20,cursor:"pointer",fontFamily:"'Inter',sans-serif",fontWeight:700,
+              fontSize:12,border:"none",
+              background:subTab===st.id?"linear-gradient(135deg,#10b981,#059669)":"#f8fafc",
+              color:subTab===st.id?"#fff":"#475569",
+              boxShadow:subTab===st.id?"0 4px 12px rgba(16,185,129,.35)":"none"}}>
+            <span style={{fontSize:15}}>{st.icon}</span>
+            <span>{st.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {err&&<div style={{fontSize:11,color:"#ef4444",marginBottom:10,textAlign:"center"}}>⚠️ {err}</div>}
+
+      {/* ═══ ROTATION SUB-TAB ═══ */}
+      {subTab==="rotation" && (
+      <>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <button onClick={analyze} disabled={loading}
+          style={{width:"100%",background:loading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+          {loading?"⟳ 20+ coins ka pattern analyze ho raha hai...":"🔄 Rotation Pattern Refresh Karo"}
+        </button>
+        {err&&<div style={{fontSize:11,color:"#ef4444",marginTop:8}}>⚠️ {err}</div>}
+      </div>
+
+      {loading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"28px",textAlign:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>BTC vs 20+ coins correlation nikal rahe hain...</div>
+          <div style={{fontSize:11,color:"#94a3b8"}}>4-hour candles · 7 din ka data · Lag analysis</div>
+        </div>
+      )}
+
+      {data&&!loading&&(
+        <div className="fadein">
+          {/* BTC status */}
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:14,padding:"14px 16px",marginBottom:12,display:"flex",alignItems:"center",gap:12}}>
+            <div style={{fontSize:28}}>₿</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:11,color:"rgba(255,255,255,.5)"}}>Bitcoin 24h (Rotation ka source)</div>
+              <div style={{fontSize:18,fontWeight:900,color:data.btcCh24>=0?"#10b981":"#ef4444"}}>
+                {data.btcCh24>=0?"▲":"▼"} {Math.abs(data.btcCh24).toFixed(2)}%
+              </div>
+            </div>
+          </div>
+
+          {/* Sector Momentum */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📊 Sector Momentum (abhi kaun hot hai)</div>
+            {data.sectorMomentum.map((s,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,
+                padding:"8px 10px",borderRadius:8,
+                background:i===0?"#ecfdf5":"transparent",
+                border:i===0?"1px solid #6ee7b7":"1px solid #f1f5f9"}}>
+                <div style={{fontWeight:700,fontSize:12,width:90,flexShrink:0,color:i===0?"#059669":"#0f172a"}}>
+                  {i===0&&"🔥 "}{s.sector}
+                </div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:6,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:100,
+                    background:s.avg>=0?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",
+                    width:`${Math.min(100,Math.abs(s.avg)*10+10)}%`}}/>
+                </div>
+                <div style={{width:60,fontSize:11,fontWeight:700,textAlign:"right",color:s.avg>=0?"#059669":"#dc2626"}}>
+                  {s.avg>=0?"+":""}{s.avg.toFixed(2)}%
+                </div>
+              </div>
+            ))}
+            <div style={{fontSize:10,color:"#94a3b8",marginTop:8}}>
+              Money typically BTC → Large Cap → L1/L2 → DeFi → Meme is order mein rotate hota hai
+            </div>
+          </div>
+
+          {/* Rotation Candidates */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:4}}>🎯 Rotation Candidates</div>
+            <div style={{fontSize:10,color:"#94a3b8",marginBottom:10}}>
+              Yeh coins historically BTC ko follow karte hain — agar BTC abhi pump hua hai toh yeh next rotate ho sakte hain
+            </div>
+            {data.rotationCandidates.length>0 ? data.rotationCandidates.map((r,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,
+                padding:"10px 12px",borderRadius:10,background:"#f0fdf4",border:"1px solid #6ee7b7"}}>
+                <div style={{width:36,height:36,borderRadius:"50%",background:"#10b981",color:"#fff",
+                  display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:12,fontFamily:"'JetBrains Mono',monospace",flexShrink:0}}>
+                  {r.coin}
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#0f172a"}}>
+                    BTC follow karta hai — {lagLabel(r.bestLag)}
+                  </div>
+                  <div style={{fontSize:10,color:"#059669"}}>
+                    Pattern confidence: {(r.corr*100).toFixed(0)}% · Current 24h: {r.ch24>=0?"+":""}{r.ch24.toFixed(1)}%
+                  </div>
+                </div>
+                <div style={{textAlign:"right",flexShrink:0}}>
+                  <div style={{fontSize:9,color:"#94a3b8"}}>Price</div>
+                  <div style={{fontSize:11,fontWeight:800,fontFamily:"'JetBrains Mono',monospace"}}>${r.price<1?r.price.toFixed(4):r.price.toFixed(2)}</div>
+                </div>
+              </div>
+            )) : (
+              <div style={{fontSize:12,color:"#94a3b8",textAlign:"center",padding:"12px 0"}}>
+                Abhi strong rotation pattern nahi mila — market sideways ho sakta hai
+              </div>
+            )}
+          </div>
+
+          {/* Full correlation table */}
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📋 Sab Coins Ka BTC Correlation</div>
+            {data.lagResults.slice(0,10).map((r,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:5,fontSize:11}}>
+                <div style={{width:44,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:"#475569"}}>{r.coin}</div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:5,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:100,
+                    background:r.followsBTC?"#10b981":"#cbd5e1",
+                    width:`${Math.max(0,r.corr*100)}%`}}/>
+                </div>
+                <div style={{width:70,textAlign:"right",color:r.followsBTC?"#059669":"#94a3b8",fontWeight:600}}>
+                  {r.followsBTC?`${lagLabel(r.bestLag)}`:"Weak link"}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:10,padding:"10px 14px",fontSize:11,color:"#92400e",lineHeight:1.7}}>
+            ⚠️ Yeh statistical pattern hai, guarantee nahi. Market conditions badalte rehte hain — DYOR aur risk management zaroori hai.
+          </div>
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",marginTop:8}}>
+            🕐 {new Date(data.updatedAt).toLocaleTimeString("en-IN")} · Real Binance data
+          </div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* ═══ ALT SEASON SUB-TAB ═══ */}
+      {subTab==="altseason" && (
+      <>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <p style={{fontSize:12,color:"#64748b",marginBottom:12,lineHeight:1.7}}>
+          Top 50 coins mein se kitne %, pichle 90 din mein Bitcoin se better perform kiye — yeh decide karta hai abhi "Altcoin Season" hai ya "Bitcoin Season"
+        </p>
+        <button onClick={fetchAltSeason} disabled={altLoading}
+          style={{width:"100%",background:altLoading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:altLoading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+          {altLoading?"⟳ Top 50 coins check ho rahe hain...":"🌊 Alt Season Index Check Karo"}
+        </button>
+      </div>
+
+      {altLoading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"28px",textAlign:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:700,fontSize:13}}>Top 50 coins ka 90-din performance nikal rahe hain...</div>
+        </div>
+      )}
+
+      {altData&&!altLoading&&(
+        <div className="fadein">
+          <div style={{background:`linear-gradient(135deg,${altData.seasonColor}15,${altData.seasonColor}05)`,border:`2px solid ${altData.seasonColor}`,borderRadius:16,padding:"24px",marginBottom:14,textAlign:"center"}}>
+            <div style={{fontSize:32,fontWeight:900,color:altData.seasonColor,marginBottom:6,fontFamily:"'JetBrains Mono',monospace"}}>
+              {altData.pct}/100
+            </div>
+            <div style={{fontSize:16,fontWeight:900,color:altData.seasonColor,marginBottom:8}}>
+              {altData.season}
+            </div>
+            <p style={{fontSize:12,color:"#475569",lineHeight:1.6}}>{altData.seasonDesc}</p>
+            <div style={{marginTop:12,background:"#f1f5f9",borderRadius:100,height:10,overflow:"hidden",position:"relative"}}>
+              <div style={{position:"absolute",left:"25%",top:0,bottom:0,width:1,background:"#94a3b8"}}/>
+              <div style={{position:"absolute",left:"75%",top:0,bottom:0,width:1,background:"#94a3b8"}}/>
+              <div style={{height:"100%",borderRadius:100,background:altData.seasonColor,width:`${altData.pct}%`,transition:"width 1s ease"}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:9,color:"#94a3b8"}}>
+              <span>₿ BTC Season</span><span>🚀 Alt Season</span>
+            </div>
+          </div>
+
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>🏆 Top 5 Outperformers (vs BTC, 90 din)</div>
+            {altData.topPerformers.map((c,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                <div style={{width:24,height:24,borderRadius:"50%",background:"#f0fdf4",border:"1px solid #6ee7b7",display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:"#059669",flexShrink:0}}>{i+1}</div>
+                <div style={{flex:1,fontSize:12,fontWeight:700,color:"#0f172a"}}>{c.name} <span style={{color:"#94a3b8",fontWeight:500}}>({c.symbol.toUpperCase()})</span></div>
+                <div style={{fontSize:12,fontWeight:800,color:"#059669"}}>+{(c.price_change_percentage_90d_in_currency||0).toFixed(1)}%</div>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center"}}>🕐 {new Date(altData.updatedAt).toLocaleTimeString("en-IN")} · CoinGecko data</div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* ═══ PAIR LAG SUB-TAB ═══ */}
+      {subTab==="pair" && (
+      <>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <p style={{fontSize:12,color:"#64748b",marginBottom:12,lineHeight:1.7}}>
+          Koi bhi 2 coins choose karo — dekho kaun kisko historically follow karta hai (sirf BTC nahi, koi bhi combination!)
+        </p>
+        <div style={{display:"grid",gridTemplateColumns:"1fr auto 1fr",gap:8,alignItems:"center",marginBottom:12}}>
+          <input value={coinA} onChange={e=>setCoinA(e.target.value.toUpperCase())}
+            style={{background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px",
+              fontSize:16,fontWeight:800,fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",textAlign:"center"}}
+            onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+          <span style={{fontSize:16,color:"#94a3b8"}}>⚔️</span>
+          <input value={coinB} onChange={e=>setCoinB(e.target.value.toUpperCase())}
+            style={{background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"12px",
+              fontSize:16,fontWeight:800,fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",textAlign:"center"}}
+            onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+        </div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
+          {[["BTC","SOL"],["ETH","ARB"],["SOL","WIF"],["BTC","DOGE"]].map(([x,y],i)=>(
+            <button key={i} onClick={()=>{setCoinA(x);setCoinB(y);}}
+              style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"4px 12px",
+                fontSize:11,color:"#059669",fontWeight:600,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+              {x} vs {y}
+            </button>
+          ))}
+        </div>
+        <button onClick={fetchPairLag} disabled={pairLoading}
+          style={{width:"100%",background:pairLoading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:pairLoading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+          {pairLoading?"⟳ Compare ho raha hai...":"⚔️ Rotation Compare Karo"}
+        </button>
+      </div>
+
+      {pairLoading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"28px",textAlign:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:700,fontSize:13}}>{coinA} aur {coinB} ka pattern compare ho raha hai...</div>
+        </div>
+      )}
+
+      {pairData&&!pairLoading&&(
+        <div className="fadein">
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:16,padding:"20px",marginBottom:14,textAlign:"center"}}>
+            <div style={{fontSize:13,color:"rgba(255,255,255,.6)",marginBottom:8}}>Result</div>
+            {pairData.winner.corr>0.15 ? (
+              <>
+                <div style={{fontSize:18,fontWeight:900,color:"#10b981",marginBottom:4}}>
+                  {pairData.winner.leader} leads → {pairData.winner.follower} follows
+                </div>
+                <div style={{fontSize:12,color:"rgba(255,255,255,.7)"}}>
+                  {pairData.winner.bestLag===0?"Same time move karte hain":`${pairData.winner.follower} typically ${pairData.winner.bestLag*4}h baad follow karta hai`}
+                </div>
+                <div style={{fontSize:11,color:"#6ee7b7",marginTop:6}}>Confidence: {(pairData.winner.corr*100).toFixed(0)}%</div>
+              </>
+            ):(
+              <div style={{fontSize:14,color:"#fbbf24"}}>Koi strong lag pattern nahi mila — dono independent move karte hain</div>
+            )}
+          </div>
+
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+              <div style={{background:"#f8fafc",borderRadius:10,padding:"12px",textAlign:"center"}}>
+                <div style={{fontSize:10,color:"#94a3b8",marginBottom:4}}>{pairData.a} → {pairData.b}</div>
+                <div style={{fontSize:16,fontWeight:800,color:"#0f172a"}}>{(pairData.aLeadsB.corr*100).toFixed(0)}%</div>
+                <div style={{fontSize:9,color:"#94a3b8"}}>Lag: {pairData.aLeadsB.bestLag*4}h</div>
+              </div>
+              <div style={{background:"#f8fafc",borderRadius:10,padding:"12px",textAlign:"center"}}>
+                <div style={{fontSize:10,color:"#94a3b8",marginBottom:4}}>{pairData.b} → {pairData.a}</div>
+                <div style={{fontSize:16,fontWeight:800,color:"#0f172a"}}>{(pairData.bLeadsA.corr*100).toFixed(0)}%</div>
+                <div style={{fontSize:9,color:"#94a3b8"}}>Lag: {pairData.bLeadsA.bestLag*4}h</div>
+              </div>
+            </div>
+          </div>
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center"}}>🕐 {new Date(pairData.updatedAt).toLocaleTimeString("en-IN")} · Real Binance data</div>
+        </div>
+      )}
+      </>
+      )}
+
+      {/* ═══ MONTHLY SEASONALITY SUB-TAB ═══ */}
+      {subTab==="monthly" && (
+      <>
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <p style={{fontSize:12,color:"#64748b",marginBottom:12,lineHeight:1.7}}>
+          Coin ka har calendar month mein historical average performance — kaunsa mahina strong raha hai, kaunsa weak
+        </p>
+        <input value={seasonCoin} onChange={e=>setSeasonCoin(e.target.value.toUpperCase())}
+          style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,padding:"13px 16px",
+            fontSize:18,fontWeight:900,fontFamily:"'JetBrains Mono',monospace",color:"#0f172a",boxSizing:"border-box",marginBottom:8}}
+          onFocus={e=>e.target.style.borderColor="#10b981"} onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:12}}>
+          {["BTC","ETH","SOL","BNB","XRP","DOGE"].map(c=>(
+            <button key={c} onClick={()=>setSeasonCoin(c)}
+              style={{background:seasonCoin===c?"#10b981":"#f8fafc",color:seasonCoin===c?"#fff":"#475569",
+                border:`1.5px solid ${seasonCoin===c?"#10b981":"#e2e8f0"}`,borderRadius:20,padding:"4px 11px",
+                fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'JetBrains Mono',monospace"}}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <button onClick={fetchMonthlySeasonality} disabled={monthlyLoading}
+          style={{width:"100%",background:monthlyLoading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:monthlyLoading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+          {monthlyLoading?"⟳ Historical months check ho rahe hain...":"📅 Monthly Pattern Dekho"}
+        </button>
+      </div>
+
+      {monthlyLoading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"28px",textAlign:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:700,fontSize:13}}>{seasonCoin} ka {"4 saal"} ka monthly data nikal rahe hain...</div>
+        </div>
+      )}
+
+      {monthlyData&&!monthlyLoading&&(
+        <div className="fadein">
+          <div style={{background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:10,padding:"8px 14px",marginBottom:12,textAlign:"center"}}>
+            <span style={{fontSize:11,color:"#059669",fontWeight:700}}>✅ {monthlyData.sym} · ~{monthlyData.yearsOfData} saal ka data</span>
+          </div>
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"14px",marginBottom:12}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10}}>📅 Month-wise Average Performance</div>
+            {monthlyData.monthStats.map((m,i)=>(
+              <div key={i} style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,
+                padding:"6px 8px",borderRadius:8,
+                background:i===0?"#ecfdf5":i===monthlyData.monthStats.length-1?"#fef2f2":"transparent"}}>
+                <div style={{width:36,fontSize:11,fontWeight:700,color:"#0f172a",flexShrink:0}}>
+                  {i===0&&"🏆 "}{m.month}
+                </div>
+                <div style={{flex:1,background:"#f1f5f9",borderRadius:100,height:6,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:100,
+                    background:m.avg>=0?"linear-gradient(90deg,#10b981,#34d399)":"linear-gradient(90deg,#ef4444,#f87171)",
+                    width:`${Math.min(100,Math.abs(m.avg)*3+10)}%`}}/>
+                </div>
+                <div style={{width:55,fontSize:11,fontWeight:700,textAlign:"right",color:m.avg>=0?"#059669":"#dc2626"}}>
+                  {m.avg>=0?"+":""}{m.avg.toFixed(1)}%
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center"}}>🕐 {new Date(monthlyData.updatedAt).toLocaleTimeString("en-IN")} · Binance monthly candles</div>
+        </div>
+      )}
+      </>
+      )}
+
+      <AD/>
+    </div>
+  );
+}
 
 function EntryTimeFinder(){
   const [coin,setCoin]=useState("BTC");
@@ -3088,6 +3688,24 @@ Give response in this EXACT JSON format (no extra text):
           </div>
         </div>
 
+        {/* 🏟️ Arena — Paper Trading promo */}
+        <Link href="/arena" style={{display:"block",textDecoration:"none",marginBottom:16}}>
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:16,
+            padding:"16px 18px",display:"flex",alignItems:"center",gap:14,
+            border:"1px solid rgba(16,185,129,.25)"}}>
+            <div style={{fontSize:32}}>🏟️</div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:900,fontSize:14,color:"#fff",marginBottom:2}}>
+                Trading Arena — Paper Trading
+              </div>
+              <div style={{fontSize:11,color:"rgba(255,255,255,.55)",lineHeight:1.5}}>
+                Virtual ₹1,00,000 se practice karo — real prices, zero risk. Leaderboard pe top karo!
+              </div>
+            </div>
+            <span style={{color:"#10b981",fontSize:18,flexShrink:0}}>→</span>
+          </div>
+        </Link>
+
         {/* Grouped Tab Navigation — Collapsible with skill badges */}
         <div style={{marginBottom:16}}>
           <div style={{fontSize:10,fontWeight:700,color:"#94a3b8",letterSpacing:1,marginBottom:8,paddingLeft:4}}>
@@ -3970,6 +4588,7 @@ Give response in this EXACT JSON format (no extra text):
         {tab==="rugpull" && <RugPullDetector />}
 
         {/* ════════════════════════ BEST ENTRY TIME ════════════════════ */}
+        {tab==="season" && <CoinSeason />}
         {tab==="entrytime" && <EntryTimeFinder />}
 
         {/* ════════════════════════ AIRDROP TRACKER ════════════════════ */}
