@@ -1127,19 +1127,21 @@ function EarlyBuzz(){
             // Early stage check: not already pumped 20%+ (if already pumped, you're late)
             const isEarly = ch24 < 15;
             const hasVolSpike = volSpike > 1.5;
+            const volBelowNormal = volSpike > 0 && volSpike < 0.8;
             const isTrending = true; // already filtered from trending list
 
-            // Score calculation
-            let score = 0;
-            if(isTrending) score += 35; // base for being in trending
-            if(hasVolSpike) score += Math.min(35, volSpike*10);
-            if(isEarly) score += 20; else score -= 15; // penalize if already pumped
-            if(ch24>0 && ch24<10) score += 10; // healthy early momentum
+            // Score calculation — Volume is the MOST important signal.
+            // Being "trending" alone means nothing without real volume backing it.
+            let score = 15; // small base just for being on trending list
+            if(hasVolSpike) score += Math.min(45, volSpike*15); // volume is the real confirmation
+            else if(volBelowNormal) score -= 15; // volume actually DOWN = buzz is fake/fading
+            if(isEarly) score += 15; else score -= 20; // penalize if already pumped hard
+            if(ch24>0 && ch24<10 && hasVolSpike) score += 15; // healthy momentum ONLY counts with volume backing
 
             score = Math.max(0,Math.min(100,Math.round(score)));
 
             return {
-              ...t, price, ch24, vol24h, volSpike, isEarly, hasVolSpike, score,
+              ...t, price, ch24, vol24h, volSpike, isEarly, hasVolSpike, volBelowNormal, score,
             };
           }catch(_){ return null; }
         })
@@ -1162,10 +1164,11 @@ function EarlyBuzz(){
   useEffect(()=>{ analyze(); },[]);
 
   const getSignalBadge = (c) => {
+    if(c.volBelowNormal) return {label:"😴 QUIET — No Real Buzz", color:"#64748b", bg:"#f1f5f9"};
+    if(!c.isEarly) return {label:"⚠️ ALREADY MOVED", color:"#ef4444", bg:"#fef2f2"};
     if(c.score>=70) return {label:"🔥 STRONG BUZZ", color:"#059669", bg:"#ecfdf5"};
-    if(c.score>=50) return {label:"⚡ BUILDING BUZZ", color:"#10b981", bg:"#f0fdf4"};
-    if(c.score>=30) return {label:"👀 WATCH", color:"#d97706", bg:"#fffbeb"};
-    return {label:"⚠️ ALREADY MOVED", color:"#ef4444", bg:"#fef2f2"};
+    if(c.score>=45) return {label:"⚡ BUILDING BUZZ", color:"#10b981", bg:"#f0fdf4"};
+    return {label:"👀 TRENDING ONLY — Weak Signal", color:"#d97706", bg:"#fffbeb"};
   };
 
   return(
@@ -1187,7 +1190,7 @@ function EarlyBuzz(){
           "In teeno signals ko combine karke ek Score (0-100) milta hai",
           "STRONG BUZZ wale coins mein interest build ho raha hai — abhi tak fully pump nahi hue"
         ]}
-        tip="Yeh 'pump ho chuka' coins ko avoid karta hai — sirf woh dikhata hai jinme buzz BAN RAHA HAI, taaki tum late-entry se bacho."
+        tip="Volume sabse important signal hai. Agar coin trending hai lekin volume NORMAL se KAM hai — woh 'buzz' fake ya fading ho sakta hai. Sirf real volume spike wale coins ko seriously lo."
       />
       <AD/>
 
@@ -1247,9 +1250,9 @@ function EarlyBuzz(){
                   </div>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
                     <div style={{background:"#f8fafc",borderRadius:8,padding:"6px 10px"}}>
-                      <div style={{fontSize:9,color:"#94a3b8"}}>Volume Spike</div>
-                      <div style={{fontSize:12,fontWeight:800,color:c.hasVolSpike?"#059669":"#94a3b8"}}>
-                        {c.volSpike>0?`${c.volSpike.toFixed(1)}x normal`:"Low data"}
+                      <div style={{fontSize:9,color:"#94a3b8"}}>Volume vs Normal</div>
+                      <div style={{fontSize:12,fontWeight:800,color:c.hasVolSpike?"#059669":c.volBelowNormal?"#ef4444":"#94a3b8"}}>
+                        {c.volSpike>0?`${c.volSpike.toFixed(1)}x ${c.hasVolSpike?"↑ spike":c.volBelowNormal?"↓ below":"normal"}`:"Low data"}
                       </div>
                     </div>
                     <div style={{background:"#f8fafc",borderRadius:8,padding:"6px 10px"}}>
