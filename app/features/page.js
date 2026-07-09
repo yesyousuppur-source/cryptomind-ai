@@ -46,6 +46,7 @@ const TAB_GROUPS = [
     level: "Medium",
     levelColor: "#d97706",
     tabs: [
+      { id:"buzz",      icon:"🔥", label:"Early Buzz"  },
       { id:"season",    icon:"🔄", label:"Coin Season" },
       { id:"entrytime", icon:"🎯", label:"Entry Finder"},
       { id:"airdrop",   icon:"🪙", label:"Airdrops"   },
@@ -1075,6 +1076,211 @@ function RugPullDetector(){
 // ═══════════════════════════════════════════════════════
 // 🔄 COIN SEASON / ROTATION PATTERN — Which coin follows which
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// 🔥 EARLY BUZZ DETECTOR — Real signals BEFORE a coin pumps
+// ═══════════════════════════════════════════════════════
+function EarlyBuzz(){
+  const [loading,setLoading] = useState(false);
+  const [data,setData] = useState(null);
+  const [err,setErr] = useState("");
+
+  const analyze = async () => {
+    setLoading(true); setErr(""); setData(null);
+    try{
+      // Signal 1: CoinGecko Trending (search volume spike — people searching = buzz building)
+      const trendR = await fetch("https://api.coingecko.com/api/v3/search/trending",{signal:AbortSignal.timeout(10000)});
+      if(!trendR.ok) throw new Error("Trending data fetch fail hua");
+      const trendData = await trendR.json();
+      const trending = (trendData.coins||[]).slice(0,10).map(c=>({
+        symbol: c.item.symbol.toUpperCase(),
+        name: c.item.name,
+        rank: c.item.market_cap_rank,
+        trendScore: c.item.score, // 0-based, 0 = most trending
+        image: c.item.thumb,
+      }));
+
+      // Signal 2 & 3: For each trending coin, check Binance for volume spike + early momentum (not already pumped hard)
+      const results = await Promise.allSettled(
+        trending.map(async (t) => {
+          try{
+            const [tickR, klR] = await Promise.all([
+              fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${t.symbol}USDT`,{signal:AbortSignal.timeout(6000)}),
+              fetch(`https://api.binance.com/api/v3/klines?symbol=${t.symbol}USDT&interval=1h&limit=25`,{signal:AbortSignal.timeout(6000)}),
+            ]);
+            if(!tickR.ok) return null; // not on Binance, skip
+            const tick = await tickR.json();
+            const kl = klR.ok ? await klR.json() : [];
+
+            const ch24 = parseFloat(tick.priceChangePercent);
+            const vol24h = parseFloat(tick.quoteVolume);
+            const price = parseFloat(tick.lastPrice);
+
+            // Volume spike: compare last 3h volume vs avg of previous 20h
+            let volSpike = 0;
+            if(kl.length>=24){
+              const volumes = kl.map(k=>parseFloat(k[5]));
+              const recent3h = volumes.slice(-3).reduce((a,b)=>a+b,0)/3;
+              const prev20h = volumes.slice(0,20).reduce((a,b)=>a+b,0)/20;
+              volSpike = prev20h>0 ? (recent3h/prev20h) : 1;
+            }
+
+            // Early stage check: not already pumped 20%+ (if already pumped, you're late)
+            const isEarly = ch24 < 15;
+            const hasVolSpike = volSpike > 1.5;
+            const isTrending = true; // already filtered from trending list
+
+            // Score calculation
+            let score = 0;
+            if(isTrending) score += 35; // base for being in trending
+            if(hasVolSpike) score += Math.min(35, volSpike*10);
+            if(isEarly) score += 20; else score -= 15; // penalize if already pumped
+            if(ch24>0 && ch24<10) score += 10; // healthy early momentum
+
+            score = Math.max(0,Math.min(100,Math.round(score)));
+
+            return {
+              ...t, price, ch24, vol24h, volSpike, isEarly, hasVolSpike, score,
+            };
+          }catch(_){ return null; }
+        })
+      );
+
+      const validResults = results
+        .filter(r=>r.status==="fulfilled" && r.value)
+        .map(r=>r.value)
+        .sort((a,b)=>b.score-a.score);
+
+      setData({
+        coins: validResults,
+        totalTrending: trending.length,
+        updatedAt: new Date().toISOString(),
+      });
+    }catch(e){ setErr(e.message||"Kuch error aaya"); }
+    setLoading(false);
+  };
+
+  useEffect(()=>{ analyze(); },[]);
+
+  const getSignalBadge = (c) => {
+    if(c.score>=70) return {label:"🔥 STRONG BUZZ", color:"#059669", bg:"#ecfdf5"};
+    if(c.score>=50) return {label:"⚡ BUILDING BUZZ", color:"#10b981", bg:"#f0fdf4"};
+    if(c.score>=30) return {label:"👀 WATCH", color:"#d97706", bg:"#fffbeb"};
+    return {label:"⚠️ ALREADY MOVED", color:"#ef4444", bg:"#fef2f2"};
+  };
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:6}}>🔥</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Early Buzz Detector</h2>
+        <p style={{fontSize:13,color:T.text2}}>Coin pump hone SE PEHLE ke real signals — search spike + volume spike</p>
+        <div style={{display:"inline-block",background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 12px",fontSize:10,color:"#059669",fontWeight:700,marginTop:6}}>
+          ✅ CoinGecko Trending + Binance Volume — Real Data
+        </div>
+      </div>
+
+      <GuideBox emoji="🔥" title="Early Buzz Detector Kaise Kaam Karta Hai"
+        steps={[
+          "CoinGecko se abhi ke top 10 'trending' coins fetch hote hain (log jo sabse zyada search kar rahe hain)",
+          "Har coin ka Binance volume check hota hai — pichle 3 ghante ka volume, average se kitna zyada hai?",
+          "'Early Stage' check hota hai — coin already 15%+ pump toh nahi hua (agar hua, toh already late ho)",
+          "In teeno signals ko combine karke ek Score (0-100) milta hai",
+          "STRONG BUZZ wale coins mein interest build ho raha hai — abhi tak fully pump nahi hue"
+        ]}
+        tip="Yeh 'pump ho chuka' coins ko avoid karta hai — sirf woh dikhata hai jinme buzz BAN RAHA HAI, taaki tum late-entry se bacho."
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <button onClick={analyze} disabled={loading}
+          style={{width:"100%",background:loading?"#e2e8f0":"linear-gradient(135deg,#f59e0b,#ef4444)",
+            color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+          {loading?"⟳ Trending coins scan ho rahe hain...":"🔥 Early Buzz Refresh Karo"}
+        </button>
+        {err&&<div style={{fontSize:11,color:"#ef4444",marginTop:8}}>⚠️ {err}</div>}
+      </div>
+
+      {loading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"28px",textAlign:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#f59e0b",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>Trending coins ka volume aur momentum check ho raha hai...</div>
+          <div style={{fontSize:11,color:"#94a3b8"}}>CoinGecko search trends + Binance real-time volume</div>
+        </div>
+      )}
+
+      {data&&!loading&&(
+        <div className="fadein">
+          <div style={{background:"linear-gradient(135deg,#0f172a,#1e3a2f)",borderRadius:12,padding:"10px 16px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <span style={{fontSize:11,color:"rgba(255,255,255,.6)"}}>🔍 {data.totalTrending} trending coins checked</span>
+            <span style={{fontSize:11,color:"rgba(255,255,255,.6)"}}>{data.coins.length} on Binance</span>
+          </div>
+
+          {data.coins.length>0 ? data.coins.map((c,i)=>{
+            const badge = getSignalBadge(c);
+            return(
+              <div key={i} style={{background:"#fff",border:`2px solid ${badge.bg==="#ecfdf5"?"#6ee7b7":badge.bg==="#f0fdf4"?"#a7f3d0":badge.bg==="#fffbeb"?"#fde68a":"#fca5a5"}`,borderRadius:16,overflow:"hidden",marginBottom:10,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+                <div style={{background:`linear-gradient(135deg,${badge.bg},#fff)`,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
+                  <img src={c.image} alt="" onError={e=>e.target.style.display="none"}
+                    style={{width:32,height:32,borderRadius:"50%",flexShrink:0}}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:900,fontSize:14,color:"#0f172a"}}>{c.name}</div>
+                    <div style={{fontSize:10,color:"#94a3b8",fontFamily:"'JetBrains Mono',monospace"}}>{c.symbol}/USDT{c.rank?` · Rank #${c.rank}`:""}</div>
+                  </div>
+                  <div style={{textAlign:"right"}}>
+                    <div style={{fontSize:14,fontWeight:900,fontFamily:"'JetBrains Mono',monospace"}}>${c.price<1?c.price.toFixed(6):c.price.toFixed(2)}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:c.ch24>=0?"#059669":"#dc2626"}}>
+                      {c.ch24>=0?"▲":"▼"}{Math.abs(c.ch24).toFixed(1)}% 24h
+                    </div>
+                  </div>
+                </div>
+                <div style={{padding:"10px 14px"}}>
+                  <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
+                    <span style={{background:badge.bg,border:`1.5px solid ${badge.color}55`,borderRadius:20,padding:"4px 10px",fontSize:11,color:badge.color,fontWeight:800}}>
+                      {badge.label}
+                    </span>
+                    <span style={{fontSize:10,fontWeight:700,color:badge.color,background:badge.bg,padding:"3px 8px",borderRadius:20}}>
+                      Score: {c.score}/100
+                    </span>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                    <div style={{background:"#f8fafc",borderRadius:8,padding:"6px 10px"}}>
+                      <div style={{fontSize:9,color:"#94a3b8"}}>Volume Spike</div>
+                      <div style={{fontSize:12,fontWeight:800,color:c.hasVolSpike?"#059669":"#94a3b8"}}>
+                        {c.volSpike>0?`${c.volSpike.toFixed(1)}x normal`:"Low data"}
+                      </div>
+                    </div>
+                    <div style={{background:"#f8fafc",borderRadius:8,padding:"6px 10px"}}>
+                      <div style={{fontSize:9,color:"#94a3b8"}}>Stage</div>
+                      <div style={{fontSize:12,fontWeight:800,color:c.isEarly?"#059669":"#ef4444"}}>
+                        {c.isEarly?"✅ Early":"⚠️ Already moved"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }) : (
+            <div style={{textAlign:"center",padding:"20px 0",color:"#94a3b8",fontSize:12}}>
+              Abhi koi trending coin Binance pe listed nahi mila
+            </div>
+          )}
+
+          <div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:10,padding:"12px 14px",marginTop:8,fontSize:11,color:"#92400e",lineHeight:1.7}}>
+            🚨 <strong>Important:</strong> Yeh koi guarantee NAHI hai ki coin pump hoga. Yeh sirf REAL signals (search interest + volume) dikhata hai jo kabhi kabhi pump se pehle appear hote hain. Trending coins mein high risk bhi hota hai — sirf utna invest karo jo tum kho sakte ho. DYOR zaroori hai.
+          </div>
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center",marginTop:8}}>
+            🕐 {new Date(data.updatedAt).toLocaleTimeString("en-IN")} · Live data
+          </div>
+        </div>
+      )}
+      <AD/>
+    </div>
+  );
+}
+
 function CoinSeason(){
   const [subTab,setSubTab] = useState("rotation"); // rotation | altseason | pair | monthly
   const [loading,setLoading] = useState(false);
@@ -4588,6 +4794,7 @@ Give response in this EXACT JSON format (no extra text):
         {tab==="rugpull" && <RugPullDetector />}
 
         {/* ════════════════════════ BEST ENTRY TIME ════════════════════ */}
+        {tab==="buzz" && <EarlyBuzz />}
         {tab==="season" && <CoinSeason />}
         {tab==="entrytime" && <EntryTimeFinder />}
 
