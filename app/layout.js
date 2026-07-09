@@ -183,9 +183,6 @@ export default function RootLayout({ children }) {
             box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
             height: 60px;
             padding-bottom: env(safe-area-inset-bottom, 0px);
-            /* Prevents the nav from being pushed/squashed by mobile keyboard or browser chrome resize */
-            transform: translateZ(0);
-            will-change: transform;
           }
 
           .yyp-nav-item {
@@ -214,6 +211,16 @@ export default function RootLayout({ children }) {
           /* Prevent horizontal overflow / accidental zoom on any page */
           img, svg { max-width: 100%; height: auto; }
           input, textarea, select, button { font-size: 16px; } /* prevents iOS auto-zoom on focus */
+
+          /* CRITICAL FIX: All pages use minHeight:"100vh" inline which recalculates
+             every time the mobile browser address bar shows/hides, causing reflow
+             that makes the fixed bottom nav appear to jump. Override with dvh
+             (dynamic viewport height) which stays stable during address bar changes.
+             !important is required to beat inline styles. */
+          main {
+            min-height: 100vh !important;
+            min-height: 100dvh !important;
+          }
 
           @media (max-width: 380px) {
             .yyp-nav-item { font-size: 8px; }
