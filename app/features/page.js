@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const T = {
@@ -25,6 +25,7 @@ const TAB_GROUPS = [
     level: "Easy",
     levelColor: "#059669",
     tabs: [
+      { id:"expertchoice",icon:"🏆", label:"Expert Choice" },
       { id:"tax",         icon:"🧾", label:"Tax Calc"    },
       { id:"dca",         icon:"📅", label:"DCA Planner" },
       { id:"traditional", icon:"🆚", label:"Crypto vs FD"},
@@ -76,7 +77,7 @@ const TAB_GROUPS = [
 const TABS = TAB_GROUPS.flatMap(g=>g.tabs);
 
 // Recommended tools for first-time users
-const RECOMMENDED = ["iq","tax","dca","rugpull"];
+const RECOMMENDED = ["expertchoice","iq","tax","dca","rugpull"];
 
 // ── IQ TEST QUESTIONS ─────────────────────────────────────────────────────────
 const IQ_QUESTIONS = [
@@ -257,6 +258,172 @@ const GuideBox = ({emoji,title,steps,tip}) => (
 // ═══════════════════════════════════════════════════════
 // 1. DCA PLANNER
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// 🏆 EXPERT CHOICE — Top 5 daily picks
+// ═══════════════════════════════════════════════════════
+function ExpertChoice(){
+  const [top5,setTop5] = useState(null);
+  const [top5Load,setTop5Load] = useState(false);
+
+  const fetchTop5 = async () => {
+    setTop5Load(true);
+    try{
+      const r = await fetch("/api/top5");
+      const j = await r.json();
+      setTop5(j);
+    }catch(_){
+      setTop5({coins:[],updatedAt:new Date().toISOString()});
+    }
+    setTop5Load(false);
+  };
+
+  useEffect(()=>{ fetchTop5(); },[]);
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:6}}>🏆</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Expert Choice</h2>
+        <p style={{fontSize:13,color:T.text2}}>120 coins scan → 6 indicators → Top 5 expert picks</p>
+      </div>
+
+      <GuideBox emoji="🏆" title="Expert Choice"
+        steps={[
+          "Page load hote hi automatically 120 coins scan hote hain",
+          "6 indicators check hote hain: RSI, MACD, Bollinger Bands, ATR, Support/Resistance, Volume",
+          "Har coin ko 0-100 score milta hai",
+          "Top 5 highest scoring coins dikhte hain",
+          "Entry price, stop loss, aur 3 targets ke saath"
+        ]}
+        tip="VERY STRONG signal ka matlab sab 6 indicators align ho rahe hain — sabse best opportunity!"
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}}>
+          {[
+            {label:"VERY STRONG 🔥",color:"#059669",bg:"#ecfdf5"},
+            {label:"STRONG BUY ✅",color:"#10b981",bg:"#f0fdf4"},
+            {label:"WATCH 👀",color:"#d97706",bg:"#fffbeb"},
+            {label:"CAUTION ⚠️",color:"#ef4444",bg:"#fef2f2"},
+          ].map(s=>(
+            <div key={s.label} style={{background:s.bg,border:`1px solid ${s.color}33`,borderRadius:20,padding:"3px 10px",fontSize:9,color:s.color,fontWeight:700}}>
+              {s.label}
+            </div>
+          ))}
+        </div>
+
+        {top5Load?(
+          <div style={{textAlign:"center",padding:"24px 0"}}>
+            <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
+              {[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+            </div>
+            <p style={{fontSize:13,fontWeight:700,color:"#0f172a",marginBottom:4}}>120 Coins Scan Ho Rahe Hain...</p>
+            <p style={{fontSize:11,color:"#94a3b8"}}>RSI · MACD · Bollinger Bands · ATR · Support/Resistance · Volume</p>
+          </div>
+        ):top5?.coins?.length>0?(
+          <div className="fadein">
+            <div style={{background:"linear-gradient(135deg,#f0fdf4,#ecfdf5)",border:"1px solid #6ee7b7",borderRadius:12,padding:"8px 14px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{fontSize:11,color:"#059669",fontWeight:700}}>📡 {top5.scanned} coins scanned</div>
+              <div style={{fontSize:11,color:"#059669",fontWeight:700}}>Market: {top5.marketStrength}</div>
+            </div>
+
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {top5.coins.map((coin,i)=>{
+                const isVeryStrong = coin.signal?.includes("VERY STRONG");
+                const isStrong     = coin.signal?.includes("STRONG BUY")||coin.signal?.includes("STRONG ✅");
+                const isWatch      = coin.signal?.includes("WATCH");
+                const isCaution    = coin.signal?.includes("CAUTION")||coin.signal?.includes("NEUTRAL");
+                const sc = {
+                  color: coin.sColor || (isVeryStrong?"#059669":isStrong?"#10b981":isWatch?"#d97706":isCaution?"#6366f1":"#ef4444"),
+                  bg:    coin.sBg    || (isVeryStrong?"#ecfdf5":isStrong?"#f0fdf4":isWatch?"#fffbeb":isCaution?"#eff6ff":"#fef2f2"),
+                  border:isVeryStrong?"#6ee7b7":isStrong?"#a7f3d0":isWatch?"#fde68a":isCaution?"#c7d2fe":"#fca5a5",
+                };
+                return(
+                  <div key={coin.symbol} style={{background:"#fff",border:`2px solid ${sc.border}`,borderRadius:16,overflow:"hidden",boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+                    <div style={{background:`linear-gradient(135deg,${sc.bg},#fff)`,padding:"12px 14px",display:"flex",alignItems:"center",gap:10,borderBottom:"1px solid #f1f5f9"}}>
+                      <img src={coin.image} alt="" onError={e=>e.target.style.display="none"}
+                        style={{width:34,height:34,borderRadius:"50%",border:"2px solid #e2e8f0",flexShrink:0}}/>
+                      <div style={{flex:1}}>
+                        <div style={{fontWeight:900,fontSize:15,color:"#0f172a"}}>{coin.name}</div>
+                        <div style={{fontSize:10,color:"#94a3b8",fontFamily:"'JetBrains Mono',monospace"}}>{coin.symbol}/USDT</div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:15,fontWeight:900,fontFamily:"'JetBrains Mono',monospace"}}>{coin.price}</div>
+                        <div style={{fontSize:11,fontWeight:700,color:parseFloat(coin.ch24)>=0?"#059669":"#dc2626"}}>
+                          {parseFloat(coin.ch24)>=0?"▲":"▼"}{Math.abs(parseFloat(coin.ch24))}% 24h
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{padding:"10px 14px"}}>
+                      <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap",alignItems:"center"}}>
+                        <span style={{background:sc.bg,border:`1.5px solid ${sc.border}`,borderRadius:20,padding:"5px 12px",fontSize:12,color:sc.color,fontWeight:800}}>
+                          {coin.signal}
+                        </span>
+                        <span style={{fontSize:10,fontWeight:700,color:sc.color,background:sc.bg,padding:"3px 8px",borderRadius:20,border:`1px solid ${sc.border}`}}>
+                          Score: {coin.score}/100
+                        </span>
+                        {coin.holdTime&&coin.holdTime!=="—"&&(
+                          <span style={{fontSize:10,color:"#6366f1",background:"#eff6ff",padding:"3px 8px",borderRadius:20,fontWeight:600}}>
+                            ⏱️ {coin.holdTime}
+                          </span>
+                        )}
+                        <span style={{fontSize:10,color:"#6366f1",background:"#eff6ff",padding:"3px 8px",borderRadius:20,fontWeight:600}}>
+                          R:R 1:{coin.rrRatio}
+                        </span>
+                      </div>
+
+                      {(coin.desc||coin.description)&&(
+                        <div style={{fontSize:11,color:"#475569",background:"#f8fafc",borderRadius:8,padding:"7px 10px",marginBottom:8,lineHeight:1.5}}>
+                          💡 {coin.desc||coin.description}
+                        </div>
+                      )}
+
+                      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5}}>
+                        <div style={{background:"#fef2f2",borderRadius:10,padding:"7px 5px",textAlign:"center",border:"1px solid #fca5a5"}}>
+                          <div style={{fontSize:8,color:"#dc2626",fontWeight:700,marginBottom:2}}>🛑 SL</div>
+                          <div style={{fontSize:9,fontWeight:800,color:"#991b1b",fontFamily:"'JetBrains Mono',monospace"}}>{coin.stopLoss}</div>
+                          <div style={{fontSize:8,color:"#dc2626"}}>{coin.slPct}%</div>
+                        </div>
+                        {[{label:"TP1",val:coin.tp1,pct:coin.tp1Pct},{label:"TP2",val:coin.tp2,pct:coin.tp2Pct},{label:"TP3",val:coin.tp3,pct:coin.tp3Pct}].map((tp,j)=>(
+                          <div key={j} style={{background:j===2?"#eff6ff":"#f0fdf4",borderRadius:10,padding:"7px 5px",textAlign:"center",border:`1px solid ${j===2?"#93c5fd":"#4ade80"}`}}>
+                            <div style={{fontSize:8,color:j===2?"#1d4ed8":"#059669",fontWeight:700,marginBottom:2}}>{j===2?"💎":"🎯"} {tp.label}</div>
+                            <div style={{fontSize:9,fontWeight:800,color:j===2?"#1e3a8a":"#065f46",fontFamily:"'JetBrains Mono',monospace"}}>{tp.val}</div>
+                            <div style={{fontSize:8,color:j===2?"#2563eb":"#059669"}}>+{tp.pct}%</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:10}}>
+              <div style={{fontSize:10,color:"#94a3b8"}}>
+                🕐 {new Date(top5.updatedAt).toLocaleTimeString("en-IN")} · 2 min cache
+              </div>
+              <button onClick={fetchTop5} style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"5px 14px",fontSize:11,color:"#059669",fontWeight:700,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                🔄 Refresh
+              </button>
+            </div>
+          </div>
+        ):(
+          <div style={{textAlign:"center",padding:"16px 0"}}>
+            <div style={{fontSize:32,marginBottom:8}}>🔄</div>
+            <p style={{fontSize:12,color:"#64748b",marginBottom:12}}>Scan ho raha hai — thoda wait karo</p>
+            <button onClick={fetchTop5} style={{background:"linear-gradient(135deg,#10b981,#059669)",color:"#fff",border:"none",borderRadius:12,padding:"12px 28px",fontWeight:700,fontSize:13,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+              🔄 Dobara Try Karo
+            </button>
+          </div>
+        )}
+      </div>
+      <AD/>
+    </div>
+  );
+}
+
 function DcaPlanner(){
   const [coinInput,setCoinInput] = useState("BTC");
   const [monthly,setMonthly]     = useState("1000");
@@ -3783,6 +3950,7 @@ Give response in this EXACT JSON format (no extra text):
         {tab==="tokenomics"    && <TokenomicsDecoder />}
 
         {/* ════════ DCA PLANNER ════════ */}
+        {tab==="expertchoice" && <ExpertChoice />}
         {tab==="dca" && <DcaPlanner />}
 
         {/* ════════════════════════ CRYPTO vs TRADITIONAL ══════════════ */}
