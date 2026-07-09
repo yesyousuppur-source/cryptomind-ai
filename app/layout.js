@@ -168,9 +168,9 @@ export default function RootLayout({ children }) {
             <span className="nav-icon">🏠</span>
             <span>Home</span>
           </a>
-          <a href="/" className="yyp-nav-item">
-            <span className="nav-icon">📊</span>
-            <span>Analyze</span>
+          <a href="/trade" className="yyp-nav-item">
+            <span className="nav-icon">📈</span>
+            <span>Trade</span>
           </a>
           <a href="/chat" className="yyp-nav-item" style={{color:"#10b981"}}>
             <span className="nav-icon">🤖</span>
