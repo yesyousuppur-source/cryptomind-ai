@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 const T = {
@@ -2598,7 +2598,14 @@ Keep it practical and honest. Hinglish mein likho.`})
 }
 
 export default function FeaturesPage() {
-  const [tab, setTab] = useState("iq");
+  const [tab, setRawTab] = useState("iq");
+  const contentRef = useRef(null);
+  const setTab = (id) => {
+    setRawTab(id);
+    setTimeout(()=>{
+      contentRef.current?.scrollIntoView({behavior:"smooth", block:"start"});
+    }, 50);
+  };
   const [openGroups, setOpenGroups] = useState({"🎓 Seekho": true});
   const toggleGroup = (label) => setOpenGroups(prev => ({...prev, [label]: !prev[label]}));
 
@@ -3139,6 +3146,9 @@ Give response in this EXACT JSON format (no extra text):
             data-full-width-responsive="true"/>
           <script dangerouslySetInnerHTML={{__html:"(adsbygoogle=window.adsbygoogle||[]).push({});"}}/>
         </div>
+        {/* Content area — auto-scroll target */}
+        <div ref={contentRef}>
+
 
         {/* ════════════════════════════════════════════════════════════════ */}
         {/* IQ TEST                                                          */}
@@ -4305,6 +4315,9 @@ Give response in this EXACT JSON format (no extra text):
             )}
           </div>
         )}
+
+        </div>
+        {/* End content area */}
 
         {/* Footer */}
         <div style={{ textAlign:"center", marginTop:24 }}>
