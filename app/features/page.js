@@ -58,7 +58,8 @@ const TAB_GROUPS = [
     levelColor: "#d97706",
     tabs: [
       { id:"quickresearch", icon:"🔬", label:"2-Min Research" },
-      { id:"summarizer",    icon:"📝", label:"Summarizer (+ Whitepaper)" },
+      { id:"whitepaper",    icon:"📄", label:"Whitepaper Reader" },
+      { id:"summarizer",    icon:"📝", label:"Summarizer" },
       { id:"tokenomics",    icon:"🪙", label:"Tokenomics"     },
     ]
   },
@@ -2407,6 +2408,162 @@ Keep it factual, concise, and helpful. Total response should take 2 minutes to r
 // ═══════════════════════════════════════════════════════
 // ⚡ TIME SAVER 2: CONTENT SUMMARIZER
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// 📄 WHITEPAPER READER — 2 minute mein poora whitepaper padho
+// ═══════════════════════════════════════════════════════
+function WhitepaperReader(){
+  const [mode,setMode] = useState("url"); // url | paste
+  const [url,setUrl] = useState("");
+  const [text,setText] = useState("");
+  const [result,setResult] = useState(null);
+  const [loading,setLoading] = useState(false);
+  const [err,setErr] = useState("");
+
+  const analyze = async () => {
+    const hasUrl = mode==="url" && url.trim().startsWith("http");
+    const hasText = mode==="paste" && text.trim().length>50;
+    if(!hasUrl && !hasText){
+      setErr(mode==="url" ? "Valid URL daalo (http:// se shuru)" : "Kam se kam 50 characters paste karo");
+      return;
+    }
+    setErr(""); setResult(null); setLoading(true);
+    try{
+      const r = await fetch("/api/whitepaper", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          url: mode==="url" ? url.trim() : "",
+          pastedText: mode==="paste" ? text.trim() : "",
+        })
+      });
+      const j = await r.json();
+      if(j.error){
+        setErr(j.message || "Kuch problem aayi");
+        if(j.error==="pdf"||j.error==="fetch_failed") setMode("paste");
+      } else {
+        setResult(j.summary);
+      }
+    }catch(e){ setErr("Network error. Dobara try karo."); }
+    setLoading(false);
+  };
+
+  const EXAMPLE_URLS = [
+    {label:"Bitcoin", url:"https://bitcoin.org/bitcoin.pdf"},
+    {label:"Ethereum", url:"https://ethereum.org/en/whitepaper/"},
+    {label:"Solana", url:"https://solana.com/solana-whitepaper.pdf"},
+  ];
+
+  return(
+    <div className="fadein">
+      <div style={{textAlign:"center",marginBottom:14}}>
+        <div style={{fontSize:40,marginBottom:6}}>📄</div>
+        <h2 style={{fontSize:22,fontWeight:900,letterSpacing:-1,marginBottom:4}}>Whitepaper Reader</h2>
+        <p style={{fontSize:13,color:T.text2}}>Kisi bhi coin ka whitepaper link paste karo — 2 minute mein short analysis</p>
+        <div style={{display:"inline-block",background:"#ecfdf5",border:"1px solid #6ee7b7",borderRadius:20,padding:"3px 12px",fontSize:10,color:"#059669",fontWeight:700,marginTop:6}}>
+          ⏱️ 2-3 ghante ka padhna → 2 minute mein
+        </div>
+      </div>
+
+      <GuideBox emoji="📄" title="Whitepaper Reader"
+        steps={[
+          "Whitepaper ka URL/link paste karo (PDF ya website dono chalega)",
+          "Ya text mode mein switch karke content directly paste karo",
+          "Analyze dabao",
+          "2 minute mein: Coin kya hai, technology, tokenomics, team, risks — sab milega",
+          "Buy karne layak hai ya nahi — honest verdict bhi milega"
+        ]}
+        tip="Koi bhi coin ka official website ya whitepaper PDF link daal sakte ho — Bitcoin, Ethereum, ya koi bhi naya project!"
+      />
+      <AD/>
+
+      <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"18px",marginBottom:14,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+        {/* Mode toggle */}
+        <div style={{display:"flex",background:"#f8fafc",borderRadius:12,padding:3,marginBottom:14,border:"1px solid #e2e8f0"}}>
+          {[{v:"url",l:"🔗 URL Paste Karo"},{v:"paste",l:"📋 Text Paste Karo"}].map(m=>(
+            <button key={m.v} onClick={()=>{setMode(m.v);setErr("");setResult(null);}}
+              style={{flex:1,padding:"9px",borderRadius:10,cursor:"pointer",fontWeight:700,
+                fontSize:12,fontFamily:"'Inter',sans-serif",border:"none",
+                background:mode===m.v?"#10b981":"transparent",
+                color:mode===m.v?"#fff":"#64748b"}}>
+              {m.l}
+            </button>
+          ))}
+        </div>
+
+        {mode==="url" ? (
+          <div>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6,letterSpacing:.5}}>WHITEPAPER / WEBSITE URL</div>
+            <input value={url} onChange={e=>{setUrl(e.target.value);setErr("");setResult(null);}}
+              placeholder="https://coin-website.com/whitepaper.pdf"
+              onKeyDown={e=>e.key==="Enter"&&analyze()}
+              style={{width:"100%",background:"#f8fafc",border:`2px solid ${err?"#ef4444":"#e2e8f0"}`,borderRadius:12,
+                padding:"13px 16px",fontSize:13,fontWeight:600,color:"#0f172a",boxSizing:"border-box",marginBottom:10}}
+              onFocus={e=>e.target.style.borderColor="#10b981"}
+              onBlur={e=>e.target.style.borderColor=err?"#ef4444":"#e2e8f0"}/>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:600,marginBottom:6}}>Example try karo:</div>
+            <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+              {EXAMPLE_URLS.map((e,i)=>(
+                <button key={i} onClick={()=>{setUrl(e.url);setErr("");setResult(null);}}
+                  style={{background:"#f0fdf4",border:"1px solid #6ee7b7",borderRadius:20,padding:"4px 12px",
+                    fontSize:11,color:"#059669",fontWeight:600,cursor:"pointer",fontFamily:"'Inter',sans-serif"}}>
+                  {e.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ):(
+          <div>
+            <div style={{fontSize:10,color:"#94a3b8",fontWeight:700,marginBottom:6,letterSpacing:.5}}>WHITEPAPER TEXT PASTE KARO</div>
+            <textarea value={text} onChange={e=>{setText(e.target.value);setErr("");setResult(null);}}
+              placeholder="Whitepaper ka koi bhi section copy-paste karo..."
+              rows={6}
+              style={{width:"100%",background:"#f8fafc",border:"2px solid #e2e8f0",borderRadius:12,
+                padding:"13px 14px",fontSize:12,color:"#374151",fontFamily:"'Inter',sans-serif",
+                resize:"vertical",lineHeight:1.6,boxSizing:"border-box",outline:"none"}}
+              onFocus={e=>e.target.style.borderColor="#10b981"}
+              onBlur={e=>e.target.style.borderColor="#e2e8f0"}/>
+          </div>
+        )}
+
+        {err&&<div style={{fontSize:11,color:"#ef4444",marginTop:8}}>⚠️ {err}</div>}
+
+        <button onClick={analyze} disabled={loading}
+          style={{width:"100%",marginTop:14,
+            background:loading?"#e2e8f0":"linear-gradient(135deg,#10b981,#059669)",
+            color:loading?"#94a3b8":"#fff",border:"none",borderRadius:12,padding:"14px",
+            fontWeight:900,fontSize:15,cursor:"pointer",fontFamily:"'Inter',sans-serif",
+            boxShadow:loading?"none":"0 4px 14px rgba(16,185,129,.4)"}}>
+          {loading?"⟳ Whitepaper padha ja raha hai...":"📄 2-Min Analysis Karo"}
+        </button>
+      </div>
+
+      {loading&&(
+        <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:"28px",textAlign:"center",marginBottom:14}}>
+          <div style={{display:"flex",justifyContent:"center",gap:8,marginBottom:12}}>
+            {[0,1,2].map(i=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:"#10b981",animation:`blink 1.2s ${i*.3}s infinite`}}/>)}
+          </div>
+          <div style={{fontWeight:700,fontSize:13,marginBottom:4}}>Whitepaper fetch aur analyze ho raha hai...</div>
+          <div style={{fontSize:11,color:"#94a3b8"}}>Technology · Tokenomics · Team · Risks · Verdict</div>
+        </div>
+      )}
+
+      {result&&!loading&&(
+        <div className="fadein">
+          <div style={{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,padding:"20px",marginBottom:12,boxShadow:"0 2px 12px rgba(0,0,0,.05)"}}>
+            <div style={{fontWeight:900,fontSize:14,marginBottom:12,paddingBottom:10,borderBottom:"1px solid #f1f5f9",display:"flex",alignItems:"center",gap:8}}>
+              📄 Whitepaper Analysis
+              <span style={{fontSize:9,color:"#94a3b8",background:"#f8fafc",borderRadius:20,padding:"2px 8px",fontWeight:600}}>2-min read</span>
+            </div>
+            <div style={{fontSize:13,color:"#374151",lineHeight:1.9,whiteSpace:"pre-wrap"}}>{result}</div>
+          </div>
+          <div style={{fontSize:10,color:"#94a3b8",textAlign:"center"}}>⚠️ AI-generated analysis. DYOR karo. Not financial advice.</div>
+        </div>
+      )}
+      <AD/>
+    </div>
+  );
+}
+
 function ContentSummarizer(){
   const [text,setText]=useState("");
   const [mode,setMode]=useState("article"); // article | thread | news | whitepaper
@@ -2417,7 +2574,6 @@ function ContentSummarizer(){
     {id:"article", icon:"📰", label:"Article/Blog",     placeholder:"Koi bhi crypto article paste karo..."},
     {id:"news",    icon:"📡", label:"News",              placeholder:"Crypto news paste karo..."},
     {id:"thread",  icon:"🐦", label:"Twitter Thread",    placeholder:"Twitter/X thread paste karo..."},
-    {id:"whitepaper",icon:"📄",label:"Whitepaper",      placeholder:"Whitepaper ka koi section paste karo..."},
   ];
 
   const activeMode=MODES.find(m=>m.id===mode);
@@ -2443,14 +2599,7 @@ Keep it under 150 words total.`,
 🧵 THREAD KA POINT (1 line)
 💡 TOP 3 INSIGHTS
 📊 SENTIMENT: Bullish/Bearish
-⚡ KEY ACTION ITEM`,
-        whitepaper:`Summarize this whitepaper section for a normal Indian investor in simple Hinglish:
-📄 YEH KYA HAI? (Simple 2-line explanation — jaise 5th class student ko samjhao)
-⚙️ TECHNOLOGY (bilkul simple mein)
-💰 TOKEN USE (kyun chahiye yeh token)
-✅ STRONG POINTS (2-3)
-❌ CONCERNS (2-3)
-🎯 VERDICT (invest worthy hai ya nahi — brief)`
+⚡ KEY ACTION ITEM`
       };
 
       const r=await fetch("/api/ai",{
@@ -2488,7 +2637,7 @@ Keep it under 150 words total.`,
           "30 seconds mein key points, market impact, aur action item milega",
           "Padhne ki zaroorat hi nahi!"
         ]}
-        tip="Koi 50 page ka whitepaper hai? Koi 100-tweet thread? Sab paste karo — AI key points extract karke dega!"
+        tip="Koi lamba article hai? Koi 100-tweet thread? Sab paste karo — AI key points extract karke dega! (Whitepaper ke liye alag 'Whitepaper Reader' tool use karo — URL bhi daal sakte ho)"
       />
       <AD/>
 
@@ -4756,6 +4905,7 @@ Give response in this EXACT JSON format (no extra text):
 
         {/* ════════ TIME SAVERS ════════ */}
         {tab==="quickresearch" && <QuickResearch />}
+        {tab==="whitepaper"     && <WhitepaperReader />}
         {tab==="summarizer"    && <ContentSummarizer />}
         {tab==="tokenomics"    && <TokenomicsDecoder />}
 
