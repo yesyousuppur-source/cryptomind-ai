@@ -61,6 +61,9 @@ export const metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+  other: {
+    coinzilla: "6e5003874f6eeaf5a5e36d3d13bf6dd9",
+  },
 };
 
 // Organization Schema for Google Search logo
